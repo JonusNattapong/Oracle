@@ -112,15 +112,17 @@ describe("MessageStore", () => {
   });
 
   test("a message file missing readBy does not poison the inbox", async () => {
-    // Found via live two-agent test: hand-written/older-schema files without
-    // readBy made the default unread inbox throw and lose ALL messages.
-    const good = await store.send({ from: "a", to: "b", body: "good" });
+    // A legacy JSON message without readBy is normalized during the one-time
+    // SQLite import.
     const badPath = path.join(home, "messages", "20260722000000000-deadbeef.json");
+    await fs.mkdir(path.dirname(badPath), { recursive: true });
     await fs.writeFile(
       badPath,
       JSON.stringify({ id: "20260722000000000-deadbeef", ts: "2026-07-22T00:00:00Z", from: "a", to: "b", body: "no readBy" }),
       "utf8"
     );
+    store = new MessageStore(home);
+    const good = await store.send({ from: "a", to: "b", body: "good" });
 
     const inbox = await store.inbox("b");
     expect(inbox.map((m) => m.id).sort()).toEqual(["20260722000000000-deadbeef", good.id].sort());

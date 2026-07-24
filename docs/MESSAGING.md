@@ -1,15 +1,15 @@
 ---
 name: oracle-messaging
-description: Relays messages and tracks tasks between agents over Oracle's file-backed inter-agent bus (shared ~/.oracle), with broadcasts, threading, per-agent read state, real-time or on-idle wake-up, and a plan/assign/verify/report task tracker built on top of messaging. Use when coordinating multiple agents — sending, receiving, or waiting on messages, or planning and tracking work with checklists and review gates — between Claude Code sessions, opencode, or any oracle-mcp client on the same machine, via the oracle_msg_*/oracle_task_* MCP tools or the `oracle msg`/`oracle task` CLI.
+description: Relays messages and tracks tasks between agents over Oracle's SQLite inter-agent bus, with broadcasts, threading, per-agent read state, real-time or on-idle wake-up, and a plan/assign/verify/report task tracker built on top of messaging. Use when coordinating multiple agents via the oracle_msg_*/oracle_task_* MCP tools or the `oracle msg`/`oracle task` CLI.
 ---
 
 # Oracle Inter-Agent Messaging
 
 Oracle is the relay between agents on this machine. Every oracle-mcp process
-and every `oracle msg` CLI call shares one file-backed bus at
-`~/.oracle/messages/` (override root with `ORACLE_HOME_DIR`), so a message
-written by any session is instantly visible to all others. No server, no
-network — just atomic JSON files.
+and every `oracle msg` CLI call shares one SQLite bus at
+`~/.oracle/runtime/oracle.db` (override root with `ORACLE_HOME_DIR`), so a
+message written by any session is transactionally visible to all others.
+The local bus does not require a running daemon.
 
 ## Core concepts
 
@@ -208,11 +208,12 @@ oracle setup-mcp --client claude-code   # register MCP server (per workspace)
 # optional: Stop hook (per agent) and/or msg watch (per live pane) as above
 ```
 
-Store location: `~/.oracle/messages/*.json` (messages), `~/.oracle/tasks/*.json`
-(tasks), `~/.oracle/swarms/*.json` (workflows), and
-`~/.oracle/dead-letter/*.json` (pruned messages) — safe to
-inspect or delete old entries by hand; each file is one record, writes are
-atomic (tmp+rename).
+Canonical store: `~/.oracle/runtime/oracle.db` for messages, acknowledgements,
+tasks, presence, and dead letters. Existing `~/.oracle/messages/*.json`,
+`~/.oracle/tasks/*.json`, and `~/.oracle/agents/*.json` files are imported
+once and retained as recovery copies. Swarm workflow projections remain under
+Legacy `~/.oracle/swarms/*.json` workflow projections are imported the same
+way and retained as recovery copies.
 
 ## Resilience features
 
@@ -223,31 +224,23 @@ atomic (tmp+rename).
 - **Workflow reconciliation**: recovery links legacy SwarmStore records to a
   primary Task, imports their proposals into persistent TaskStore consensus,
   and refreshes linked message ids and recovery metadata.
-- **I/O retry**: all message store operations (`writeAtomic`, `readAll`, `get`)
-  retry on transient system errors (EBUSY, EIO, ENOSPC, ETIMEDOUT, …) with
-  exponential backoff + jitter. Logical errors (ENOENT, JSON parse failures)
-  pass through immediately. See `src/messaging/retry.ts`.
+- **Transactional acknowledgements**: each read receipt is a unique SQLite
+  row, so concurrent broadcast acknowledgements cannot overwrite each other.
 - **Dead-letter queue**: stale or undeliverable messages can be moved out of
   the live bus via `MessageStore.prune()` (by recipient inactivity or age).
-  Dead letters land in `~/.oracle/dead-letter/` and are excluded from all
-  inbox/search/thread queries. Use `purgeDeadLetter()` to permanently delete
-  old dead-letter files. See `src/messaging/store.ts`.
+  Dead letters remain in SQLite with `dead_lettered_at` and are excluded from
+  inbox/search/thread queries. Use `purgeDeadLetter()` for permanent removal.
 - **Agent heartbeat**: registered agents call `oracle_msg_heartbeat` to
   refresh their presence. `oracle_msg_stale` lists agents inactive for 20+
   minutes (likely crashed), so a lead can detect failures and reassign work.
   See `src/messaging/registry.ts`.
 
-## Known limitations (from a live concurrency review — accepted for now)
+## Remote coordination
 
-- **Concurrent acks can lose one ack**: `ack` is read-modify-write without a
-  lock; two agents acking the same broadcast at the same instant may drop one
-  `readBy` entry. Consequence: a Stop hook may re-fire once. Harmless but
-  real; re-ack if you see a message twice.
-- **Windows rename contention**: simultaneous ack + inbox on the same file
-  can throw EPERM under heavy concurrency; retry (now built-in) recovers.
-- **The store grows forever**: every inbox call reads all files. Fine for
-  thousands of messages; use `prune()` or delete old files by hand if the dir
-  gets huge.
+The MCP tools above remain the zero-config local workflow. For agents on
+different machines use `oracle connect` and `oracle team ...`; Remote Swarm
+adds scoped tokens, project rooms, WebSocket replay, and the same
+checklist-gated task lifecycle. See [remote-swarm.md](remote-swarm.md).
 
 ## Worked example (two sessions)
 

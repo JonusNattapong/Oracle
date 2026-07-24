@@ -15,6 +15,7 @@ const daemon = new OracleDaemon({
   host,
   port,
   workspaceRoot,
+  allowRemote: process.env.ORACLE_RUNTIME_REMOTE === "1",
   onShutdown: () => {
     if (!exiting) process.exit(0);
   }

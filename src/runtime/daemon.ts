@@ -4,6 +4,7 @@ import { VERSION } from "../version.js";
 import { LocalApiServer } from "./api.js";
 import { RuntimeDatabase } from "./database.js";
 import { RuntimeEventBus } from "./events.js";
+import { RemoteSwarmService } from "./swarmService.js";
 import { SchedulerService } from "./schedulerService.js";
 import {
   createDaemonState,
@@ -21,6 +22,7 @@ export interface OracleDaemonOptions {
   token?: string;
   databasePath?: string;
   workspaceRoot?: string;
+  allowRemote?: boolean;
   onShutdown?: () => void;
 }
 
@@ -29,6 +31,7 @@ export class OracleDaemon {
   private events?: RuntimeEventBus;
   private scheduler?: SchedulerService;
   private control?: ControlCenterService;
+  private swarm?: RemoteSwarmService;
   private api?: LocalApiServer;
   private state?: DaemonState;
   private stopPromise?: Promise<void>;
@@ -52,7 +55,7 @@ export class OracleDaemon {
     if (existing) await removeDaemonState(this.options.homeDir, existing.pid);
 
     const host = this.options.host ?? "127.0.0.1";
-    this.assertLoopback(host);
+    this.assertBinding(host);
     const requestedPort = this.options.port ?? 4777;
     if (!Number.isInteger(requestedPort) || requestedPort < 0 || requestedPort > 65535) {
       throw new Error(`Invalid runtime port: ${requestedPort}`);
@@ -63,6 +66,7 @@ export class OracleDaemon {
       this.options.databasePath ?? path.join(this.options.homeDir, "runtime", "oracle.db")
     );
     this.events = new RuntimeEventBus(this.database);
+    this.swarm = new RemoteSwarmService(this.database, this.events);
     this.scheduler = new SchedulerService(this.database, this.events);
     const workspaceRoot = path.resolve(this.options.workspaceRoot ?? process.cwd());
     this.control = new ControlCenterService(
@@ -90,6 +94,7 @@ export class OracleDaemon {
       scheduler: this.scheduler,
       control: this.control,
       events: this.events,
+      swarm: this.swarm,
       onShutdown: () => {
         void this.stop().then(() => this.options.onShutdown?.());
       }
@@ -118,6 +123,7 @@ export class OracleDaemon {
       this.api = undefined;
       this.scheduler = undefined;
       this.control = undefined;
+      this.swarm = undefined;
       this.events = undefined;
       this.database = undefined;
       throw error;
@@ -143,14 +149,18 @@ export class OracleDaemon {
     this.api = undefined;
     this.scheduler = undefined;
     this.control = undefined;
+    this.swarm = undefined;
     this.events = undefined;
     this.database = undefined;
   }
 
-  private assertLoopback(host: string): void {
-    if (!["127.0.0.1", "::1", "localhost"].includes(host)) {
+  private assertBinding(host: string): void {
+    if (
+      !this.options.allowRemote
+      && !["127.0.0.1", "::1", "localhost"].includes(host)
+    ) {
       throw new Error(
-        `Runtime API must bind to loopback; received "${host}". Use a separate authenticated proxy if remote access is required.`
+        `Runtime API must bind to loopback unless allowRemote is enabled; received "${host}".`
       );
     }
   }

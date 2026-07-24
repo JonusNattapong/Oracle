@@ -10,7 +10,7 @@ When you fire up Claude Code, it has no memory of yesterday's work. If you start
 - **Persistent memory** — everything the agent learns is saved and ranked by relevance; future sessions find it instantly
 - **Consultation engine** — ask a question with full project context (code + memory + docs + web) and get a grounded answer with citations
 - **Autonomous action** — an agent sandbox that can read/write files and run commands, confined to your workspace, fully audited
-- **Inter-agent coordination** — multiple agent sessions on one machine can message each other, hand off work, wake each other up when something needs attention
+- **Inter-agent coordination** — agent sessions on one or many machines can message each other, hand off work, and wake each other through a project-scoped Remote Swarm
 - **Task planning & verification** — a lead breaks work into assigned tasks with checklists; agents can't report "done" until their declared verification steps are actually checked off, and the lead is auto-notified when work is ready to review
 - **ASCII work board** — a lead can render the live agent roster and its main TODOs in any MCP client with `oracle_task_board`
 - **Control Center** — a blue local dashboard and Ink TUI for authorized approvals, task flow, memory, and the tamper-evident audit chain
@@ -70,9 +70,9 @@ Session B: Claude Code → Oracle
 | 🧠 **Remember** | Persistent memory across sessions — facts auto-ranked by recency, access frequency, semantic match, and importance. Entity graph to find related knowledge. Auto-consolidation to kill duplicates. | MCP: `oracle_memory_*` tools. CLI: `oracle memory list/search/update/consolidate`. Agent sees memory auto-injected into context. |
 | 💬 **Consult** | Ask a question with your real project context (code files + memory + docs + web search/fetch). Get a cited answer back. | MCP: `oracle_ask`. CLI: `oracle ask "question" -f "src/**/*.ts"`. Agent can search memory, read files, fetch URLs, then answer. |
 | 🛠️ **Act** | Autonomous agent with bash tool + file R/W + plan mode + self-review + resume. **Sandbox: shell + filesystem, confined to workspace.** Full audit trail of every mutation (who, when, what changed, hash). | MCP: `oracle_agent`. CLI: `oracle agent "write a test for X" --plan --review`. Agent loops until done; logs all file changes. |
-| 📨 **Coordinate** | Inter-agent message bus on one machine. Agents send/receive messages, reply in threads, mark as read. Broadcasts. Presence roster (who's active). One-call onboarding (register → see who else is there + your unread work). | MCP: `oracle_msg_*`. CLI: `oracle msg send/inbox/ack/watch`. Auto-injected instructions tell every agent to register before starting work. Presence is automatic (every action updates lastSeen). |
+| 📨 **Coordinate** | SQLite message bus for local sessions plus authenticated Remote Swarm rooms across machines. Messages, replies, acknowledgements, presence, and task events are durable. | Local: `oracle_msg_*` / `oracle msg ...`. Remote: `oracle connect`, `oracle team ...`. |
 | ✅ **Verify** | Durable task/message coordination: lifecycle notifications are persisted before delivery, linked back to their Task and Swarm, and recover safely without duplicates. Checklist submit still **blocks** while verification is incomplete. | MCP: `oracle_task_*`, `oracle_coordination_recover`. CLI: `oracle task ...`, `oracle swarm .../recover`. |
-| ⏰ **Runtime** | Persistent Oracle daemon owning the Scheduler service, SQLite backend, token-authenticated local API, and replayable WebSocket events. | CLI: `oracle daemon start/status/events/stop`, `oracle schedule list/add/update/run/remove`. |
+| ⏰ **Runtime** | Persistent daemon owning SQLite coordination, Scheduler, token-scoped Remote Swarm API, and replayable WebSocket events. | CLI: `oracle daemon start/status/events/stop`, `oracle schedule ...`, `oracle team ...`. |
 | 🖥️ **Control** | Human control plane with approval inbox, task workflow, memory distribution, and audit visualization. Task approvals close through the existing durable coordination flow. | TUI: `oracle control`. Web: `oracle control url`. Decisions: `oracle approval ...`. |
 
 ---
@@ -133,6 +133,32 @@ oracle doctor                       # verify it works
 ```
 
 Supported: `anthropic`, `openai`, `opencode`, `codex`
+
+### Connect agents on different machines
+
+On the Runtime host:
+
+```bash
+oracle daemon start --remote --host 0.0.0.0
+oracle team token --project clew-code --agent claude-lead --role lead
+oracle team token --project clew-code --agent codex-worker --role worker
+```
+
+On each agent machine, use its own token:
+
+```bash
+oracle connect https://oracle.example.com \
+  --project clew-code \
+  --agent codex-worker \
+  --token "$ORACLE_SWARM_TOKEN"
+oracle team status
+oracle team inbox
+oracle team task list --active
+```
+
+Use HTTPS through a reverse proxy or an encrypted private network when the
+Runtime crosses machine boundaries. Remote Swarm carries coordination data
+only; it does not expose remote shell or file mutation endpoints.
 
 ---
 
@@ -207,7 +233,7 @@ oracle agent-checkpoints --json                               # checkpoints as J
 
 **The problem Oracle solves:** Two Claude Code sessions run in parallel. One finishes a refactor. How does the other know? How do they coordinate without you being the messenger?
 
-**Solution: Shared message bus at `~/.oracle/messages/`**
+**Solution: Shared SQLite message bus in `~/.oracle/runtime/oracle.db`**
 
 Every agent can:
 - **Register** (`oracle_msg_register`) — one call: register name/role → get the roster + your unread messages. Presence updates automatically.
@@ -235,7 +261,9 @@ oracle msg ack -a worker <id>
 oracle msg watch -a codex --exec 'notify-send "Message from $ORACLE_MSG_FROM"'
 ```
 
-**Storage:** `~/.oracle/messages/` (atomic JSON) + `~/.oracle/agents/` (presence registry).
+**Storage:** messages, acknowledgements, and presence use transactional SQLite.
+Legacy `~/.oracle/messages/*.json` and `~/.oracle/agents/*.json` data is
+imported once and kept as a recovery copy.
 
 ### 5. Task Planning, Tracking & Verification (built on the message bus)
 
@@ -276,9 +304,9 @@ oracle task list --assignee builder --active
 oracle swarm recover                                  # replay interrupted notifications
 ```
 
-**Storage:** `~/.oracle/tasks/` and `~/.oracle/swarms/` (atomic JSON, one file
-per task/workflow) linked to deterministic coordination messages in
-`~/.oracle/messages/`.
+**Storage:** tasks and their deterministic coordination messages use SQLite.
+Legacy `~/.oracle/tasks/*.json` records are imported once without deleting
+the source files. Legacy swarm workflow projections are imported as well.
 
 #### ASCII work board
 
@@ -334,11 +362,12 @@ Read-only; results are historical records, not instructions.
 `oracle_oracle_list`, `oracle_oracle_register`, `oracle_skills`
 
 Scheduler is a Runtime CLI/API capability rather than an MCP tool category.
-Use `oracle schedule ...` or the authenticated loopback API documented in
+Use `oracle schedule ...` or the authenticated Runtime API documented in
 [runtime.md](docs/runtime.md).
 
 See [**MESSAGING.md**](docs/MESSAGING.md) for the full messaging + task-tracking
-reference; [**docs/**](docs/) for deeper architecture.
+reference, [**Remote Swarm**](docs/remote-swarm.md) for cross-machine setup,
+and [**docs/**](docs/) for deeper architecture.
 
 ---
 
@@ -348,9 +377,11 @@ reference; [**docs/**](docs/) for deeper architecture.
 
 ```bash
 ORACLE_WORKSPACE_ROOT      # Project root (default: cwd)
-ORACLE_HOME_DIR            # Memory/agents/messages store (default: ~/.oracle)
-ORACLE_RUNTIME_HOST        # Runtime loopback host (default: 127.0.0.1)
-ORACLE_RUNTIME_PORT        # Runtime local API port (default: 4777)
+ORACLE_HOME_DIR            # Oracle state root (default: ~/.oracle)
+ORACLE_RUNTIME_HOST        # Runtime bind host (default: 127.0.0.1)
+ORACLE_RUNTIME_PORT        # Runtime API port (default: 4777)
+ORACLE_RUNTIME_REMOTE      # Set to 1 only for an explicit remote binding
+ORACLE_SWARM_TOKEN         # Optional token input for `oracle connect`
 ORACLE_TELEGRAM_BOT_TOKEN  # Optional approval notification bot
 ORACLE_TELEGRAM_CHAT_ID    # Optional approval notification destination
 ORACLE_TELEGRAM_ALLOWED_USER_IDS # Optional comma-separated callback allowlist
@@ -380,9 +411,9 @@ Oracle MCP Server (src/mcp/)
 ├─ Memory System (src/memory/)
 │  └─ BM25 + vector search + entity graph + auto-consolidation
 ├─ Messaging Bus (src/messaging/)
-│  └─ File-backed store + registry + watcher + CLI + onboarding hooks
+│  └─ SQLite store + registry + watcher + CLI + onboarding hooks
 ├─ Task Tracker (src/tasks/)
-│  └─ File-backed store + durable notification outbox
+│  └─ SQLite store + durable notification outbox
 ├─ Coordination Service (src/coordination/)
 │  └─ Links Task ↔ Message ↔ Swarm, reconciles consensus, recovers workflows
 ├─ Agent Sandbox (src/agent/)
@@ -390,7 +421,7 @@ Oracle MCP Server (src/mcp/)
 ├─ Scheduler (src/scheduler/)
 │  └─ CronEngine + repository port, owned by Runtime while active
 ├─ Runtime (src/runtime/)
-│  └─ Daemon + SQLite + Scheduler service + local HTTP/WebSocket API
+│  └─ Daemon + SQLite + Remote Swarm + Scheduler + HTTP/WebSocket API
 ├─ Control Center (src/control/)
 │  └─ Ink TUI + dashboard + quorum/expiry/execute-once approvals
 ├─ Observability (src/observability/)
@@ -401,13 +432,14 @@ Oracle MCP Server (src/mcp/)
    └─ Reusable skill registry + custom oracle profiles
 
 CLI (src/cli.ts)
-├─ oracle ask, agent, daemon, memory, msg, task, identity, schedule, ...
+├─ oracle ask, agent, daemon, memory, msg, task, team, identity, schedule, ...
 ├─ oracle agent: --plan, --review, --resume, --approval-mode, --json, --read-only
 ├─ oracle daemon: start, run, status, stop, events
+├─ oracle connect + team: authenticated cross-machine coordination
 ├─ oracle control: TUI, url, snapshot
 ├─ oracle approval: request, list, show, approve, reject
 ├─ oracle schedule: list, add, update, remove, run, watch
-├─ same bus as MCP (shared ~/.oracle/)
+├─ same SQLite bus as MCP
 └─ designed for scripting & local use
 
 Standalone Coordination Server (src/mcp-messaging.ts)
@@ -419,15 +451,16 @@ Standalone Coordination Server (src/mcp-messaging.ts)
 **Storage Layout:**
 ```
 ~/.oracle/
-├─ messages/              # Inter-agent message store (atomic JSON per message)
-├─ tasks/                 # Task tracker (atomic JSON per task, one file each)
-├─ swarms/                # Workflow, task/message links, recovery metadata
 ├─ runtime/
-│  ├─ oracle.db           # SQLite scheduler state, events, approvals
+│  ├─ oracle.db           # Messages, tasks, agents, Remote Swarm, events, approvals
 │  ├─ daemon.json         # Local endpoint + owner-only API credential
 │  └─ daemon.log          # Background daemon output
+├─ remote.json            # Current Remote Swarm profile (owner-only)
+├─ messages/              # Legacy import source; retained if it existed
+├─ tasks/                 # Legacy import source; retained if it existed
+├─ agents/                # Legacy import source; retained if it existed
+├─ swarms/                # Legacy workflow import source; retained if it existed
 ├─ scheduler/             # Legacy JSON tasks (import source)
-├─ agents/                # Presence registry (one JSON per registered agent)
 ├─ memory/                # Persistent memory (facts, insights, wiki, graph)
 ├─ skills/                # Local skill definitions
 └─ .sessions/             # Session cache
@@ -468,15 +501,19 @@ Audits are immutable; they go to `~/.oracle/audits/` and can be replayed or revi
 
 ### Message Bus Security
 
-Messages are not encrypted (they're in a local JSON store), so **this is only suitable for single-machine multi-agent coordination,** not cross-network. If you need to send messages over the network, TLS should wrap the MCP server.
+Local coordination is stored in an owner-only SQLite database. Remote Swarm
+tokens are project- and agent-scoped; only SHA-256 token hashes are stored.
+The remote API exposes coordination data, not shell or file mutation tools.
+Oracle's HTTP server does not terminate TLS, so cross-machine deployments
+must use HTTPS through a reverse proxy or an encrypted private network.
 
 ---
 
 ## Limitations & Known Issues
 
 - **Memory store grows unbounded.** Prune old memories by hand or via `oracle memory prune`.
-- **Concurrent writes to the same message can lose one ack.** Read-modify-write without a lock. If two agents ack the same broadcast simultaneously, one ack might not be recorded. Workaround: re-ack.
-- **Windows rename under contention.** On heavy concurrent load, `fs.rename()` can fail EPERM. Retry succeeds.
+- **Remote Runtime does not terminate TLS.** Put it behind HTTPS or use an encrypted private network.
+- **Remote execution is intentionally absent.** Remote Swarm distributes messages and verified tasks, not shell commands.
 - **Stop hook is fragile.** If a hook dies or times out, Claude closes anyway. Make hooks fast (< 1 second).
 
 ---
@@ -489,7 +526,8 @@ npm run typecheck        # tsc --noEmit
 npm run build            # tsc -> dist/
 ```
 
-263 tests cover messaging, memory, agent sandbox, bash tool, and MCP integration.
+325 tests cover messaging, memory, Remote Swarm, Runtime, agent sandbox, bash
+tool, and MCP integration.
 
 ---
 

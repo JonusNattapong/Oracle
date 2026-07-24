@@ -31,6 +31,7 @@ export async function startDaemon(input: {
   host?: string;
   port?: number;
   workspaceRoot?: string;
+  allowRemote?: boolean;
   timeoutMs?: number;
 }): Promise<{ state: DaemonState; alreadyRunning: boolean }> {
   const current = await daemonStatus(input.homeDir);
@@ -59,6 +60,7 @@ export async function startDaemon(input: {
       ORACLE_HOME_DIR: input.homeDir,
       ORACLE_RUNTIME_HOST: input.host ?? "127.0.0.1",
       ORACLE_RUNTIME_PORT: String(input.port ?? 4777),
+      ORACLE_RUNTIME_REMOTE: input.allowRemote ? "1" : "0",
       ORACLE_WORKSPACE_ROOT: input.workspaceRoot ?? process.cwd()
     }
   });

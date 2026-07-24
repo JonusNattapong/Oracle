@@ -37,15 +37,38 @@ try {
   if (!parsedStatus.running || parsedStatus.health?.storage !== "sqlite") {
     throw new Error(`Unexpected daemon status: ${status}`);
   }
-  if (parsedStatus.health?.version !== "0.4.0") {
+  if (parsedStatus.health?.version !== "0.5.0") {
     throw new Error(`Unexpected Runtime version: ${status}`);
   }
   if (JSON.stringify(parsedStatus).includes("token")) {
     throw new Error("Daemon status leaked the API token.");
   }
 
+  const issued = run([
+    "team", "token",
+    "--project", "runtime-smoke",
+    "--agent", "smoke-agent",
+    "--role", "lead"
+  ]);
+  const swarmToken = issued.match(/oracle_swarm_[A-Za-z0-9_-]+/)?.[0];
+  if (!swarmToken) throw new Error(`Could not parse Remote Swarm token:\n${issued}`);
+  const runtimeUrl = `http://${parsedStatus.state.host}:${parsedStatus.state.port}`;
+  const connected = run([
+    "connect", runtimeUrl,
+    "--project", "runtime-smoke",
+    "--agent", "smoke-agent",
+    "--token", swarmToken
+  ]);
+  if (!connected.includes('Remote Swarm "runtime-smoke"')) {
+    throw new Error(`Remote Swarm connect failed:\n${connected}`);
+  }
+  const teamStatus = run(["team", "status"]);
+  if (!teamStatus.includes("smoke-agent") || !teamStatus.includes("runtime-smoke")) {
+    throw new Error(`Unexpected Remote Swarm status:\n${teamStatus}`);
+  }
+
   const snapshot = JSON.parse(run(["control", "snapshot"]));
-  if (snapshot.version !== "0.4.0" || snapshot.approvals?.pending !== 0) {
+  if (snapshot.version !== "0.5.0" || snapshot.approvals?.pending !== 0) {
     throw new Error(`Unexpected Control Center snapshot: ${JSON.stringify(snapshot)}`);
   }
   const tui = run(["control", "--once"]);

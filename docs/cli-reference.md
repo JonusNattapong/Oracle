@@ -177,13 +177,47 @@ oracle schedule remove <id>
 
 ---
 
+### oracle connect / oracle team
+
+Connect agents on different machines to one project-scoped Remote Swarm.
+
+```bash
+# Runtime host
+oracle daemon start --remote --host 0.0.0.0
+oracle team token --project clew-code --agent worker-1 --role worker
+oracle team token-revoke <token-id>
+
+# Agent machine
+oracle connect https://oracle.example.com \
+  --project clew-code --agent worker-1 --token "$ORACLE_SWARM_TOKEN"
+oracle team status
+oracle team agents
+oracle team send --to lead --body "Ready"
+oracle team inbox
+oracle team ack <message-id>
+oracle team watch
+
+oracle team task create --title "Tests" --assignee worker-1 \
+  --checklist "tests pass"
+oracle team task list --active
+oracle team task update <id> --status in_progress --note "starting"
+oracle team task check <id> 0
+oracle team task submit <id> --summary "verified"
+oracle team task close <id>
+```
+
+See [Remote Swarm](remote-swarm.md) for deployment and security guidance.
+
+---
+
 ### oracle daemon
 
-Persistent local Runtime with SQLite, Scheduler, HTTP API, and WebSocket
-events.
+Persistent Runtime with SQLite coordination, Scheduler, HTTP APIs, and
+WebSocket events.
 
 ```bash
 oracle daemon start [--port 4777]
+oracle daemon start --remote --host 0.0.0.0  # explicit Remote Swarm binding
 oracle daemon status [--json]
 oracle daemon events [--after <event-id>]
 oracle daemon stop

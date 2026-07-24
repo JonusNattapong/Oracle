@@ -262,8 +262,166 @@ export class RuntimeDatabase {
       version = 3;
     }
 
-    if (version > 3) {
-      throw new Error(`Runtime database schema ${version} is newer than supported schema 3.`);
+    if (version < 4) {
+      this.applyMigration(4, `
+        CREATE TABLE swarm_projects (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE TABLE swarm_tokens (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL REFERENCES swarm_projects(id) ON DELETE CASCADE,
+          agent_name TEXT NOT NULL,
+          role TEXT NOT NULL,
+          token_hash TEXT NOT NULL UNIQUE,
+          created_at TEXT NOT NULL,
+          revoked_at TEXT
+        ) STRICT;
+
+        CREATE INDEX swarm_tokens_agent_idx
+          ON swarm_tokens(project_id, agent_name, revoked_at);
+
+        CREATE TABLE swarm_agents (
+          project_id TEXT NOT NULL REFERENCES swarm_projects(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          role TEXT NOT NULL,
+          connected_at TEXT NOT NULL,
+          last_seen_at TEXT NOT NULL,
+          PRIMARY KEY (project_id, name)
+        ) STRICT;
+
+        CREATE INDEX swarm_agents_seen_idx
+          ON swarm_agents(project_id, last_seen_at DESC);
+
+        CREATE TABLE swarm_messages (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL REFERENCES swarm_projects(id) ON DELETE CASCADE,
+          from_agent TEXT NOT NULL,
+          to_agent TEXT NOT NULL,
+          subject TEXT,
+          body TEXT NOT NULL,
+          reply_to TEXT,
+          task_id TEXT,
+          created_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX swarm_messages_inbox_idx
+          ON swarm_messages(project_id, to_agent, created_at ASC);
+        CREATE INDEX swarm_messages_task_idx
+          ON swarm_messages(project_id, task_id, created_at ASC);
+
+        CREATE TABLE swarm_message_reads (
+          message_id TEXT NOT NULL REFERENCES swarm_messages(id) ON DELETE CASCADE,
+          agent_name TEXT NOT NULL,
+          read_at TEXT NOT NULL,
+          PRIMARY KEY (message_id, agent_name)
+        ) STRICT;
+
+        CREATE TABLE swarm_tasks (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL REFERENCES swarm_projects(id) ON DELETE CASCADE,
+          title TEXT NOT NULL,
+          description TEXT,
+          created_by TEXT NOT NULL,
+          assignee TEXT NOT NULL,
+          status TEXT NOT NULL CHECK (
+            status IN ('pending', 'in_progress', 'review', 'done', 'blocked', 'cancelled')
+          ),
+          checklist_json TEXT NOT NULL DEFAULT '[]',
+          notes_json TEXT NOT NULL DEFAULT '[]',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX swarm_tasks_assignee_idx
+          ON swarm_tasks(project_id, assignee, status, updated_at DESC);
+        CREATE INDEX swarm_tasks_creator_idx
+          ON swarm_tasks(project_id, created_by, status, updated_at DESC);
+      `);
+      version = 4;
+    }
+
+    if (version < 5) {
+      this.applyMigration(5, `
+        CREATE TABLE coordination_messages (
+          id TEXT PRIMARY KEY,
+          ts TEXT NOT NULL,
+          from_agent TEXT NOT NULL,
+          to_agent TEXT NOT NULL,
+          subject TEXT,
+          body TEXT NOT NULL,
+          reply_to TEXT,
+          task_id TEXT,
+          workflow_id TEXT,
+          coordination_event_id TEXT,
+          dead_lettered_at TEXT
+        ) STRICT;
+
+        CREATE UNIQUE INDEX coordination_messages_event_idx
+          ON coordination_messages(coordination_event_id)
+          WHERE coordination_event_id IS NOT NULL;
+        CREATE INDEX coordination_messages_inbox_idx
+          ON coordination_messages(to_agent, ts ASC);
+        CREATE INDEX coordination_messages_task_idx
+          ON coordination_messages(task_id, ts ASC);
+
+        CREATE TABLE coordination_message_reads (
+          message_id TEXT NOT NULL REFERENCES coordination_messages(id) ON DELETE CASCADE,
+          agent_name TEXT NOT NULL,
+          read_at TEXT NOT NULL,
+          PRIMARY KEY (message_id, agent_name)
+        ) STRICT;
+
+        CREATE TABLE coordination_tasks (
+          id TEXT PRIMARY KEY,
+          record_json TEXT NOT NULL,
+          status TEXT NOT NULL,
+          assignee TEXT NOT NULL,
+          created_by TEXT NOT NULL,
+          workflow_id TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX coordination_tasks_assignee_idx
+          ON coordination_tasks(assignee, status, updated_at DESC);
+        CREATE INDEX coordination_tasks_creator_idx
+          ON coordination_tasks(created_by, status, updated_at DESC);
+        CREATE INDEX coordination_tasks_workflow_idx
+          ON coordination_tasks(workflow_id, updated_at ASC);
+
+        CREATE TABLE coordination_agents (
+          name TEXT PRIMARY KEY,
+          role TEXT,
+          registered_at TEXT NOT NULL,
+          last_seen_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX coordination_agents_seen_idx
+          ON coordination_agents(last_seen_at DESC);
+      `);
+      version = 5;
+    }
+
+    if (version < 6) {
+      this.applyMigration(6, `
+        CREATE TABLE coordination_workflows (
+          id TEXT PRIMARY KEY,
+          record_json TEXT NOT NULL,
+          status TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX coordination_workflows_status_idx
+          ON coordination_workflows(status, updated_at DESC);
+      `);
+      version = 6;
+    }
+
+    if (version > 6) {
+      throw new Error(`Runtime database schema ${version} is newer than supported schema 6.`);
     }
   }
 

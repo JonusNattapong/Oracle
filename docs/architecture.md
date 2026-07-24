@@ -14,8 +14,9 @@ you ──▶ oracle ask ──▶ context (memory · docs · web · files) ─�
 
 Oracle combines an MCP server and CLI with an optional persistent Runtime
 daemon. Coordination and memory remain local stores under `~/.oracle/`;
-Runtime owns long-lived scheduling, SQLite state, and the loopback
-HTTP/WebSocket API. Control Center is the human-facing projection over those
+Runtime owns long-lived scheduling, SQLite state, and authenticated
+HTTP/WebSocket APIs. Remote Swarm adds project-scoped coordination across
+machines. Control Center is the human-facing projection over those
 stores and does not replace their existing sources of truth.
 
 ## Components
@@ -25,13 +26,14 @@ stores and does not replace their existing sources of truth.
 | **CLI** | Commander-based CLI: `ask`, `agent`, `memory`, `wiki`, `docs`, `web`, `msg`, `task`, `identity`, `github`, `session`, `skill` | `src/cli.ts` |
 | **MCP Server** | Stdio MCP server exposing Oracle's full tool surface | `src/mcp/server.ts`, `src/mcp/runtime.ts` |
 | **Standalone coordination server** | `oracle-msg-mcp` binary — 21 messaging, task, consensus, and recovery tools without the provider/memory/agent stack | `src/mcp-messaging.ts` |
-| **Runtime daemon** | Long-lived Scheduler owner, SQLite backend, loopback API, WebSocket events | `src/runtime/`, `src/daemon.ts` |
+| **Runtime daemon** | Long-lived Scheduler owner, SQLite backend, local/admin API, project-scoped Remote Swarm API, WebSocket events | `src/runtime/`, `src/daemon.ts` |
+| **Remote Swarm** | Cross-machine messages, presence, verified tasks, scoped tokens, reconnect replay | `src/runtime/swarmService.ts`, `src/runtime/swarmClient.ts` |
 | **Control Center** | Web dashboard, Ink TUI, quorum/expiry approvals, execute-once gate, optional Telegram callbacks | `src/control/` |
 | **ConsultService** | Core loop: load files → build context (memory + docs + web) → call provider → answer | `src/core/consult.ts` |
 | **Provider layer** | Codex CLI, Anthropic, OpenAI, OpenCode | `src/providers/` |
 | **Agent sandbox** | Autonomous file read/write/edit loop with a bash tool for shell commands. Every mutation hashed and logged to an audit trail. | `src/agent/` |
 | **Memory system** | BM25 + vector search + entity knowledge graph + auto-consolidation + background maintenance | `src/memory/` |
-| **Messaging bus** | Atomic file-backed message store, presence registry, real-time watcher, Stop-hook wake-up | `src/messaging/` |
+| **Messaging bus** | Transactional SQLite message store, presence registry, real-time watcher, Stop-hook wake-up | `src/messaging/` |
 | **Task tracker** | Plan/assign/verify/report on top of the messaging bus; checklist-gated review | `src/tasks/` |
 | **Coordination service** | Durable Task↔Message outbox, Swarm linkage, consensus reconciliation, recovery | `src/coordination/` |
 | **Scheduler service** | Cron lifecycle over a repository port; SQLite in Runtime, legacy file store for compatibility | `src/scheduler/`, `src/runtime/schedulerService.ts` |
@@ -46,9 +48,13 @@ stores and does not replace their existing sources of truth.
 ## Inter-agent coordination
 
 Every `oracle-mcp` process and every `oracle msg`/`oracle task` CLI call on
-one machine shares the same file-backed bus at `~/.oracle/`. There is no
-server to run and no network hop — writes are atomic (tmp file + rename), so
-concurrent readers never see a partial message.
+one machine shares the same WAL-mode SQLite database at
+`~/.oracle/runtime/oracle.db`. Local coordination does not require the
+daemon; each process opens the same transactional store.
+
+Remote agents connect to the daemon with a project- and agent-scoped token.
+The Remote Swarm API exposes messages, tasks, presence, and filtered
+WebSocket events only. See [remote-swarm.md](remote-swarm.md).
 
 Coordination 0.1.0 connects those stores through a durable outbox. A task
 transition first persists a pending coordination event, then delivers a
@@ -97,15 +103,16 @@ for the full lifecycle.
 
 ```
 ~/.oracle/
-├── messages/           # inter-agent message store (atomic JSON per message)
-├── tasks/               # task tracker (atomic JSON per task)
-├── swarms/              # workflow state + Task/Message/consensus links
 ├── runtime/
-│   ├── oracle.db        # SQLite scheduler state, events, approvals
-│   ├── daemon.json      # pid, loopback endpoint, owner-only token
+│   ├── oracle.db        # coordination, Remote Swarm, scheduler, events, approvals
+│   ├── daemon.json      # pid, endpoint, owner-only admin token
 │   └── daemon.log       # detached process output
+├── remote.json          # saved agent-scoped Remote Swarm profile
+├── messages/            # retained legacy import source
+├── tasks/               # retained legacy import source
+├── agents/              # retained legacy import source
+├── swarms/              # retained legacy workflow import source
 ├── scheduler/           # legacy JSON tasks imported into SQLite
-├── agents/               # presence registry (one JSON per registered agent)
 ├── memory/               # facts · insights · wiki · entity graph
 ├── skills/                # custom skill definitions
 ├── souls/                 # personality prompts (default/engineer/custom)
@@ -129,9 +136,11 @@ Every mutation is logged with a timestamp,
 agent name, SHA-256 content hash, and diff summary, so file changes and commands can be
 audited or reverted after the fact. The bash tool is disabled in readOnly mode.
 
-The message bus and task store are plain local JSON files with no
-encryption — suitable for single-machine multi-agent coordination, not for
-sending messages across a network.
+Local coordination lives in an owner-only SQLite database. Remote Swarm
+stores only token hashes and filters every request and event by project.
+Remote tokens do not grant shell, filesystem, Scheduler, approval, or admin
+access. Cross-machine deployments require TLS termination or an encrypted
+private network because the built-in listener is HTTP.
 
 ---
 *Oracle — A persistent coordination layer for AI coding agents*

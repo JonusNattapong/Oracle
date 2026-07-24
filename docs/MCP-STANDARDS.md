@@ -130,7 +130,7 @@ cache.invalidatePattern("skill-.*");
 - `oracle_msg_heartbeat` / `oracle_msg_stale` — Presence and stale-agent detection
 
 **Standards:**
-- File-backed atomic JSON at `~/.oracle/messages/`
+- Transactional SQLite at `~/.oracle/runtime/oracle.db`
 - 4-tier wake-up: pull, standby wait, push-on-idle (Stop hook), real-time push (tmux watcher)
 - Self-onboarding: MCP server sends instructions on connect telling agents to register before starting work
 
@@ -145,7 +145,7 @@ cache.invalidatePattern("skill-.*");
 - `oracle_task_close` — Approve or reject with note
 
 **Standards:**
-- File-backed atomic JSON at `~/.oracle/tasks/`
+- Transactional SQLite at `~/.oracle/runtime/oracle.db`
 - Lifecycle: `pending → in_progress → review → done` (or `blocked`/`cancelled`)
 - Checklist-gated submit: `oracle_task_submit` fails if any checklist item is unchecked
 - Auto-messages task creator on submit; notifies assignee on close/reject

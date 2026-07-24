@@ -1,7 +1,9 @@
-# Oracle Runtime 0.2.0
+# Oracle Runtime 0.5.0
 
 Oracle Runtime is a persistent local service that owns long-lived scheduling,
-SQLite state, a loopback HTTP API, and a WebSocket event stream.
+SQLite state, authenticated HTTP APIs, and WebSocket event streams. Loopback
+is the default; Remote Swarm can be enabled explicitly for cross-machine
+coordination.
 
 ## Start and inspect
 
@@ -20,7 +22,7 @@ an available port. The daemon writes state to
 `~/.oracle/runtime/daemon.json`, logs to `~/.oracle/runtime/daemon.log`, and
 SQLite data to `~/.oracle/runtime/oracle.db`.
 
-Runtime also serves Human Control Plane 0.4.0 for the workspace from which the
+Runtime also serves Human Control Plane 0.5.0 for the workspace from which the
 daemon was started:
 
 ```bash
@@ -48,9 +50,9 @@ At first startup, legacy JSON records from `~/.oracle/scheduler/*.json` are
 imported with `INSERT OR IGNORE`. The original files are left untouched, and
 repeated startup is idempotent.
 
-The SQLite schema stores current scheduler tasks, run history, runtime
-metadata, and replayable events. WAL mode and a busy timeout allow local CLI
-readers to coexist with the daemon.
+The SQLite schema stores local and remote coordination, scheduler tasks, run
+history, approvals, Runtime metadata, and replayable events. WAL mode and a
+busy timeout allow local CLI readers to coexist with the daemon.
 
 ## Local API
 
@@ -60,7 +62,7 @@ Health is available without credentials:
 GET /health
 ```
 
-All `/v1/*` routes require the bearer token kept in the daemon state file:
+Admin `/v1/*` routes require the bearer token kept in the daemon state file:
 
 ```text
 GET    /v1/schedules
@@ -78,6 +80,27 @@ GET    /v1/control/approvals/:id
 POST   /v1/control/approvals/:id/decision
 POST   /v1/control/approvals/:id/execution/claim
 POST   /v1/control/executions/:id/complete
+POST   /v1/swarm/tokens
+DELETE /v1/swarm/tokens/:token-id
+```
+
+Remote Swarm routes require a project-scoped agent token instead:
+
+```text
+POST   /v1/swarm/connect
+POST   /v1/swarm/heartbeat
+GET    /v1/swarm/status
+GET    /v1/swarm/agents
+POST   /v1/swarm/messages
+GET    /v1/swarm/messages/inbox
+POST   /v1/swarm/messages/ack
+GET    /v1/swarm/tasks
+POST   /v1/swarm/tasks
+GET    /v1/swarm/tasks/:id
+PATCH  /v1/swarm/tasks/:id
+POST   /v1/swarm/tasks/:id/check
+POST   /v1/swarm/tasks/:id/submit
+POST   /v1/swarm/tasks/:id/close
 ```
 
 The CLI reads the token internally. `oracle daemon status --json` deliberately
@@ -107,11 +130,13 @@ directly.
 ## Security boundary
 
 Runtime only accepts `127.0.0.1`, `::1`, or `localhost` as its bind host.
-It rejects `0.0.0.0` and external interfaces. The API token and state file
-are written with owner-only permissions.
+It rejects `0.0.0.0` and external interfaces unless `--remote` is explicitly
+passed. The admin API token, connection profiles, and state files are written
+with owner-only permissions.
 
-Do not expose Runtime through an SSH tunnel or reverse proxy unless that
-proxy adds its own authentication, authorization, and transport security.
+Remote Swarm tokens provide project authorization but not transport
+encryption. Use a TLS reverse proxy or an encrypted private network; do not
+expose the built-in HTTP listener directly to the public internet.
 
 The `/control` HTML shell is non-sensitive, but every data request and
 decision still requires the Runtime token. `oracle control url` passes that
