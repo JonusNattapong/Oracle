@@ -24,7 +24,7 @@ describe("RuntimeDatabase", () => {
     expect(stat.mode & 0o777).toBe(0o600);
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "6" });
+    ).get()).toEqual({ value: "7" });
   });
 
   test("persists scheduler tasks and run history in SQLite", async () => {
@@ -135,7 +135,7 @@ describe("RuntimeDatabase", () => {
     database = new RuntimeDatabase(home);
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "6" });
+    ).get()).toEqual({ value: "7" });
     expect(database.connection.prepare(`
       SELECT status, version, required_approvals, authorized_reviewers_json
       FROM approval_requests WHERE id = 'approval-legacy'
