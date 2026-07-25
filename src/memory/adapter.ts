@@ -2,12 +2,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import type { MemoryPort } from "../orchestrator/ports.js";
-import { generateEmbedding } from "./ollama.js";
 import { VectorStore } from "./vectorStore.js";
+import { SQLiteMemoryBackend } from "./sqliteMemoryBackend.js";
 import { EntityGraph } from "./entityGraph.js";
 import { consolidateMemories, type ConsolidationResult } from "./consolidation.js";
 import { pruneStaleMemories, promoteWorkingMemories, runMaintenance, type MaintenanceOptions, type MaintenanceResult } from "./maintenance.js";
 import { reflectOnMemories, type Reflection } from "./reflect.js";
+import type { RuntimeDatabase } from "../runtime/database.js";
 
 /** Options for MemoryAdapter.startAutoMaintenance(). */
 export interface AutoMaintenanceOptions {
@@ -83,13 +84,23 @@ function queryTerms(query: string): string[] {
 }
 
 export class MemoryAdapter implements MemoryPort {
-  private vectors: VectorStore;
+  private vectors: VectorStore;  // Legacy fallback
   private vectorsLoaded = false;
+  private sqliteBackend: SQLiteMemoryBackend | null = null;
   private entityGraph: EntityGraph;
 
   constructor(private readonly rootDir: string, private readonly dataDirectory = DATA_DIR) {
     this.vectors = new VectorStore(rootDir, dataDirectory);
     this.entityGraph = new EntityGraph(rootDir, dataDirectory);
+  }
+
+  /** Initialize with SQLite backend if available. */
+  initWithDatabase(db: RuntimeDatabase['connection']): void {
+    if (db) {
+      const vectorsJsonPath = path.join(this.rootDir, this.dataDirectory, "vectors.json");
+      this.sqliteBackend = new SQLiteMemoryBackend(db, vectorsJsonPath);
+      this.sqliteBackend.initialize().catch(() => {});
+    }
   }
 
   private dataDir(): string {
@@ -167,11 +178,16 @@ export class MemoryAdapter implements MemoryPort {
     };
     await this.writeEntry(entry);
 
-    // ponytail: fire-and-forget vector index — never blocks remember
-    if (USE_OLLAMA) {
+    // Fire-and-forget indexing — never blocks remember
+    if (this.sqliteBackend) {
+      // Index both vector (semantic) and BM25 (lexical)
+      this.sqliteBackend.indexMemory(entry.id, content).catch(() => {});
+      this.sqliteBackend.indexContent(entry.id, content);
+    } else if (USE_OLLAMA) {
+      // Fallback: legacy JSON-based vector store
       this.ensureVectors().then(() => this.vectors.index(entry.id, content)).catch(() => {});
     }
-    // ponytail: fire-and-forget entity graph index
+    // Entity graph indexing
     this.entityGraph.indexMemory(entry.id, content, entry.tags).catch(() => {});
     return entry;
   }
@@ -235,12 +251,10 @@ export class MemoryAdapter implements MemoryPort {
     const limit = opts?.limit ?? 50;
     const q = query.toLowerCase();
 
-    // Try semantic search via Ollama (whitelist: non-empty query)
-    if (USE_OLLAMA && q.length > 0) {
-      await this.ensureVectors();
-      const queryEmb = await generateEmbedding(query);
-      if (queryEmb) {
-        const hits = this.vectors.search(queryEmb.embedding, limit * 2);
+    // Try hybrid search via SQLite backend (semantic + lexical with RRF)
+    if (this.sqliteBackend && q.length > 0) {
+      try {
+        const hits = await this.sqliteBackend.search(query, limit * 2);
         if (hits.length > 0) {
           const ids = new Map(hits.map((h) => [h.memoryId, h.score]));
           const all = await this.recall({ type: opts?.type, agent: opts?.agent, limit: 10_000 });
@@ -251,10 +265,12 @@ export class MemoryAdapter implements MemoryPort {
             .slice(0, limit);
           return scored.map((s) => s.entry);
         }
+      } catch {
+        // Fall through to keyword-only search
       }
     }
 
-    // Fallback: keyword filter
+    // Fallback: keyword-only (BM25 via SQLite or lexical score)
     const terms = queryTerms(query);
     const entries = await this.recall({ type: opts?.type, agent: opts?.agent, limit: Math.max(limit * 4, 100), touch: false });
     return entries
@@ -274,11 +290,9 @@ export class MemoryAdapter implements MemoryPort {
     const limit = opts?.limit ?? 50;
     const q = query.toLowerCase();
 
-    if (USE_OLLAMA && q.length > 0) {
-      await this.ensureVectors();
-      const queryEmb = await generateEmbedding(query);
-      if (queryEmb) {
-        const hits = this.vectors.search(queryEmb.embedding, limit * 4);
+    if (this.sqliteBackend && q.length > 0) {
+      try {
+        const hits = await this.sqliteBackend.search(query, limit * 4);
         if (hits.length > 0) {
           const ids = new Map(hits.map((h) => [h.memoryId, h.score]));
           const all = await this.recall({ type: opts?.type, agent: opts?.agent, limit: 10_000 });
@@ -296,6 +310,8 @@ export class MemoryAdapter implements MemoryPort {
           }
           return scored.map((s) => s.entry);
         }
+      } catch {
+        // Fall through to keyword-only search
       }
     }
 
@@ -338,7 +354,11 @@ export class MemoryAdapter implements MemoryPort {
     try {
       await fs.unlink(this.filePath(type, id));
     } catch { /* ignore */ }
-    if (USE_OLLAMA) this.vectors.remove(id).catch(() => {});
+    if (this.sqliteBackend) {
+      this.sqliteBackend.remove(id);
+    } else if (USE_OLLAMA) {
+      this.vectors.remove(id).catch(() => {});
+    }
     this.entityGraph.removeMemory(id).catch(() => {});
   }
 

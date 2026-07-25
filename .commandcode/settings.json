@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(npm:*)",
+      "Shell(npx vitest run src/control/service.test.ts src/control/dashboard.test.ts 2>&1)",
+      "Shell(git:*)",
+      "Shell(git commit -F - <<'EOF' feat: TUI + Web Dashboard enhancements — live updates, actions, UX, code quality - Shared format.ts helpers (clean/truncate/shortAge/riskTone) - Web Dashboard: Scheduler/Agents cards, filter, toast, integrity badge, task/scheduler actions - Ink TUI: WebSocket live updates, per-tab actions (submit/close/run/pause/delete/maintenance), responsive width, per-tab selection/scroll - Backend: POST /v1/control/tasks/:id/submit|close, POST /v1/control/memory/maintenance - Tests: 46 new tests (format, ink-state, live modules) - cli.ts: Windows-friendly --actor default, plain-TUI error recovery Co-authored-by: CommandCodeBot <noreply@commandcode.ai> EOF)",
+      "powershell"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}
