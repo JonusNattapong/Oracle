@@ -149,12 +149,21 @@ program
     });
     closeCostSink();
 
+    if (result.status !== "completed") {
+      // The failure reason lives on the record. Printing only `output` here
+      // meant a failed consult exited 1 having said nothing at all, leaving no
+      // way to tell an auth problem from a network one.
+      console.error(`Consult failed: ${result.error ?? "unknown error"}`);
+      if (result.output) console.error(result.output);
+      process.exitCode = 1;
+      return;
+    }
+
     if (options.conversation) {
       await recordSelfLog(memory, options.conversation, { question, answerSummary: result.output.slice(0, 400) });
     }
 
     console.log(result.output);
-    process.exitCode = result.status === "completed" ? 0 : 1;
   });
 
 // ── oracle ───────────────────────────────────────────────────────
@@ -797,16 +806,48 @@ program
   .option("--provider <provider>", "Provider", "anthropic")
   .option("--client-id <id>", "OAuth client ID")
   .option("--force", "Re-authenticate")
+  .option("--status", "Show the current session without logging in")
   .action(async (options) => {
     const store = new TokenStore(homeDir());
+
+    if (options.status) {
+      if (options.provider !== "anthropic") {
+        console.log(`No OAuth session tracked for provider: ${options.provider}`);
+        return;
+      }
+      const { readAnthropicOAuthSession } = await import("./providers/factory.js");
+      const session = await readAnthropicOAuthSession(homeDir());
+      if (!session.present) {
+        console.log("Not logged in. Run `oracle login --provider anthropic`.");
+        process.exitCode = 1;
+        return;
+      }
+      console.log(`Provider: anthropic`);
+      console.log(`Plan:     ${session.planTier ?? "api"}`);
+      console.log(
+        session.expired
+          ? session.refreshable
+            ? "Status:   expired, refreshes on next use"
+            : "Status:   expired, re-login required"
+          : "Status:   active"
+      );
+      if (process.env.ANTHROPIC_API_KEY) {
+        // The provider prefers the key, so say so — otherwise a stale session
+        // looks like the thing serving your calls when it is not.
+        console.log("Note:     ANTHROPIC_API_KEY is set and takes precedence over this session.");
+      }
+      if (session.expired && !session.refreshable) process.exitCode = 1;
+      return;
+    }
+
     const existing = await store.read(options.provider);
     if (existing && !options.force) {
       console.log(`Already logged in to ${options.provider}. Use --force to re-authenticate.`);
       return;
     }
     if (options.provider !== "anthropic") throw new Error(`Login not supported for provider: ${options.provider}`);
-    const clientId = options.clientId ?? process.env.ANTHROPIC_CLIENT_ID;
-    if (!clientId) throw new Error("ANTHROPIC_CLIENT_ID is required.");
+    const clientId = options.clientId ?? process.env.ANTHROPIC_CLIENT_ID ?? existing?.clientId;
+    if (!clientId) throw new Error("ANTHROPIC_CLIENT_ID is required (or pass --client-id).");
     const oauth = new AnthropicOAuthClient(clientId, store);
     const session = await oauth.startDeviceFlow();
     console.log(`\nOpen: ${session.verificationUri}\nCode: ${session.userCode}\n`);

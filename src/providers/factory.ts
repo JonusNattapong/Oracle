@@ -1,9 +1,41 @@
+import os from "node:os";
+import path from "node:path";
 import { AnthropicProvider } from "./anthropic.js";
 import { CodexCliProvider, runCommand, type CommandRunner } from "./codex.js";
 import { OpenAIProvider, OpenCodeProvider } from "./openai.js";
 import { GeminiProvider, GEMINI_MODELS } from "./gemini.js";
+import { TokenStore } from "../auth/store.js";
+import { AnthropicOAuthClient } from "../auth/anthropic-oauth.js";
 import type { Provider } from "./provider.js";
 import type { AgentProvider } from "../agent/types.js";
+
+/** Mirrors the CLI's home-directory resolution so both read the same tokens. */
+export function oracleHomeDir(): string {
+  return process.env.ORACLE_HOME_DIR ?? path.join(os.homedir(), ".oracle");
+}
+
+export interface OAuthSessionStatus {
+  present: boolean;
+  expired: boolean;
+  /** An expired session with a refresh token still recovers without a re-login. */
+  refreshable: boolean;
+  planTier?: string;
+}
+
+/** Inspect the stored Anthropic OAuth session without performing a refresh. */
+export async function readAnthropicOAuthSession(
+  homeDir = oracleHomeDir()
+): Promise<OAuthSessionStatus> {
+  const entry = await new TokenStore(homeDir).read("anthropic");
+  if (!entry) return { present: false, expired: false, refreshable: false };
+  const expired = Boolean(entry.expiresAt && Date.now() >= entry.expiresAt);
+  return {
+    present: true,
+    expired,
+    refreshable: Boolean(entry.refreshToken),
+    planTier: entry.planTier,
+  };
+}
 
 export type ProviderName = "codex" | "openai" | "anthropic" | "opencode" | "gemini";
 
@@ -20,9 +52,27 @@ export function parseProviderName(value = "codex"): ProviderName {
   throw new Error(`Unknown provider: ${value}. Expected ${PROVIDER_NAMES.join(", ")}.`);
 }
 
+/**
+ * Build an Anthropic provider that can authenticate either way.
+ *
+ * The OAuth client must be supplied here: `AnthropicProvider` only consults
+ * OAuth when it is handed a client, so constructing it bare made every stored
+ * `oracle login` session unreachable and the bearer-token path dead code.
+ *
+ * The client id may be empty — a stored session records its own, and the
+ * client resolves it from there when refreshing.
+ */
+function createAnthropicProvider(): AnthropicProvider {
+  const oauth = new AnthropicOAuthClient(
+    process.env.ANTHROPIC_CLIENT_ID ?? "",
+    new TokenStore(oracleHomeDir())
+  );
+  return new AnthropicProvider(process.env.ANTHROPIC_API_KEY, oauth);
+}
+
 export function createProvider(name: ProviderName = "codex"): Provider {
   switch (name) {
-    case "anthropic": return new AnthropicProvider();
+    case "anthropic": return createAnthropicProvider();
     case "openai": return new OpenAIProvider();
     case "opencode": return new OpenCodeProvider();
     case "gemini": return new GeminiProvider();
@@ -77,7 +127,7 @@ export const AGENT_PROVIDERS: readonly ProviderName[] = ["anthropic", "opencode"
  */
 export function createAgentProvider(name: ProviderName): AgentProvider {
   switch (name) {
-    case "anthropic": return new AnthropicProvider();
+    case "anthropic": return createAnthropicProvider();
     case "opencode": return new OpenCodeProvider();
     case "codex": return new CodexCliProvider();
     default:
@@ -100,8 +150,31 @@ export async function checkProvider(
   }
 
   if (name === "anthropic") {
+    // Either credential is sufficient. Checking only the env var made a
+    // successful `oracle login` useless: the provider authenticates fine over
+    // OAuth, but this gate rejected the call before it ever got there.
+    if (process.env.ANTHROPIC_API_KEY) {
+      return [{ name: "anthropic credentials", ok: true, detail: "ANTHROPIC_API_KEY set" }];
+    }
+    const session = await readAnthropicOAuthSession();
+    if (session.present) {
+      // An expired session that still holds a refresh token is usable — the
+      // provider renews it on first call. Only an expired session with nothing
+      // to refresh from actually requires the user to log in again.
+      const usable = !session.expired || session.refreshable;
+      const detail = !session.expired
+        ? `OAuth session (plan: ${session.planTier ?? "api"})`
+        : session.refreshable
+          ? "OAuth session expired, refreshes on next use"
+          : "OAuth session expired — run `oracle login --provider anthropic`";
+      return [{ name: "anthropic credentials", ok: usable, detail }];
+    }
     return [
-      { name: "ANTHROPIC_API_KEY", ok: Boolean(process.env.ANTHROPIC_API_KEY), detail: process.env.ANTHROPIC_API_KEY ? "set" : "not set" },
+      {
+        name: "anthropic credentials",
+        ok: false,
+        detail: "no ANTHROPIC_API_KEY and no OAuth session — run `oracle login --provider anthropic`",
+      },
     ];
   }
 

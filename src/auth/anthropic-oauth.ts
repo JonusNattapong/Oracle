@@ -66,6 +66,23 @@ export class AnthropicOAuthClient {
     private readonly store: TokenStore
   ) {}
 
+  /**
+   * The client id to authenticate with. A provider constructed from the
+   * factory has no id to hand in, so fall back to the one recorded at login;
+   * without this, refresh would fail in any shell that lacks the env var.
+   */
+  private async resolveClientId(): Promise<string> {
+    if (this.clientId) return this.clientId;
+    const entry = await this.store.read("anthropic");
+    const stored = entry?.clientId;
+    if (!stored) {
+      throw new Error(
+        "No OAuth client id available. Set ANTHROPIC_CLIENT_ID or run `oracle login --provider anthropic --client-id <id>`."
+      );
+    }
+    return stored;
+  }
+
   async getValidToken(): Promise<string | null> {
     const entry = await this.store.read("anthropic");
     if (!entry) return null;
@@ -117,7 +134,8 @@ export class AnthropicOAuthClient {
           accessToken: data.access_token,
           refreshToken: data.refresh_token,
           expiresAt: data.expires_in ? Date.now() + data.expires_in * 1000 : undefined,
-          planTier: decodePlanTier(data.access_token)
+          planTier: decodePlanTier(data.access_token),
+          clientId: this.clientId
         });
         return;
       }
@@ -167,7 +185,7 @@ export class AnthropicOAuthClient {
     }
 
     const res = await post("/oauth/token", {
-      client_id: this.clientId,
+      client_id: await this.resolveClientId(),
       refresh_token: refreshToken,
       grant_type: "refresh_token"
     });
@@ -187,7 +205,8 @@ export class AnthropicOAuthClient {
       accessToken: data.access_token,
       refreshToken: data.refresh_token ?? refreshToken,
       expiresAt: data.expires_in ? Date.now() + data.expires_in * 1000 : undefined,
-      planTier: decodePlanTier(data.access_token)
+      planTier: decodePlanTier(data.access_token),
+      clientId: this.clientId || onDisk?.clientId
     });
     return data.access_token;
   }
