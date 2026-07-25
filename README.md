@@ -73,7 +73,7 @@ Session B: Claude Code → Oracle
 | 📨 **Coordinate** | SQLite message bus for local sessions plus authenticated Remote Swarm rooms across machines. Messages, replies, acknowledgements, presence, and task events are durable. | Local: `oracle_msg_*` / `oracle msg ...`. Remote: `oracle connect`, `oracle team ...`. |
 | ✅ **Verify** | Durable task/message coordination: lifecycle notifications are persisted before delivery, linked back to their Task and Swarm, and recover safely without duplicates. Checklist submit still **blocks** while verification is incomplete. | MCP: `oracle_task_*`, `oracle_coordination_recover`. CLI: `oracle task ...`, `oracle swarm .../recover`. |
 | ⏰ **Runtime** | Persistent daemon owning SQLite coordination, Scheduler, token-scoped Remote Swarm API, and replayable WebSocket events. | CLI: `oracle daemon start/status/events/stop`, `oracle schedule ...`, `oracle team ...`. |
-| 🖥️ **Control** | Human control plane with approval inbox, task workflow, memory distribution, and audit visualization. Task approvals close through the existing durable coordination flow. | TUI: `oracle control`. Web: `oracle control url`. Decisions: `oracle approval ...`. |
+| 🖥️ **Control** | Human control plane with approval inbox, task workflow, memory distribution, audit visualization, agent presence, and scheduler management. WebSocket live updates with auto-reconnect. Per-tab actions: submit/close tasks, run/pause/delete scheduler jobs, memory maintenance. | TUI: `oracle control`. Web: `oracle control url`. Decisions: `oracle approval ...`. |
 
 ---
 
@@ -97,8 +97,8 @@ Start the local control plane:
 
 ```bash
 oracle daemon start
-oracle control              # interactive terminal UI
-oracle control url          # authenticated local web dashboard
+oracle control              # interactive terminal UI (7 tabs, live updates, per-tab actions)
+oracle control url          # authenticated web dashboard (approvals, tasks, scheduler, agents, audit)
 ```
 
 ### Wire up an MCP client
@@ -423,7 +423,8 @@ Oracle MCP Server (src/mcp/)
 ├─ Runtime (src/runtime/)
 │  └─ Daemon + SQLite + Remote Swarm + Scheduler + HTTP/WebSocket API
 ├─ Control Center (src/control/)
-│  └─ Ink TUI + dashboard + quorum/expiry/execute-once approvals
+│  └─ Ink TUI + web dashboard + quorum/expiry/execute-once approvals +
+│     WebSocket live updates, task/scheduler/memory actions
 ├─ Observability (src/observability/)
 │  └─ Structured JSON logging to stderr
 ├─ Identity & Personas (src/identity/)
@@ -526,8 +527,8 @@ npm run typecheck        # tsc --noEmit
 npm run build            # tsc -> dist/
 ```
 
-325 tests cover messaging, memory, Remote Swarm, Runtime, agent sandbox, bash
-tool, and MCP integration.
+366 tests cover messaging, memory, Remote Swarm, Runtime, agent sandbox, bash
+tool, MCP integration, and Control Center.
 
 ---
 
