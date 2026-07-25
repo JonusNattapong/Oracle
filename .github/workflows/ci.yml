@@ -7,9 +7,11 @@ on:
     branches: [ main ]
 
 # A push to a PR branch matches both triggers above and would otherwise start
-# two identical runs. Collapse them, and drop superseded runs on re-push.
+# two identical runs. Group by the head commit so both events land in the same
+# group: on pull_request, github.sha is the merge commit rather than the head,
+# so read the head sha explicitly. Also drops superseded runs on re-push.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.head.sha || github.sha }}
   cancel-in-progress: true
 
 jobs:

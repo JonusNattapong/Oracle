@@ -196,8 +196,9 @@ describe("MemoryAdapter — end to end", () => {
     const old = await memory.remember("me", "fact", "old memory about caching");
     const recent = await memory.remember("me", "fact", "recent memory about caching");
 
-    // Manually boost recent's access count to simulate recency boost
-    const recentPath = path.join(tmp, ".oracle-memory", "fact", `${recent.id}.json`);
+    // Manually boost recent's access count to simulate recency boost.
+    // The on-disk directory for "fact" is "facts" (see TYPE_DIR in adapter.ts).
+    const recentPath = path.join(tmp, ".oracle-memory", "facts", `${recent.id}.json`);
     const recentRaw = JSON.parse(await fs.readFile(recentPath, "utf8"));
     recentRaw.lastAccessed = new Date().toISOString();
     await fs.writeFile(recentPath, JSON.stringify(recentRaw), "utf8");
