@@ -2,6 +2,62 @@
 
 `.oracle/config.json` defines Oracle's runtime behavior per project.
 
+## v0.7.0 additions
+
+### Provider credentials
+
+| Provider | Environment variable | Notes |
+|---|---|---|
+| Anthropic | `ANTHROPIC_API_KEY` | |
+| OpenAI | `OPENAI_API_KEY` | `OPENAI_API_BASE` to redirect |
+| Gemini | `GEMINI_API_KEY` or `GOOGLE_API_KEY` | `GEMINI_API_BASE` to redirect |
+| OpenCode | `OPENCODE_API_KEY` | any OpenAI-compatible endpoint |
+| Codex | — | uses local CLI login state |
+
+`oracle models` lists every model and which providers have credentials.
+
+### Cost accounting
+
+Spend is recorded automatically for every consult:
+
+```bash
+oracle usage                 # today
+oracle usage week --agent planner
+oracle usage budget 25 -w month
+oracle usage prune --days 90
+```
+
+Cost is derived from a built-in price table. Local providers (Ollama) are
+free; a model absent from the table reports `$0` and says so, rather than
+inventing a price. Attribute a call with `oracle ask --agent <name>`.
+
+### Sandbox
+
+```jsonc
+{
+  "sandbox": {
+    "mode": "docker",      // "docker" | "namespace" | "none"
+    "memoryMB": 512,
+    "cpus": 0.5,
+    "maxProcesses": 128,
+    "allowNetwork": false  // outbound network is denied by default
+  }
+}
+```
+
+`ORACLE_SANDBOX_IMAGE` overrides the container image (default `alpine:3.20`).
+Omitting `mode` auto-detects the strongest available. Naming a mode the host
+cannot provide is an error — Oracle will not quietly run your agent with no
+isolation because Docker was missing.
+
+### Memory graph
+
+```bash
+oracle memory graph show --limit 20 --connected
+oracle memory graph entity Redis
+oracle memory graph path Oracle Docker
+```
+
 ## Schema v1.0
 
 ```jsonc

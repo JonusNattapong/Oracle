@@ -409,6 +409,21 @@ export class MemoryAdapter implements MemoryPort {
     return this.entityGraph.getStats();
   }
 
+  /** Renderable graph projection for the dashboard and `oracle memory graph`. */
+  async getGraphView(opts?: { limit?: number; includeIsolated?: boolean }): Promise<import("./entityGraph.js").GraphView> {
+    return this.entityGraph.toGraphView(opts);
+  }
+
+  /** One entity with its relations and mentioning memories. */
+  async getGraphEntity(name: string): Promise<import("./entityGraph.js").EntityDetail | null> {
+    return this.entityGraph.getEntity(name);
+  }
+
+  /** Entities ordered by connectedness. */
+  async listGraphEntities(limit?: number): Promise<Array<import("./entityGraph.js").Entity & { degree: number }>> {
+    return this.entityGraph.listEntities(limit);
+  }
+
   /** Prune stale/isolated entities from the graph. */
   async graphPrune(maxAgeDays?: number): Promise<{ removedEntities: number; removedEdges: number }> {
     return this.entityGraph.pruneGraph(maxAgeDays);

@@ -196,11 +196,12 @@ describe("MemoryAdapter — end to end", () => {
     const old = await memory.remember("me", "fact", "old memory about caching");
     const recent = await memory.remember("me", "fact", "recent memory about caching");
 
-    // Manually boost recent's access count to simulate recency boost
-    const recentPath = path.join(tmp, ".oracle-memory", "fact", `${recent.id}.json`);
-    const recentRaw = JSON.parse(await fs.readFile(recentPath, "utf8"));
-    recentRaw.lastAccessed = new Date().toISOString();
-    await fs.writeFile(recentPath, JSON.stringify(recentRaw), "utf8");
+    // Backdate the older entry so recency is the only thing separating them.
+    const oldPath = path.join(tmp, ".oracle-memory", "facts", `${old.id}.json`);
+    const oldRaw = JSON.parse(await fs.readFile(oldPath, "utf8"));
+    oldRaw.lastAccessed = new Date(Date.now() - 365 * 86_400_000).toISOString();
+    oldRaw.ts = oldRaw.lastAccessed;
+    await fs.writeFile(oldPath, JSON.stringify(oldRaw), "utf8");
 
     const hits = await memory.scoredSearchMemories("caching");
     expect(hits.length).toBeGreaterThan(0);

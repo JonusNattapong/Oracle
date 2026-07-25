@@ -22,10 +22,23 @@ function createSessionId(prompt: string): string {
   return `${slug}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
+/**
+ * Records a completed call's token usage. Kept as a narrow callback so
+ * ConsultService does not have to own a database handle.
+ */
+export type CostSink = (entry: {
+  provider: string;
+  model: string;
+  agent?: string;
+  inputTokens: number;
+  outputTokens: number;
+}) => void;
+
 export class ConsultService {
   constructor(
     private readonly provider: Provider,
-    private readonly sessions = new FileSessionStore()
+    private readonly sessions = new FileSessionStore(),
+    private readonly costSink?: CostSink
   ) {}
 
   async consult(request: ConsultRequest): Promise<ConsultResult> {
@@ -106,6 +119,18 @@ export class ConsultService {
         usage: response.usage,
         error: undefined
       };
+
+      // Accounting is best-effort: a bookkeeping failure must not turn a
+      // successful consult into an error.
+      try {
+        this.costSink?.({
+          provider: request.provider ?? this.provider.id,
+          model,
+          agent: request.agent,
+          inputTokens: response.usage.inputTokens ?? 0,
+          outputTokens: response.usage.outputTokens ?? 0,
+        });
+      } catch { /* ignore */ }
     } catch (error) {
       record = {
         ...record,

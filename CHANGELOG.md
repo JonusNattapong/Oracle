@@ -10,6 +10,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Web dashboard Scheduler card with Run, Pause/Resume, and Delete job actions
 
+## [0.7.0] - 2026-07-25
+
+### Added
+- **Cost & token accounting** — provider spend is recorded and queryable
+  - `CostTracker` aggregates by window (today/week/month/all), provider, and agent
+  - Schema v8 `cost_log` table, indexed by time, agent, and provider
+  - Built-in price table (per 1M tokens) with longest-prefix model matching;
+    local providers are free, unknown models report `$0` rather than a guess
+  - `oracle usage [window] [--agent]`, `oracle usage budget <limit>`, `oracle usage prune`
+  - `oracle ask --agent <name>` attributes a call; unattributed calls are
+    reported as `(unattributed)` instead of being dropped
+  - Budget checks return ok / warn (80%) / exceeded, and `budget` exits 1 when over
+
+- **Gemini provider** — `gemini-2.0-flash`, `gemini-2.0-pro`, `gemini-1.5-*`
+  - REST-based, so no new dependency is added
+  - API key sent as an `x-goog-api-key` header, never in the URL
+  - Safety blocks raise an error rather than returning an empty answer
+  - `oracle models` lists every provider's models and which have credentials
+  - `providerForModel()` routes a model name to its provider
+
+- **Sandbox hardening** — real containment for the agent's `bash` tool
+  - Docker mode: no network, capped memory/swap/cpu, `--pids-limit` fork ceiling,
+    all capabilities dropped, `no-new-privileges`, read-only root with a
+    writable workspace mount and a `noexec` tmpfs
+  - Namespace mode: unshared user/pid/net namespaces via `unshare(1)` with a
+    `ulimit -u` fork ceiling (Linux only)
+  - `detectSandboxMode()` picks the strongest available; requesting a mode the
+    host cannot provide is an error, never a silent downgrade to no isolation
+  - Schema v8 `sandbox_runs` table for mode, duration, exit code, and kills
+
+- **Memory graph visualization** — the entity graph is now inspectable
+  - `EntityGraph.toGraphView()` returns render-ready nodes/edges ranked by
+    connectedness; edges to dropped nodes are filtered so no edge dangles
+  - Truncated views report `stats.truncated` so a partial graph never reads
+    as the whole graph
+  - `EntityGraph.getEntity()` returns relations with direction and weight
+  - `oracle memory graph show|entity|path`
+
+### Changed
+- `ConsultService` accepts an optional `CostSink`; accounting failures are
+  swallowed so bookkeeping can never fail a successful consult
+- `ConsultRequest` gains an optional `agent` field for cost attribution
+- `EntityGraph.getEntity()` falls back to a case-insensitive lookup, so
+  `entity redis` finds a node stored as `Redis`
+- Schema v8 supersedes v7
+
+### Fixed
+- `adapter.e2e.test.ts` recency test read from `.oracle-memory/fact/` instead of
+  the real `facts/` directory, so it never exercised the ranking it asserted
+
+### Known issues
+- On Windows, `src/tasks/store.test.ts` and several other SQLite-backed suites
+  fail in teardown with `EBUSY` unlinking `oracle.db`. This predates 0.7.0 and
+  is a file-locking quirk of the platform, not a product defect; CI runs Linux.
+
 ## [0.6.0] - 2026-07-25
 
 ### Added

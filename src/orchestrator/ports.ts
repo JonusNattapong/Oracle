@@ -40,6 +40,15 @@ export interface MemoryPort {
   /** Prune stale/isolated entities from the entity graph. */
   graphPrune?(maxAgeDays?: number): Promise<{ removedEntities: number; removedEdges: number }>;
 
+  /** Renderable projection of the entity graph. */
+  getGraphView?(opts?: { limit?: number; includeIsolated?: boolean }): Promise<import("../memory/entityGraph.js").GraphView>;
+
+  /** One entity with its relations and mentioning memories. */
+  getGraphEntity?(name: string): Promise<import("../memory/entityGraph.js").EntityDetail | null>;
+
+  /** Entities ordered by connectedness. */
+  listGraphEntities?(limit?: number): Promise<Array<import("../memory/entityGraph.js").Entity & { degree: number }>>;
+
   /** Merge near-duplicate memories by tag overlap */
   consolidate?(): Promise<{ consolidated: number; created: MemoryStoreEntry | null; archived: string[] }>;
 

@@ -57,6 +57,32 @@ import { buildOracleSystemPrompt } from "./core/systemPrompt.js";
 import { getConversationContext, recordSelfLog } from "./core/selfMemory.js";
 import { buildWiki, getWikiPage, listWikiTopics } from "./wiki/compile.js";
 
+/**
+ * Open a cost-logging sink backed by the runtime database.
+ *
+ * Accounting must never be the reason a consult fails, so a database that
+ * cannot be opened yields a no-op sink rather than an error.
+ */
+async function createCostSink(): Promise<{
+  sink: import("./core/consult.js").CostSink | undefined;
+  close: () => void;
+}> {
+  try {
+    const [{ RuntimeDatabase }, { CostTracker }] = await Promise.all([
+      import("./runtime/database.js"),
+      import("./runtime/costTracker.js"),
+    ]);
+    const database = new RuntimeDatabase(homeDir());
+    const tracker = new CostTracker(database.connection);
+    return {
+      sink: (entry) => tracker.log(entry),
+      close: () => { try { database.close(); } catch { /* ignore */ } },
+    };
+  } catch {
+    return { sink: undefined, close: () => {} };
+  }
+}
+
 const homeDir = (): string =>
   process.env.ORACLE_HOME_DIR ?? path.join(os.homedir(), ".oracle");
 
@@ -77,6 +103,7 @@ program
   .option("-m, --model <model>", "Model override")
   .option("--provider <provider>", "Provider override")
   .option("--cwd <path>", "Working directory", process.cwd())
+  .option("--agent <name>", "Attribute this call to an agent for cost accounting")
   .action(async (question, options) => {
     const cwd = path.resolve(options.cwd);
     const finalProvider = options.provider ?? "codex";
@@ -85,7 +112,8 @@ program
     const failedCheck = checks.find((chk) => !chk.ok);
     if (failedCheck) throw new Error(`${failedCheck.name}: ${failedCheck.detail}`);
 
-    const service = new ConsultService(createProvider(parsedProvider));
+    const { sink: costSink, close: closeCostSink } = await createCostSink();
+    const service = new ConsultService(createProvider(parsedProvider), undefined, costSink);
     const soulsDir = path.join(homeDir(), "souls");
 
     // Build system prompt — use specific soul if --soul given, otherwise auto-detect mood
@@ -116,8 +144,10 @@ program
       model: options.model ?? "gpt-5.4",
       cwd,
       systemPrompt,
-      allowEmptyFiles: !hasFiles
+      allowEmptyFiles: !hasFiles,
+      agent: options.agent
     });
+    closeCostSink();
 
     if (options.conversation) {
       await recordSelfLog(memory, options.conversation, { question, answerSummary: result.output.slice(0, 400) });
@@ -355,6 +385,218 @@ memCmd
     const memory = await orchestrator.createMemoryAdapter();
     const count = await memory.clearWorking(agent ?? undefined);
     console.log(`Cleared ${count} working memory entries.`);
+  });
+
+// ── memory graph ─────────────────────────────────────────────────
+const graphCmd = memCmd.command("graph").description("Explore the memory entity graph");
+
+graphCmd
+  .command("show")
+  .description("Show entity graph overview")
+  .option("-n, --limit <number>", "Max entities", "20")
+  .option("--connected", "Hide entities with no relations", false)
+  .action(async (options) => {
+    const orchestrator = new OrchestratorFactory(process.cwd(), homeDir());
+    const memory = await orchestrator.createMemoryAdapter();
+    if (!memory.getGraphView) {
+      console.error("The active memory backend does not expose an entity graph.");
+      process.exitCode = 1;
+      return;
+    }
+    const view = await memory.getGraphView({
+      limit: Number(options.limit),
+      includeIsolated: !options.connected,
+    });
+
+    if (!view.nodes.length) {
+      console.log("Graph is empty — remember something first.");
+      return;
+    }
+
+    console.log(`Entities: ${view.stats.totalEntities}   Edges: ${view.stats.totalEdges}`);
+    if (view.stats.truncated) {
+      console.log(`Showing top ${view.stats.renderedEntities} by connectedness.\n`);
+    } else {
+      console.log("");
+    }
+
+    for (const node of view.nodes) {
+      const mem = `${node.memoryCount} ${node.memoryCount === 1 ? "memory" : "memories"}`;
+      console.log(`  ${node.label.padEnd(24)} ${node.type.padEnd(12)} ${String(node.degree).padStart(3)} edges  ${mem}`);
+    }
+  });
+
+graphCmd
+  .command("entity")
+  .description("Show one entity's relations and memories")
+  .argument("<name>", "Entity name")
+  .action(async (name) => {
+    const orchestrator = new OrchestratorFactory(process.cwd(), homeDir());
+    const memory = await orchestrator.createMemoryAdapter();
+    if (!memory.getGraphEntity) {
+      console.error("The active memory backend does not expose an entity graph.");
+      process.exitCode = 1;
+      return;
+    }
+    const detail = await memory.getGraphEntity(name);
+
+    if (!detail) {
+      console.log(`Entity not found: ${name}. Try \`oracle memory graph show\`.`);
+      process.exitCode = 1;
+      return;
+    }
+
+    console.log(`${detail.name}  [${detail.type}]`);
+    if (detail.aliases.length) console.log(`  aliases: ${detail.aliases.join(", ")}`);
+    console.log(`  first seen: ${detail.firstSeen.slice(0, 19)}`);
+    console.log(`  last seen:  ${detail.lastSeen.slice(0, 19)}`);
+
+    if (detail.relations.length) {
+      console.log("\n  Relations:");
+      for (const rel of detail.relations) {
+        const arrow = rel.direction === "out" ? "→" : "←";
+        console.log(`    ${arrow} ${rel.relation.padEnd(16)} ${rel.other}  (${rel.weight})`);
+      }
+    } else {
+      console.log("\n  No relations recorded.");
+    }
+
+    console.log(`\n  Memories (${detail.memoryIds.length}):`);
+    for (const id of detail.memoryIds.slice(0, 10)) console.log(`    ${id}`);
+    if (detail.memoryIds.length > 10) {
+      console.log(`    … and ${detail.memoryIds.length - 10} more`);
+    }
+  });
+
+graphCmd
+  .command("path")
+  .description("Find the shortest relation path between two entities")
+  .argument("<from>", "Start entity")
+  .argument("<to>", "End entity")
+  .action(async (from, to) => {
+    const orchestrator = new OrchestratorFactory(process.cwd(), homeDir());
+    const memory = await orchestrator.createMemoryAdapter();
+    if (!memory.graphFindPath) {
+      console.error("The active memory backend does not expose an entity graph.");
+      process.exitCode = 1;
+      return;
+    }
+    const hops = await memory.graphFindPath(from, to);
+
+    if (!hops.length) {
+      console.log(`No path found between "${from}" and "${to}".`);
+      process.exitCode = 1;
+      return;
+    }
+
+    console.log(`Path (${hops.length} ${hops.length === 1 ? "hop" : "hops"}):`);
+    for (const hop of hops) console.log(`  ${hop.from} --[${hop.relation}]--> ${hop.to}`);
+  });
+
+// ── usage ────────────────────────────────────────────────────────
+const usageCmd = program.command("usage").description("Token and cost accounting across provider calls");
+
+async function withCostTracker<T>(fn: (tracker: import("./runtime/costTracker.js").CostTracker) => T): Promise<T> {
+  const [{ RuntimeDatabase }, { CostTracker }] = await Promise.all([
+    import("./runtime/database.js"),
+    import("./runtime/costTracker.js"),
+  ]);
+  const database = new RuntimeDatabase(homeDir());
+  try {
+    return fn(new CostTracker(database.connection));
+  } finally {
+    database.close();
+  }
+}
+
+function printCostSummary(summary: import("./runtime/costTracker.js").CostSummary): void {
+  if (!summary.calls) {
+    console.log(`No recorded calls for: ${summary.window}`);
+    return;
+  }
+
+  const usd = (n: number) => `$${n.toFixed(4)}`;
+  console.log(`${summary.window}: ${summary.totalTokens.toLocaleString()} tokens  ${usd(summary.totalCostUSD)}  (${summary.calls} calls, avg ${usd(summary.avgCostPerCall)})`);
+
+  const section = (title: string, rows: Record<string, { tokens: number; costUSD: number; calls: number }>) => {
+    const entries = Object.entries(rows).sort((a, b) => b[1].costUSD - a[1].costUSD);
+    if (!entries.length) return;
+    console.log(`\n  ${title}`);
+    for (const [key, value] of entries) {
+      console.log(`    ${key.padEnd(20)} ${String(value.tokens).padStart(10)} tokens  ${usd(value.costUSD).padStart(10)}  ${value.calls} calls`);
+    }
+  };
+
+  section("By provider", summary.byProvider);
+  section("By agent", summary.byAgent);
+
+  // Cost is 0 for models absent from the price table; say so rather than
+  // letting a $0.0000 total read as "this was free".
+  if (summary.totalCostUSD === 0) {
+    console.log("\n  Cost is $0 — the models used are local or absent from the price table.");
+  }
+}
+
+usageCmd
+  .command("show", { isDefault: true })
+  .description("Show token usage and cost")
+  .argument("[window]", "today | week | month | all", "today")
+  .option("--agent <name>", "Restrict to one agent")
+  .action(async (window, options) => {
+    const valid = ["today", "week", "month", "all"];
+    if (!valid.includes(window)) {
+      console.error(`Unknown window: ${window}. Expected ${valid.join(", ")}.`);
+      process.exitCode = 1;
+      return;
+    }
+    const summary = await withCostTracker((t) => t.summary(window, { agent: options.agent }));
+    printCostSummary(summary);
+  });
+
+usageCmd
+  .command("budget")
+  .description("Check spend against a budget ceiling")
+  .argument("<limit>", "Budget in USD")
+  .option("-w, --window <window>", "today | week | month | all", "today")
+  .action(async (limit, options) => {
+    const limitUSD = Number(limit);
+    if (!Number.isFinite(limitUSD) || limitUSD <= 0) {
+      console.error(`Invalid budget: ${limit}. Expected a positive number.`);
+      process.exitCode = 1;
+      return;
+    }
+    const result = await withCostTracker((t) => t.checkBudget(limitUSD, options.window));
+    console.log(result.message);
+    if (result.level === "exceeded") process.exitCode = 1;
+  });
+
+usageCmd
+  .command("prune")
+  .description("Delete cost records older than the retention window")
+  .option("-d, --days <number>", "Retention in days", "90")
+  .action(async (options) => {
+    const removed = await withCostTracker((t) => t.prune(Number(options.days)));
+    console.log(`Removed ${removed} cost record(s) older than ${options.days} days.`);
+  });
+
+// ── models ───────────────────────────────────────────────────────
+program
+  .command("models")
+  .description("List models by provider and show which are usable now")
+  .action(async () => {
+    const { PROVIDER_MODELS, detectAvailableProviders } = await import("./providers/factory.js");
+    const available = new Set(detectAvailableProviders());
+
+    for (const [provider, models] of Object.entries(PROVIDER_MODELS)) {
+      // `codex` depends on CLI login state, which env detection cannot see.
+      const status = provider === "codex"
+        ? "run `oracle doctor` to check"
+        : available.has(provider as never)
+          ? "available"
+          : "no credentials";
+      console.log(`${provider.padEnd(12)} (${status})`);
+      for (const model of models) console.log(`  ${model}`);
+    }
   });
 
 const wikiCmd = program.command("wiki").description("Compile facts/insights into a topic-grouped memory wiki");

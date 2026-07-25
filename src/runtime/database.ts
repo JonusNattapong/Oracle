@@ -456,8 +456,41 @@ export class RuntimeDatabase {
       version = 7;
     }
 
-    if (version > 7) {
-      throw new Error(`Runtime database schema ${version} is newer than supported schema 7.`);
+    if (version < 8) {
+      this.applyMigration(8, `
+        CREATE TABLE cost_log (
+          id TEXT PRIMARY KEY,
+          provider TEXT NOT NULL,
+          model TEXT NOT NULL,
+          agent TEXT,
+          input_tokens INTEGER NOT NULL DEFAULT 0,
+          output_tokens INTEGER NOT NULL DEFAULT 0,
+          cost_usd REAL NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX cost_log_created_idx ON cost_log(created_at DESC);
+        CREATE INDEX cost_log_agent_idx ON cost_log(agent, created_at DESC);
+        CREATE INDEX cost_log_provider_idx ON cost_log(provider, created_at DESC);
+
+        CREATE TABLE sandbox_runs (
+          id TEXT PRIMARY KEY,
+          mode TEXT NOT NULL CHECK (mode IN ('docker', 'namespace', 'none')),
+          command TEXT NOT NULL,
+          exit_code INTEGER,
+          duration_ms INTEGER NOT NULL DEFAULT 0,
+          killed INTEGER NOT NULL DEFAULT 0 CHECK (killed IN (0, 1)),
+          error TEXT,
+          created_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX sandbox_runs_created_idx ON sandbox_runs(created_at DESC);
+      `);
+      version = 8;
+    }
+
+    if (version > 8) {
+      throw new Error(`Runtime database schema ${version} is newer than supported schema 8.`);
     }
   }
 

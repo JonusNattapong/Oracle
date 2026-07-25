@@ -1,10 +1,13 @@
 import { AnthropicProvider } from "./anthropic.js";
 import { CodexCliProvider, runCommand, type CommandRunner } from "./codex.js";
 import { OpenAIProvider, OpenCodeProvider } from "./openai.js";
+import { GeminiProvider, GEMINI_MODELS } from "./gemini.js";
 import type { Provider } from "./provider.js";
 import type { AgentProvider } from "../agent/types.js";
 
-export type ProviderName = "codex" | "openai" | "anthropic" | "opencode";
+export type ProviderName = "codex" | "openai" | "anthropic" | "opencode" | "gemini";
+
+const PROVIDER_NAMES: readonly ProviderName[] = ["codex", "openai", "anthropic", "opencode", "gemini"];
 
 export interface DoctorCheck {
   name: string;
@@ -13,8 +16,8 @@ export interface DoctorCheck {
 }
 
 export function parseProviderName(value = "codex"): ProviderName {
-  if (value === "codex" || value === "openai" || value === "anthropic" || value === "opencode") return value;
-  throw new Error(`Unknown provider: ${value}. Expected codex, openai, anthropic, or opencode.`);
+  if ((PROVIDER_NAMES as readonly string[]).includes(value)) return value as ProviderName;
+  throw new Error(`Unknown provider: ${value}. Expected ${PROVIDER_NAMES.join(", ")}.`);
 }
 
 export function createProvider(name: ProviderName = "codex"): Provider {
@@ -22,8 +25,45 @@ export function createProvider(name: ProviderName = "codex"): Provider {
     case "anthropic": return new AnthropicProvider();
     case "openai": return new OpenAIProvider();
     case "opencode": return new OpenCodeProvider();
+    case "gemini": return new GeminiProvider();
     default: return new CodexCliProvider();
   }
+}
+
+/** Models each provider serves, for `oracle models list`. */
+export const PROVIDER_MODELS: Record<ProviderName, readonly string[]> = {
+  anthropic: ["claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5"],
+  openai: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini"],
+  gemini: GEMINI_MODELS,
+  opencode: ["(any OpenAI-compatible model via OPENCODE_MODEL)"],
+  codex: ["(whatever the local codex CLI is logged into)"],
+};
+
+/**
+ * Which providers are usable right now, based on credentials in the environment.
+ * `codex` is excluded: it depends on a CLI binary and login state, which only
+ * `checkProvider` can determine, and it does so by shelling out.
+ */
+export function detectAvailableProviders(env: NodeJS.ProcessEnv = process.env): ProviderName[] {
+  const available: ProviderName[] = [];
+  if (env.ANTHROPIC_API_KEY) available.push("anthropic");
+  if (env.OPENAI_API_KEY) available.push("openai");
+  if (env.GEMINI_API_KEY || env.GOOGLE_API_KEY) available.push("gemini");
+  if (env.OPENCODE_API_KEY || (env.OPENAI_API_KEY && env.OPENCODE_API_BASE)) available.push("opencode");
+  return available;
+}
+
+/**
+ * Route a model name to the provider that serves it.
+ * Returns null when the name matches no known family, so callers can decide
+ * whether to error or fall back rather than being handed a wrong provider.
+ */
+export function providerForModel(model: string): ProviderName | null {
+  const name = model.toLowerCase();
+  if (name.startsWith("claude")) return "anthropic";
+  if (name.startsWith("gemini")) return "gemini";
+  if (name.startsWith("gpt") || name.startsWith("o1") || name.startsWith("o3")) return "openai";
+  return null;
 }
 
 /** Providers that implement the agentic tool-use loop (read/write/bash). */
@@ -62,6 +102,26 @@ export async function checkProvider(
   if (name === "anthropic") {
     return [
       { name: "ANTHROPIC_API_KEY", ok: Boolean(process.env.ANTHROPIC_API_KEY), detail: process.env.ANTHROPIC_API_KEY ? "set" : "not set" },
+    ];
+  }
+
+  if (name === "gemini") {
+    const key = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
+    return [
+      {
+        name: "GEMINI_API_KEY",
+        ok: Boolean(key),
+        detail: process.env.GEMINI_API_KEY
+          ? "set"
+          : process.env.GOOGLE_API_KEY
+            ? "set (GOOGLE_API_KEY)"
+            : "not set",
+      },
+      {
+        name: "GEMINI_API_BASE",
+        ok: true,
+        detail: process.env.GEMINI_API_BASE ?? "default (generativelanguage.googleapis.com)",
+      },
     ];
   }
 

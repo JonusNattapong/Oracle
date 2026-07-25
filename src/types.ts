@@ -18,6 +18,8 @@ export interface ConsultRequest {
   maxInputBytes?: number;
   previousResponseId?: string;
   allowEmptyFiles?: boolean;
+  /** Attribution for cost accounting; unset calls are reported as unattributed. */
+  agent?: string;
 }
 
 export interface TokenUsage {

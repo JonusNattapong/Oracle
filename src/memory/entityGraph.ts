@@ -39,6 +39,50 @@ export interface PathHop {
   to: string;
 }
 
+/** A node as rendered by the graph view. */
+export interface GraphViewNode {
+  id: string;
+  label: string;
+  type: EntityType;
+  memoryCount: number;
+  degree: number;
+  lastSeen: string;
+}
+
+/** An edge as rendered by the graph view. */
+export interface GraphViewEdge {
+  source: string;
+  target: string;
+  relation: string;
+  weight: number;
+}
+
+/**
+ * A renderable projection of the graph. `stats.truncated` is reported rather
+ * than left implicit so a partial view never reads as the whole graph.
+ */
+export interface GraphView {
+  nodes: GraphViewNode[];
+  edges: GraphViewEdge[];
+  stats: {
+    totalEntities: number;
+    totalEdges: number;
+    renderedEntities: number;
+    truncated: boolean;
+  };
+}
+
+export interface EntityRelation {
+  relation: string;
+  other: string;
+  direction: "in" | "out";
+  weight: number;
+}
+
+export interface EntityDetail extends Entity {
+  relations: EntityRelation[];
+}
+
 interface GraphData {
   entities: Record<string, Entity>;
   edges: Edge[];
@@ -446,6 +490,115 @@ export class EntityGraph {
     await this.ready;
     const data = await this.load();
     return { entityCount: Object.keys(data.entities).length, edgeCount: data.edges.length };
+  }
+
+  /**
+   * Serialize the graph for rendering.
+   *
+   * `limit` keeps the most-connected entities, since a force-directed layout
+   * degrades well before the graph does. Edges are filtered to those whose
+   * endpoints both survive, so the result never references a dropped node.
+   */
+  async toGraphView(opts?: { limit?: number; includeIsolated?: boolean }): Promise<GraphView> {
+    await this.ready;
+    const data = await this.load();
+    const limit = opts?.limit ?? 200;
+    const includeIsolated = opts?.includeIsolated ?? true;
+
+    const degree = new Map<string, number>();
+    for (const edge of data.edges) {
+      degree.set(edge.from, (degree.get(edge.from) ?? 0) + 1);
+      degree.set(edge.to, (degree.get(edge.to) ?? 0) + 1);
+    }
+
+    const allEntities = Object.values(data.entities);
+    const totalEntities = allEntities.length;
+
+    const ranked = allEntities
+      .filter((e) => includeIsolated || (degree.get(e.name) ?? 0) > 0)
+      .sort((a, b) => {
+        const byDegree = (degree.get(b.name) ?? 0) - (degree.get(a.name) ?? 0);
+        if (byDegree !== 0) return byDegree;
+        return b.memoryIds.length - a.memoryIds.length;
+      })
+      .slice(0, limit);
+
+    const kept = new Set(ranked.map((e) => e.name));
+
+    return {
+      nodes: ranked.map((e) => ({
+        id: e.name,
+        label: e.aliases[0] ?? e.name,
+        type: e.type,
+        memoryCount: e.memoryIds.length,
+        degree: degree.get(e.name) ?? 0,
+        lastSeen: e.lastSeen,
+      })),
+      edges: data.edges
+        .filter((edge) => kept.has(edge.from) && kept.has(edge.to))
+        .map((edge) => ({
+          source: edge.from,
+          target: edge.to,
+          relation: edge.relation,
+          weight: edge.memoryIds.length,
+        })),
+      stats: {
+        totalEntities,
+        totalEdges: data.edges.length,
+        renderedEntities: ranked.length,
+        truncated: ranked.length < totalEntities,
+      },
+    };
+  }
+
+  /**
+   * One entity with its edges and the memory ids that mention it.
+   *
+   * Canonical names keep their original casing, so an exact hit is tried first
+   * and a case-insensitive scan second — otherwise `entity redis` would miss a
+   * node stored as `Redis`, which is how a human would type it.
+   */
+  async getEntity(rawName: string): Promise<EntityDetail | null> {
+    await this.ready;
+    const data = await this.load();
+    const canonicalName = canonical(rawName);
+    let name = canonicalName;
+    let entity = data.entities[name];
+
+    if (!entity) {
+      const wanted = canonicalName.toLowerCase();
+      const match = Object.keys(data.entities).find((key) => key.toLowerCase() === wanted);
+      if (match) {
+        name = match;
+        entity = data.entities[match];
+      }
+    }
+
+    if (!entity) return null;
+
+    return {
+      ...entity,
+      relations: data.edges
+        .filter((e) => e.from === name || e.to === name)
+        .map((e) => ({
+          relation: e.relation,
+          other: e.from === name ? e.to : e.from,
+          direction: e.from === name ? ("out" as const) : ("in" as const),
+          weight: e.memoryIds.length,
+        })),
+    };
+  }
+
+  /** Entities ordered by connectedness, for a CLI overview. */
+  async listEntities(limit = 50): Promise<Array<Entity & { degree: number }>> {
+    const view = await this.toGraphView({ limit });
+    const data = await this.load();
+    return view.nodes
+      .map((n) => {
+        const entity = data.entities[n.id];
+        return entity ? { ...entity, degree: n.degree } : null;
+      })
+      .filter((e): e is Entity & { degree: number } => e !== null);
   }
 
   // ── Internal helpers ────────────────────────────────────────────────────
