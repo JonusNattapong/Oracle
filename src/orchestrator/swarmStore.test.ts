@@ -50,4 +50,20 @@ describe("SwarmStore", () => {
     expect(found?.workflow.id).toBe(workflow.id);
     expect(found?.proposal.proposedAction).toBe("Release v1");
   });
+
+  test("imports a legacy JSON workflow without deleting it", async () => {
+    const orchestrator = new SwarmOrchestrator();
+    const workflow = orchestrator.createSwarmWorkflow("Legacy workflow", []);
+    const directory = path.join(home, "swarms");
+    const filePath = path.join(directory, `${workflow.id}.json`);
+    await fs.mkdir(directory, { recursive: true });
+    await fs.writeFile(filePath, JSON.stringify(workflow), "utf8");
+
+    store = new SwarmStore(home);
+    expect(await store.get(workflow.id)).toMatchObject({
+      id: workflow.id,
+      title: "Legacy workflow"
+    });
+    await expect(fs.stat(filePath)).resolves.toBeDefined();
+  });
 });

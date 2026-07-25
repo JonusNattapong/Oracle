@@ -36,9 +36,9 @@ npx -p @oraclepersonal/oracle oracle ask "review this" -f "src/**/*.ts"
 | 🧠 **Remember** | Persistent memory across sessions, auto-ranked by recency, frequency, semantic match, and importance. Entity graph links related knowledge. Auto-consolidation kills duplicates. |
 | 💬 **Consult** | Ask a question with real project context — code files, memory, docs, web search/fetch — and get a grounded, cited answer. |
 | 🛠️ **Act** | An autonomous agent that reads/writes/edits files and runs policy-checked shell commands from the workspace. Risky actions pause for approval; use OS/container isolation for a host sandbox. |
-| 📨 **Coordinate** | A file-backed inter-agent message bus. Agents send, receive, reply in threads, broadcast, and track presence — with self-onboarding via MCP server instructions, so no one has to be told how to use it. |
+| 📨 **Coordinate** | A transactional SQLite bus for local agents plus authenticated Remote Swarm rooms for agents on different machines. |
 | ✅ **Verify** | A task tracker on top of the bus: assign work with a checklist, log progress, and submit for review — which **blocks** until every checklist item is actually checked off. The task creator is notified automatically. |
-| ⏰ **Runtime** | Persistent local daemon for scheduling, SQLite state, an authenticated loopback API, and WebSocket events. |
+| ⏰ **Runtime** | Persistent daemon for SQLite coordination, scheduling, authenticated APIs, and replayable WebSocket events. |
 | 🖥️ **Control** | Blue dashboard and Ink TUI for quorum approvals, guarded execution, workflow recovery, memory, and audit integrity. |
 
 ## Documentation
@@ -57,11 +57,12 @@ npx -p @oraclepersonal/oracle oracle ask "review this" -f "src/**/*.ts"
 | 10 | [Messaging & Task Tracking](MESSAGING.md) | Inter-agent messaging, wake-up tiers, task workflow |
 | 11 | [Scheduler](scheduler.md) | Runtime-backed cron task commands and expressions |
 | 12 | [Runtime](runtime.md) | Daemon, SQLite, local API, WebSocket events, security |
-| 13 | [Control Center](control-center.md) | Dashboard, TUI, approval inbox, Telegram notifications |
-| 14 | [Troubleshooting](troubleshooting.md) | Common issues and how to resolve them |
-| 15 | [Superpowers / Specs](superpowers/specs/) | Architecture design specs |
-| 16 | [Changelog](/CHANGELOG.md) | Release notes and version history |
-| 17 | [Init](getting-started.md#initialize-the-workspace) | Bootstrap `.oracle/` for a new project |
+| 13 | [Remote Swarm](remote-swarm.md) | Cross-machine agents, scoped tokens, messages, tasks, replay |
+| 14 | [Control Center](control-center.md) | Dashboard, TUI, approval inbox, Telegram notifications |
+| 15 | [Troubleshooting](troubleshooting.md) | Common issues and how to resolve them |
+| 16 | [Superpowers / Specs](superpowers/specs/) | Architecture design specs |
+| 17 | [Changelog](/CHANGELOG.md) | Release notes and version history |
+| 18 | [Init](getting-started.md#initialize-the-workspace) | Bootstrap `.oracle/` for a new project |
 
 ## MCP Tools
 
@@ -75,11 +76,12 @@ live in [MESSAGING.md](MESSAGING.md).
 
 ```
 ~/.oracle/
-├── messages/    # inter-agent message store (atomic JSON per message)
-├── tasks/       # task tracker (atomic JSON per task)
-├── runtime/     # SQLite scheduler/approval state, daemon state, logs
+├── runtime/     # SQLite coordination/scheduler/approval state, daemon state, logs
+├── remote.json  # owner-only Remote Swarm connection profile
+├── messages/    # retained legacy import source
+├── tasks/       # retained legacy import source
 ├── scheduler/   # legacy cron JSON imported into Runtime
-├── agents/      # presence registry
+├── agents/      # retained legacy import source
 ├── memory/      # persistent memory: facts, insights, wiki, entity graph
 ├── skills/      # local skill definitions
 └── souls/       # personality prompts (default/engineer/custom)

@@ -1,46 +1,54 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 import { watch as chokidarWatch, type FSWatcher } from "chokidar";
-import type { AgentMessage } from "./store.js";
+import { MessageStore, type AgentMessage } from "./store.js";
 
 /**
- * Real-time inbox watcher: fires `onMessage` the moment another process drops
- * a message for `agent` into ~/.oracle/messages/. This is the push half of
- * the bus — the store is pull-based, but a watcher process (e.g. `oracle msg
- * watch --exec "tmux send-keys ..."`) can wake an idle agent session the
- * instant something arrives instead of waiting for its next Stop hook.
- *
- * Relies on the store's atomic tmp+rename writes: chokidar sees a single
- * "add" of a complete file, never a partial write. `.tmp` files are ignored
- * defensively anyway.
+ * Watch the SQLite WAL/database files and deliver newly-visible inbox rows.
+ * The query is the source of truth; filesystem events are only a wake-up
+ * signal, so coalesced WAL events cannot lose messages.
  */
 export async function watchInbox(
   homeDir: string,
   agent: string,
-  onMessage: (msg: AgentMessage) => void | Promise<void>
+  onMessage: (message: AgentMessage) => void | Promise<void>
 ): Promise<FSWatcher> {
-  const dir = path.join(homeDir, "messages");
-  await fs.mkdir(dir, { recursive: true });
-
-  const watcher = chokidarWatch(dir, {
+  const store = new MessageStore(homeDir);
+  const initial = await store.inbox(agent, { unreadOnly: true, limit: 1000 });
+  const seen = new Set(initial.map((message) => message.id));
+  const runtimeDir = path.join(homeDir, "runtime");
+  const watcher = chokidarWatch(runtimeDir, {
     ignoreInitial: true,
-    depth: 0,
-    ignored: (p) => p.endsWith(".tmp"),
+    depth: 0
   });
 
-  watcher.on("add", async (filePath) => {
-    if (!filePath.endsWith(".json")) return;
-    let msg: AgentMessage;
+  let running = false;
+  let rerun = false;
+  const scan = async () => {
+    if (running) {
+      rerun = true;
+      return;
+    }
+    running = true;
     try {
-      msg = JSON.parse(await fs.readFile(filePath, "utf8")) as AgentMessage;
-    } catch {
-      return; // partial/corrupt file — the store's atomic writes make this rare
+      do {
+        rerun = false;
+        const messages = await store.inbox(agent, {
+          unreadOnly: true,
+          limit: 1000
+        });
+        for (const message of messages) {
+          if (seen.has(message.id)) continue;
+          seen.add(message.id);
+          await onMessage(message);
+        }
+      } while (rerun);
+    } finally {
+      running = false;
     }
-    const forMe = (msg.to === agent || msg.to === "*") && msg.from !== agent;
-    if (forMe && !(msg.readBy ?? []).includes(agent)) {
-      await onMessage(msg);
-    }
-  });
+  };
 
+  watcher.on("all", () => {
+    void scan();
+  });
   return watcher;
 }

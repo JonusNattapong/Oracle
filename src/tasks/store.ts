@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import { RuntimeDatabase } from "../runtime/database.js";
 import {
   ConsensusEngine,
   type TaskProposal,
@@ -10,9 +11,8 @@ import {
 /**
  * Task tracking for multi-agent work: a lead breaks work into tasks, assigns
  * them, agents record progress notes and check off a verification checklist,
- * then submit for review. Mirrors the message store's design (one atomic
- * JSON file per task under ~/.oracle/tasks/) so it needs no database and
- * composes naturally with the message bus for reporting.
+ * then submit for review. Version 0.5 stores records transactionally in the
+ * Runtime SQLite database and imports legacy ~/.oracle/tasks/*.json once.
  */
 
 export type TaskStatus = "pending" | "in_progress" | "review" | "done" | "blocked" | "cancelled";
@@ -70,7 +70,12 @@ export interface TaskRecord {
 const ACTIVE_STATUSES: TaskStatus[] = ["pending", "in_progress", "review", "blocked"];
 
 export class TaskStore {
-  constructor(private readonly homeDir: string) {}
+  private readonly database: RuntimeDatabase;
+  private importPromise?: Promise<void>;
+
+  constructor(private readonly homeDir: string) {
+    this.database = new RuntimeDatabase(homeDir);
+  }
 
   private dir(): string {
     return path.join(this.homeDir, "tasks");
@@ -80,13 +85,32 @@ export class TaskStore {
     if (!/^[a-z0-9][a-z0-9-]{0,63}$/i.test(id)) {
       throw new Error(`Invalid task id "${id}".`);
     }
-    return path.join(this.dir(), `${id}.json`);
+    return id;
   }
 
-  private async writeAtomic(filePath: string, record: TaskRecord): Promise<void> {
-    const tmp = `${filePath}.${crypto.randomBytes(4).toString("hex")}.tmp`;
-    await fs.writeFile(tmp, JSON.stringify(record, null, 2), "utf8");
-    await fs.rename(tmp, filePath);
+  private async writeAtomic(_id: string, record: TaskRecord): Promise<void> {
+    this.database.connection.prepare(`
+      INSERT INTO coordination_tasks (
+        id, record_json, status, assignee, created_by, workflow_id,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        record_json = excluded.record_json,
+        status = excluded.status,
+        assignee = excluded.assignee,
+        created_by = excluded.created_by,
+        workflow_id = excluded.workflow_id,
+        updated_at = excluded.updated_at
+    `).run(
+      record.id,
+      JSON.stringify(record),
+      record.status,
+      record.assignee,
+      record.createdBy,
+      record.workflowId ?? null,
+      record.createdAt,
+      record.updatedAt
+    );
   }
 
   private newId(): string {
@@ -116,7 +140,7 @@ export class TaskStore {
     parentId?: string;
     workflowId?: string;
   }): Promise<TaskRecord> {
-    await fs.mkdir(this.dir(), { recursive: true });
+    await this.ensureLegacyImported();
     const now = new Date().toISOString();
     const record: TaskRecord = {
       id: this.newId(),
@@ -151,29 +175,26 @@ export class TaskStore {
   }
 
   async get(id: string): Promise<TaskRecord | null> {
+    await this.ensureLegacyImported();
     try {
-      const task = JSON.parse(await fs.readFile(this.filePath(id), "utf8")) as TaskRecord;
-      if (!Array.isArray(task.checklist)) task.checklist = [];
-      if (!Array.isArray(task.notes)) task.notes = [];
-      if (!Array.isArray(task.proposals)) task.proposals = [];
-      if (!Array.isArray(task.messageIds)) task.messageIds = [];
-      if (!Array.isArray(task.coordinationEvents)) task.coordinationEvents = [];
-      return task;
+      this.filePath(id);
     } catch {
       return null;
     }
+    const row = this.database.connection.prepare(`
+      SELECT record_json FROM coordination_tasks WHERE id = ?
+    `).get(id) as { record_json: string } | undefined;
+    if (!row) return null;
+    return this.normalize(JSON.parse(row.record_json) as TaskRecord);
   }
 
   private async readAll(): Promise<TaskRecord[]> {
-    let entries: string[];
-    try {
-      entries = await fs.readdir(this.dir());
-    } catch {
-      return [];
-    }
-    const ids = entries.filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -".json".length));
-    const tasks = await Promise.all(ids.map((id) => this.get(id)));
-    return tasks.filter((t): t is TaskRecord => t !== null);
+    await this.ensureLegacyImported();
+    const rows = this.database.connection.prepare(`
+      SELECT record_json FROM coordination_tasks
+      ORDER BY updated_at ASC
+    `).all() as unknown as Array<{ record_json: string }>;
+    return rows.map((row) => this.normalize(JSON.parse(row.record_json) as TaskRecord));
   }
 
   async list(opts: {
@@ -351,5 +372,66 @@ export class TaskStore {
     task.updatedAt = new Date().toISOString();
     await this.writeAtomic(this.filePath(taskId), task);
     return task;
+  }
+
+  private normalize(task: TaskRecord): TaskRecord {
+    if (!Array.isArray(task.checklist)) task.checklist = [];
+    if (!Array.isArray(task.notes)) task.notes = [];
+    if (!Array.isArray(task.proposals)) task.proposals = [];
+    if (!Array.isArray(task.messageIds)) task.messageIds = [];
+    if (!Array.isArray(task.coordinationEvents)) task.coordinationEvents = [];
+    return task;
+  }
+
+  private ensureLegacyImported(): Promise<void> {
+    this.importPromise ??= this.importLegacy();
+    return this.importPromise;
+  }
+
+  private async importLegacy(): Promise<void> {
+    const completed = this.database.connection.prepare(`
+      SELECT value FROM runtime_metadata
+      WHERE key = 'coordination_tasks_imported_v5'
+    `).get() as { value: string } | undefined;
+    if (completed?.value === "1") return;
+
+    let names: string[] = [];
+    try {
+      names = (await fs.readdir(this.dir())).filter((name) => name.endsWith(".json"));
+    } catch {
+      // A missing legacy task directory is normal on a fresh installation.
+    }
+
+    const insert = this.database.connection.prepare(`
+      INSERT OR IGNORE INTO coordination_tasks (
+        id, record_json, status, assignee, created_by, workflow_id,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const name of names) {
+      try {
+        const task = this.normalize(JSON.parse(
+          await fs.readFile(path.join(this.dir(), name), "utf8")
+        ) as TaskRecord);
+        this.filePath(task.id);
+        insert.run(
+          task.id,
+          JSON.stringify(task),
+          task.status,
+          task.assignee,
+          task.createdBy,
+          task.workflowId ?? null,
+          task.createdAt,
+          task.updatedAt
+        );
+      } catch {
+        // Keep malformed legacy files intact for manual recovery.
+      }
+    }
+    this.database.connection.prepare(`
+      INSERT INTO runtime_metadata (key, value, updated_at)
+      VALUES ('coordination_tasks_imported_v5', '1', ?)
+      ON CONFLICT(key) DO UPDATE SET value = '1', updated_at = excluded.updated_at
+    `).run(new Date().toISOString());
   }
 }

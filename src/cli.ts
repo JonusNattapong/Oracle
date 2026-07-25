@@ -33,6 +33,12 @@ import { TaskStore } from "./tasks/store.js";
 import { CoordinationService } from "./coordination/service.js";
 import { SwarmStore } from "./orchestrator/swarmStore.js";
 import { RuntimeClient } from "./runtime/client.js";
+import {
+  SwarmClient,
+  removeSwarmProfile,
+  saveSwarmProfile,
+  type SwarmConnectionProfile
+} from "./runtime/swarmClient.js";
 import { daemonStatus, startDaemon, stopDaemon } from "./runtime/control.js";
 import type {
   CreateTaskInput as CreateCronTaskInput,
@@ -889,7 +895,11 @@ taskCmd
   });
 
 // ── runtime daemon ──────────────────────────────────────────────
-async function runDaemonForeground(host: string, port: number): Promise<void> {
+async function runDaemonForeground(
+  host: string,
+  port: number,
+  allowRemote = false
+): Promise<void> {
   const { OracleDaemon } = await import("./runtime/daemon.js");
   let resolveStopped!: () => void;
   const stopped = new Promise<void>((resolve) => { resolveStopped = resolve; });
@@ -897,6 +907,7 @@ async function runDaemonForeground(host: string, port: number): Promise<void> {
     homeDir: homeDir(),
     host,
     port,
+    allowRemote,
     workspaceRoot: process.cwd(),
     onShutdown: resolveStopped
   });
@@ -924,13 +935,15 @@ const daemonCmd = program
 daemonCmd
   .command("start")
   .description("Start Oracle Runtime in the background")
-  .option("--host <host>", "Loopback host", "127.0.0.1")
+  .option("--host <host>", "Bind host", "127.0.0.1")
   .option("--port <port>", "Local API port", "4777")
+  .option("--remote", "Allow an explicit non-loopback binding for Remote Swarm", false)
   .action(async (options) => {
     const result = await startDaemon({
       homeDir: homeDir(),
       host: options.host,
       port: Number(options.port),
+      allowRemote: Boolean(options.remote),
       workspaceRoot: process.cwd()
     });
     console.log(result.alreadyRunning ? "Oracle Runtime is already running." : "Oracle Runtime started.");
@@ -942,10 +955,11 @@ daemonCmd
 daemonCmd
   .command("run")
   .description("Run Oracle Runtime in the foreground")
-  .option("--host <host>", "Loopback host", "127.0.0.1")
+  .option("--host <host>", "Bind host", "127.0.0.1")
   .option("--port <port>", "Local API port", "4777")
+  .option("--remote", "Allow an explicit non-loopback binding for Remote Swarm", false)
   .action(async (options) => {
-    await runDaemonForeground(options.host, Number(options.port));
+    await runDaemonForeground(options.host, Number(options.port), Boolean(options.remote));
   });
 
 daemonCmd
@@ -995,6 +1009,345 @@ daemonCmd
       socket.on("close", () => resolve());
       process.once("SIGINT", () => socket.close(1000, "client stopped"));
     });
+  });
+
+// ── Remote Swarm ───────────────────────────────────────────────
+program
+  .command("connect")
+  .description("Connect this machine to a Remote Swarm")
+  .argument("<url>", "Oracle Runtime URL, for example https://oracle.example.com")
+  .requiredOption("--project <id>", "Project room id")
+  .requiredOption("--agent <name>", "Agent identity")
+  .option("--token <token>", "Agent token (or set ORACLE_SWARM_TOKEN)")
+  .action(async (url, options) => {
+    const token = options.token ?? process.env.ORACLE_SWARM_TOKEN;
+    if (!token) throw new Error("Provide --token or set ORACLE_SWARM_TOKEN.");
+    const profile: SwarmConnectionProfile = {
+      url,
+      projectId: options.project,
+      agentName: options.agent,
+      token,
+      connectedAt: new Date().toISOString()
+    };
+    const client = new SwarmClient(profile);
+    const connected = await client.connect();
+    if (
+      connected.projectId !== profile.projectId
+      || connected.agent.name !== profile.agentName
+    ) {
+      throw new Error(
+        `Token belongs to ${connected.projectId}/${connected.agent.name}, `
+        + `not ${profile.projectId}/${profile.agentName}.`
+      );
+    }
+    await saveSwarmProfile(homeDir(), profile);
+    console.log(`Connected ${profile.agentName} to Remote Swarm "${profile.projectId}".`);
+    console.log(`  server: ${client.baseUrl.toString()}`);
+    console.log(`  role:   ${connected.agent.role}`);
+  });
+
+async function requireSwarmClient(): Promise<SwarmClient> {
+  const client = await SwarmClient.fromHome(homeDir());
+  if (!client) {
+    throw new Error("No Remote Swarm connection. Run `oracle connect <url> ...` first.");
+  }
+  return client;
+}
+
+function printSwarmMessage(
+  message: import("./runtime/swarmService.js").SwarmMessage
+): void {
+  console.log(
+    `${message.id} | ${message.ts} | from ${message.from} to ${message.to}`
+    + (message.subject ? ` | ${message.subject}` : "")
+  );
+  console.log(`  ${message.body.split("\n").join("\n  ")}`);
+}
+
+function printSwarmTask(task: import("./runtime/swarmService.js").SwarmTask): void {
+  console.log(
+    `${task.id} | ${task.status} | ${task.title} | `
+    + `${task.createdBy} -> ${task.assignee}`
+  );
+  if (task.description) console.log(`  ${task.description}`);
+  for (const [index, item] of task.checklist.entries()) {
+    console.log(`  ${index}: [${item.done ? "x" : " "}] ${item.text}`);
+  }
+  for (const note of task.notes) {
+    console.log(`  [${note.ts}] ${note.agent}: ${note.text}`);
+  }
+}
+
+const teamCmd = program
+  .command("team")
+  .description("Coordinate agents across machines through Remote Swarm");
+
+teamCmd
+  .command("token")
+  .description("Issue a project-scoped agent token from the local Runtime")
+  .requiredOption("--project <id>", "Project room id")
+  .requiredOption("--agent <name>", "Agent identity")
+  .option("--role <role>", "Agent role", "worker")
+  .option("--project-name <name>", "Human-readable project name")
+  .action(async (options) => {
+    const runtime = await requireRuntimeClient();
+    const issued = await runtime.issueSwarmToken({
+      projectId: options.project,
+      projectName: options.projectName,
+      agentName: options.agent,
+      role: options.role
+    });
+    console.log(
+      `Token ${issued.id} issued for ${issued.projectId}/${issued.agentName} (${issued.role})`
+    );
+    console.log(issued.token);
+    console.error("Save this token now. Oracle stores only its SHA-256 hash.");
+  });
+
+teamCmd
+  .command("token-revoke")
+  .description("Revoke an issued Remote Swarm token")
+  .argument("<token-id>", "Token id returned during issuance")
+  .action(async (tokenId) => {
+    const revoked = await (await requireRuntimeClient()).revokeSwarmToken(tokenId);
+    console.log(revoked ? `Revoked ${tokenId}.` : `Token not found: ${tokenId}`);
+    if (!revoked) process.exitCode = 1;
+  });
+
+teamCmd
+  .command("disconnect")
+  .description("Remove the saved Remote Swarm connection from this machine")
+  .action(async () => {
+    const removed = await removeSwarmProfile(homeDir());
+    console.log(removed ? "Remote Swarm connection removed." : "No saved connection.");
+  });
+
+teamCmd
+  .command("status")
+  .description("Show the connected project, agents, tasks, and unread work")
+  .option("--json", "Print machine-readable output", false)
+  .action(async (options) => {
+    const status = await (await requireSwarmClient()).status();
+    if (options.json) {
+      console.log(JSON.stringify(status, null, 2));
+      return;
+    }
+    console.log(`Remote Swarm "${status.projectId}" — Oracle ${status.version}`);
+    console.log(`  you:      ${status.agent.name} (${status.agent.role})`);
+    console.log(`  agents:   ${status.agents.length}`);
+    console.log(`  tasks:    ${status.activeTasks} active`);
+    console.log(`  messages: ${status.unreadMessages} unread`);
+  });
+
+teamCmd
+  .command("agents")
+  .description("List agents and presence in the connected project")
+  .action(async () => {
+    const agents = await (await requireSwarmClient()).listAgents();
+    if (!agents.length) {
+      console.log("No agents connected.");
+      return;
+    }
+    for (const agent of agents) {
+      console.log(
+        `${agent.name.padEnd(24)} ${agent.status.padEnd(7)} `
+        + `${agent.role}  last seen ${agent.lastSeenAt}`
+      );
+    }
+  });
+
+teamCmd
+  .command("send")
+  .description("Send a message to a remote agent or broadcast with '*'")
+  .requiredOption("-t, --to <agent>", "Recipient agent name, or '*'")
+  .requiredOption("-b, --body <text>", "Message body")
+  .option("-s, --subject <text>", "Subject line")
+  .option("--reply-to <id>", "Message id this replies to")
+  .action(async (options) => {
+    const message = await (await requireSwarmClient()).send({
+      to: options.to,
+      body: options.body,
+      subject: options.subject,
+      replyTo: options.replyTo
+    });
+    console.log(`Sent ${message.id} to ${message.to}.`);
+  });
+
+teamCmd
+  .command("inbox")
+  .description("Show Remote Swarm messages (unread by default)")
+  .option("--all", "Include acknowledged messages", false)
+  .option("--limit <n>", "Maximum messages", "50")
+  .option("--json", "Print machine-readable output", false)
+  .action(async (options) => {
+    const messages = await (await requireSwarmClient()).inbox({
+      all: Boolean(options.all),
+      limit: Number(options.limit)
+    });
+    if (options.json) {
+      console.log(JSON.stringify(messages, null, 2));
+      return;
+    }
+    if (!messages.length) {
+      console.log("Remote inbox empty.");
+      return;
+    }
+    for (const message of messages) printSwarmMessage(message);
+  });
+
+teamCmd
+  .command("ack")
+  .description("Acknowledge Remote Swarm messages")
+  .argument("<ids...>", "Message ids")
+  .action(async (ids) => {
+    if (!ids.length) throw new Error("Provide at least one message id.");
+    const acked = await (await requireSwarmClient()).acknowledge(ids);
+    console.log(`Acked ${acked.length}/${ids.length}.`);
+  });
+
+teamCmd
+  .command("watch")
+  .description("Watch project events with replay after reconnect")
+  .option("--after <id>", "Replay after this event id", "0")
+  .action(async (options) => {
+    const client = await requireSwarmClient();
+    const { WebSocket } = await import("ws");
+    let after = Number(options.after);
+    let stopped = false;
+    let activeSocket: InstanceType<typeof WebSocket> | undefined;
+    const stop = () => {
+      stopped = true;
+      activeSocket?.close(1000, "client stopped");
+    };
+    process.once("SIGINT", stop);
+    console.error(`Watching Remote Swarm "${client.profile.projectId}". Press Ctrl+C to stop.`);
+    while (!stopped) {
+      const socket = new WebSocket(client.webSocketUrl(after), {
+        headers: client.webSocketHeaders()
+      });
+      activeSocket = socket;
+      await new Promise<void>((resolve) => {
+        socket.on("message", (data) => {
+          const raw = data.toString();
+          const event = JSON.parse(raw) as { id?: number };
+          if (typeof event.id === "number") after = Math.max(after, event.id);
+          console.log(raw);
+        });
+        socket.on("error", (error) => {
+          console.error(`Remote Swarm event stream: ${error.message}`);
+        });
+        socket.on("close", () => resolve());
+        if (stopped) socket.close(1000, "client stopped");
+      });
+      if (!stopped) await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    process.off("SIGINT", stop);
+  });
+
+const teamTaskCmd = teamCmd
+  .command("task")
+  .description("Manage verified tasks in the connected Remote Swarm");
+
+teamTaskCmd
+  .command("create")
+  .requiredOption("--title <text>", "Task title")
+  .requiredOption("--assignee <agent>", "Agent responsible for the work")
+  .option("--description <text>", "Task description")
+  .option("--checklist <items...>", "Verification steps")
+  .action(async (options) => {
+    const task = await (await requireSwarmClient()).createTask({
+      title: options.title,
+      description: options.description,
+      assignee: options.assignee,
+      checklist: options.checklist
+    });
+    console.log(`Created ${task.id}, assigned to ${task.assignee}.`);
+  });
+
+teamTaskCmd
+  .command("list")
+  .option("--assignee <agent>")
+  .option("--created-by <agent>")
+  .option("--status <status>")
+  .option("--active", "Only active tasks", false)
+  .option("--json", "Print machine-readable output", false)
+  .action(async (options) => {
+    const tasks = await (await requireSwarmClient()).listTasks({
+      assignee: options.assignee,
+      createdBy: options.createdBy,
+      status: options.status,
+      activeOnly: Boolean(options.active)
+    });
+    if (options.json) {
+      console.log(JSON.stringify(tasks, null, 2));
+      return;
+    }
+    if (!tasks.length) {
+      console.log("No remote tasks found.");
+      return;
+    }
+    for (const task of tasks) printSwarmTask(task);
+  });
+
+teamTaskCmd
+  .command("get")
+  .argument("<id>", "Task id")
+  .action(async (id) => {
+    printSwarmTask(await (await requireSwarmClient()).getTask(id));
+  });
+
+teamTaskCmd
+  .command("update")
+  .argument("<id>", "Task id")
+  .option("--status <status>")
+  .option("--note <text>")
+  .action(async (id, options) => {
+    const task = await (await requireSwarmClient()).updateTask(id, {
+      status: options.status,
+      note: options.note
+    });
+    printSwarmTask(task);
+  });
+
+teamTaskCmd
+  .command("check")
+  .argument("<id>", "Task id")
+  .argument("<index>", "Checklist index")
+  .option("--undo", "Uncheck the item", false)
+  .action(async (id, index, options) => {
+    const task = await (await requireSwarmClient()).checkTask(
+      id,
+      Number(index),
+      !options.undo
+    );
+    printSwarmTask(task);
+  });
+
+teamTaskCmd
+  .command("submit")
+  .argument("<id>", "Task id")
+  .requiredOption("--summary <text>", "Work summary")
+  .action(async (id, options) => {
+    const task = await (await requireSwarmClient()).submitTask(id, options.summary);
+    console.log(`Submitted ${task.id} for review.`);
+  });
+
+teamTaskCmd
+  .command("close")
+  .argument("<id>", "Task id")
+  .option("--reject", "Return the task to the assignee", false)
+  .option("--note <text>", "Decision note")
+  .action(async (id, options) => {
+    const task = await (await requireSwarmClient()).closeTask(
+      id,
+      !options.reject,
+      options.note
+    );
+    console.log(
+      task.status === "done"
+        ? `Closed ${task.id} as done.`
+        : `Returned ${task.id} to ${task.assignee}.`
+    );
   });
 
 // ── Control Center & approval inbox ─────────────────────────────

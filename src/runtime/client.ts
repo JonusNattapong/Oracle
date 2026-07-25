@@ -8,6 +8,7 @@ import type {
   CreateApprovalInput
 } from "../control/types.js";
 import { readDaemonState, type DaemonState } from "./state.js";
+import type { SwarmToken } from "./swarmService.js";
 
 export interface RuntimeHealth {
   status: "ok";
@@ -35,6 +36,31 @@ export class RuntimeClient {
 
   health(): Promise<RuntimeHealth> {
     return this.request<RuntimeHealth>("GET", "/health", undefined, false);
+  }
+
+  async issueSwarmToken(input: {
+    projectId: string;
+    projectName?: string;
+    agentName: string;
+    role?: string;
+  }): Promise<SwarmToken> {
+    return (await this.request<{ token: SwarmToken }>(
+      "POST",
+      "/v1/swarm/tokens",
+      input
+    )).token;
+  }
+
+  async revokeSwarmToken(id: string): Promise<boolean> {
+    try {
+      return (await this.request<{ revoked: boolean }>(
+        "DELETE",
+        `/v1/swarm/tokens/${encodeURIComponent(id)}`
+      )).revoked;
+    } catch (error) {
+      if (error instanceof RuntimeApiError && error.status === 404) return false;
+      throw error;
+    }
   }
 
   async listSchedules(): Promise<CronTask[]> {

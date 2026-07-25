@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-24
+
+### Added
+- Remote Swarm project rooms for cross-machine agent coordination
+- Project- and agent-scoped tokens with SHA-256 hashes stored in SQLite
+- Remote presence, direct/broadcast messaging, per-agent acknowledgements,
+  verified task lifecycle, and project-filtered WebSocket events
+- Replay-after-reconnect support through persisted Runtime event ids
+- `oracle connect` and `oracle team status|agents|send|inbox|ack|watch`
+- Remote token revocation through `oracle team token-revoke`
+- `oracle team task create|list|get|update|check|submit|close`
+- Explicit `oracle daemon start|run --remote` gate for non-loopback bindings
+- Non-destructive legacy import for local message, task, presence, and swarm
+  workflow JSON
+
+### Changed
+- Package version advanced to Remote Swarm 0.5.0
+- Local messages, acknowledgements, tasks, and agent presence now use the
+  Runtime SQLite database instead of mutable JSON records
+- Local message watch uses SQLite WAL changes as wake-up signals and queries
+  the database as its source of truth
+- Runtime database schema advanced to version 6
+
+### Security
+- Remote tokens never grant shell, filesystem, Scheduler, approval, or admin
+  Runtime access
+- WebSocket clients receive only events for their token's project
+- Raw Remote Swarm tokens are returned once and never persisted by the host
+- Non-loopback binding remains rejected unless explicitly enabled
+- Cross-machine deployments require TLS termination or an encrypted private
+  network; Oracle does not expose its HTTP listener as TLS
+
 ## [0.4.0] - 2026-07-24
 
 ### Added

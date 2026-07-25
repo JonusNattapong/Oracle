@@ -17,6 +17,10 @@ import type {
 } from "../control/types.js";
 import type { SchedulerService } from "./schedulerService.js";
 import type { RuntimeEventBus } from "./events.js";
+import {
+  RemoteSwarmService,
+  type SwarmIdentity
+} from "./swarmService.js";
 
 export interface LocalApiServerOptions {
   host: string;
@@ -26,12 +30,14 @@ export interface LocalApiServerOptions {
   scheduler: SchedulerService;
   control: ControlCenterService;
   events: RuntimeEventBus;
+  swarm: RemoteSwarmService;
   onShutdown: () => void;
 }
 
 export class LocalApiServer {
   private readonly server: Server;
   private readonly webSockets = new WebSocketServer({ noServer: true });
+  private readonly swarmSockets = new Map<WebSocket, string>();
   private unsubscribeEvents?: () => void;
 
   constructor(private readonly options: LocalApiServerOptions) {
@@ -40,28 +46,44 @@ export class LocalApiServer {
     });
     this.server.on("upgrade", (request, socket, head) => {
       const url = new URL(request.url ?? "/", `http://${this.options.host}`);
-      if (url.pathname !== "/v1/events" || !this.authorized(request, url)) {
+      const runtimeEvents = url.pathname === "/v1/events" && this.authorized(request, url);
+      const swarmIdentity = url.pathname === "/v1/swarm/events"
+        ? this.swarmIdentity(request, url)
+        : null;
+      if (!runtimeEvents && !swarmIdentity) {
         socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n");
         socket.destroy();
         return;
       }
       this.webSockets.handleUpgrade(request, socket, head, (webSocket) => {
+        if (swarmIdentity) this.swarmSockets.set(webSocket, swarmIdentity.projectId);
         this.webSockets.emit("connection", webSocket, request);
       });
     });
     this.webSockets.on("connection", (socket, request) => {
       const url = new URL(request.url ?? "/", `http://${this.options.host}`);
       const after = this.integer(url.searchParams.get("after"), 0);
+      const projectId = this.swarmSockets.get(socket);
       socket.send(JSON.stringify({
-        type: "runtime.connected",
+        type: projectId ? "swarm.connected" : "runtime.connected",
         payload: {
           version: this.options.version,
-          schedulerRunning: this.options.scheduler.isRunning
+          ...(projectId
+            ? { projectId }
+            : { schedulerRunning: this.options.scheduler.isRunning })
         }
       }));
       for (const event of this.options.events.history(after, 100)) {
+        if (
+          projectId
+          && (
+            !event.type.startsWith("swarm.")
+            || event.payload.projectId !== projectId
+          )
+        ) continue;
         socket.send(JSON.stringify(event));
       }
+      socket.on("close", () => this.swarmSockets.delete(socket));
     });
   }
 
@@ -76,6 +98,14 @@ export class LocalApiServer {
     this.unsubscribeEvents = this.options.events.subscribe((event) => {
       const encoded = JSON.stringify(event);
       for (const client of this.webSockets.clients) {
+        const projectId = this.swarmSockets.get(client);
+        if (
+          projectId
+          && (
+            !event.type.startsWith("swarm.")
+            || event.payload.projectId !== projectId
+          )
+        ) continue;
         if (client.readyState === WebSocket.OPEN) client.send(encoded);
       }
     });
@@ -118,8 +148,47 @@ export class LocalApiServer {
         return;
       }
 
+      if (
+        url.pathname.startsWith("/v1/swarm/")
+        && !url.pathname.startsWith("/v1/swarm/tokens")
+      ) {
+        const identity = this.swarmIdentity(request, url);
+        if (!identity) {
+          this.json(response, 401, { error: "Invalid or revoked swarm token." });
+          return;
+        }
+        if (await this.routeSwarm(request, response, url, identity)) return;
+        this.json(response, 404, { error: "Not found" });
+        return;
+      }
+
       if (!this.authorized(request, url)) {
         this.json(response, 401, { error: "Unauthorized" });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/swarm/tokens") {
+        const body = await this.body(request);
+        const issued = this.options.swarm.issueToken({
+          projectId: this.requiredString(body.projectId, "projectId"),
+          projectName: this.optionalString(body.projectName, "projectName"),
+          agentName: this.requiredString(body.agentName, "agentName"),
+          role: this.optionalString(body.role, "role")
+        });
+        this.json(response, 201, { token: issued });
+        return;
+      }
+
+      const swarmTokenMatch = url.pathname.match(
+        /^\/v1\/swarm\/tokens\/(token-[a-f0-9]+)$/i
+      );
+      if (request.method === "DELETE" && swarmTokenMatch) {
+        const revoked = this.options.swarm.revokeToken(swarmTokenMatch[1]);
+        this.json(
+          response,
+          revoked ? 200 : 404,
+          revoked ? { revoked: true } : { error: "Token not found" }
+        );
         return;
       }
 
@@ -316,11 +385,193 @@ export class LocalApiServer {
     }
   }
 
+  private async routeSwarm(
+    request: IncomingMessage,
+    response: ServerResponse,
+    url: URL,
+    identity: SwarmIdentity
+  ): Promise<boolean> {
+    if (request.method === "POST" && url.pathname === "/v1/swarm/connect") {
+      const agent = this.options.swarm.connect(identity);
+      this.json(response, 200, {
+        projectId: identity.projectId,
+        agent,
+        version: this.options.version
+      });
+      return true;
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/swarm/heartbeat") {
+      this.json(response, 200, { agent: this.options.swarm.heartbeat(identity) });
+      return true;
+    }
+
+    if (request.method === "GET" && url.pathname === "/v1/swarm/status") {
+      const agent = this.options.swarm.heartbeat(identity);
+      const agents = this.options.swarm.listAgents(identity.projectId);
+      const tasks = this.options.swarm.listTasks(identity, { activeOnly: true });
+      const unread = this.options.swarm.inbox(identity, { unreadOnly: true, limit: 500 });
+      this.json(response, 200, {
+        version: this.options.version,
+        projectId: identity.projectId,
+        agent,
+        agents,
+        activeTasks: tasks.length,
+        unreadMessages: unread.length
+      });
+      return true;
+    }
+
+    if (request.method === "GET" && url.pathname === "/v1/swarm/agents") {
+      this.options.swarm.heartbeat(identity);
+      this.json(response, 200, {
+        agents: this.options.swarm.listAgents(identity.projectId)
+      });
+      return true;
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/swarm/messages") {
+      const body = await this.body(request);
+      const message = this.options.swarm.sendMessage(identity, {
+        to: this.requiredString(body.to, "to"),
+        body: this.requiredString(body.body, "body"),
+        subject: this.optionalString(body.subject, "subject"),
+        replyTo: this.optionalString(body.replyTo, "replyTo"),
+        taskId: this.optionalString(body.taskId, "taskId")
+      });
+      this.json(response, 201, { message });
+      return true;
+    }
+
+    if (request.method === "GET" && url.pathname === "/v1/swarm/messages/inbox") {
+      const unreadOnly = url.searchParams.get("all") !== "true";
+      const limit = this.integer(url.searchParams.get("limit"), 50);
+      this.json(response, 200, {
+        messages: this.options.swarm.inbox(identity, { unreadOnly, limit })
+      });
+      return true;
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/swarm/messages/ack") {
+      const body = await this.body(request);
+      const ids = this.optionalStringArray(body.ids, "ids") ?? [];
+      this.json(response, 200, {
+        acked: this.options.swarm.acknowledge(identity, ids)
+      });
+      return true;
+    }
+
+    if (request.method === "GET" && url.pathname === "/v1/swarm/tasks") {
+      const statusValue = url.searchParams.get("status");
+      const status = statusValue
+        ? this.collaborationTaskStatus(statusValue)
+        : undefined;
+      this.json(response, 200, {
+        tasks: this.options.swarm.listTasks(identity, {
+          assignee: url.searchParams.get("assignee") ?? undefined,
+          createdBy: url.searchParams.get("createdBy") ?? undefined,
+          status,
+          activeOnly: url.searchParams.get("active") === "true"
+        })
+      });
+      return true;
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/swarm/tasks") {
+      const body = await this.body(request);
+      const task = this.options.swarm.createTask(identity, {
+        title: this.requiredString(body.title, "title"),
+        description: this.optionalString(body.description, "description"),
+        assignee: this.requiredString(body.assignee, "assignee"),
+        checklist: this.optionalStringArray(body.checklist, "checklist")
+      });
+      this.json(response, 201, { task });
+      return true;
+    }
+
+    const taskMatch = url.pathname.match(
+      /^\/v1\/swarm\/tasks\/(task-[a-z0-9-]+)(?:\/(check|submit|close))?$/i
+    );
+    if (!taskMatch) return false;
+    const taskId = taskMatch[1];
+    const action = taskMatch[2];
+
+    if (request.method === "GET" && !action) {
+      const task = this.options.swarm.getTask(identity.projectId, taskId);
+      this.json(
+        response,
+        task ? 200 : 404,
+        task ? { task } : { error: "Task not found" }
+      );
+      return true;
+    }
+
+    if (request.method === "PATCH" && !action) {
+      const body = await this.body(request);
+      const task = this.options.swarm.updateTask(identity, taskId, {
+        status: body.status === undefined
+          ? undefined
+          : this.collaborationTaskStatus(body.status),
+        note: this.optionalString(body.note, "note")
+      });
+      this.json(response, 200, { task });
+      return true;
+    }
+
+    if (request.method === "POST" && action === "check") {
+      const body = await this.body(request);
+      const index = Number(body.index);
+      if (!Number.isInteger(index) || index < 0) {
+        throw new Error("index must be a non-negative integer.");
+      }
+      if (typeof body.done !== "boolean") throw new Error("done must be a boolean.");
+      const task = this.options.swarm.checkTask(identity, taskId, index, body.done);
+      this.json(response, 200, { task });
+      return true;
+    }
+
+    if (request.method === "POST" && action === "submit") {
+      const body = await this.body(request);
+      const task = this.options.swarm.submitTask(
+        identity,
+        taskId,
+        this.requiredString(body.summary, "summary")
+      );
+      this.json(response, 200, { task });
+      return true;
+    }
+
+    if (request.method === "POST" && action === "close") {
+      const body = await this.body(request);
+      if (typeof body.approved !== "boolean") throw new Error("approved must be a boolean.");
+      const task = this.options.swarm.closeTask(identity, taskId, {
+        approved: body.approved,
+        note: this.optionalString(body.note, "note")
+      });
+      this.json(response, 200, { task });
+      return true;
+    }
+
+    return false;
+  }
+
   private authorized(request: IncomingMessage, url: URL): boolean {
+    return this.requestToken(request, url) === this.options.token;
+  }
+
+  private swarmIdentity(request: IncomingMessage, url: URL): SwarmIdentity | null {
+    const token = this.requestToken(request, url);
+    return token ? this.options.swarm.authenticate(token) : null;
+  }
+
+  private requestToken(request: IncomingMessage, url: URL): string | undefined {
     const bearer = request.headers.authorization?.match(/^Bearer (.+)$/i)?.[1];
     const header = request.headers["x-oracle-token"];
     const query = url.searchParams.get("token");
-    return bearer === this.options.token || header === this.options.token || query === this.options.token;
+    return bearer
+      ?? (typeof header === "string" ? header : undefined)
+      ?? query
+      ?? undefined;
   }
 
   private async body(request: IncomingMessage): Promise<Record<string, unknown>> {
@@ -354,6 +605,22 @@ export class LocalApiServer {
   private taskStatus(value: unknown): "active" | "paused" | "deleted" {
     if (value === "active" || value === "paused" || value === "deleted") return value;
     throw new Error("status must be active, paused, or deleted.");
+  }
+
+  private collaborationTaskStatus(
+    value: unknown
+  ): "pending" | "in_progress" | "review" | "done" | "blocked" | "cancelled" {
+    if (
+      value === "pending"
+      || value === "in_progress"
+      || value === "review"
+      || value === "done"
+      || value === "blocked"
+      || value === "cancelled"
+    ) return value;
+    throw new Error(
+      "status must be pending, in_progress, review, done, blocked, or cancelled."
+    );
   }
 
   private approvalKind(value: unknown): ApprovalKind | undefined {

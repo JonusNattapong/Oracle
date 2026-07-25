@@ -1,8 +1,8 @@
-import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { SwarmWorkflow } from "./swarm.js";
+import { RuntimeDatabase } from "../runtime/database.js";
 import type { TaskProposal } from "../tasks/consensus.js";
+import type { SwarmWorkflow } from "./swarm.js";
 
 export interface StoredSwarmProposal {
   workflow: SwarmWorkflow;
@@ -10,72 +10,140 @@ export interface StoredSwarmProposal {
 }
 
 /**
- * File-backed swarm workflow store. Each workflow is persisted independently
- * so separate `oracle swarm` CLI invocations share the same state.
+ * SQLite-backed swarm workflow projection with a one-time, non-destructive
+ * import of legacy ~/.oracle/swarms/*.json files.
  */
 export class SwarmStore {
-  constructor(private readonly homeDir: string) {}
+  private readonly database: RuntimeDatabase;
+  private importPromise?: Promise<void>;
 
-  private dir(): string {
-    return path.join(this.homeDir, "swarms");
-  }
-
-  private filePath(id: string): string {
-    if (!/^swarm_[a-z0-9_-]+$/i.test(id)) {
-      throw new Error(`Invalid swarm workflow id "${id}".`);
-    }
-    return path.join(this.dir(), `${id}.json`);
+  constructor(private readonly homeDir: string) {
+    this.database = new RuntimeDatabase(homeDir);
   }
 
   async save(workflow: SwarmWorkflow): Promise<void> {
-    await fs.mkdir(this.dir(), { recursive: true });
+    await this.ensureLegacyImported();
+    this.validateId(workflow.id);
     workflow.updatedAt = new Date().toISOString();
-    const filePath = this.filePath(workflow.id);
-    const temporaryPath = `${filePath}.${crypto.randomBytes(4).toString("hex")}.tmp`;
-    await fs.writeFile(temporaryPath, JSON.stringify(workflow, null, 2), "utf8");
-    await fs.rename(temporaryPath, filePath);
+    this.database.connection.prepare(`
+      INSERT INTO coordination_workflows (
+        id, record_json, status, updated_at
+      ) VALUES (?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        record_json = excluded.record_json,
+        status = excluded.status,
+        updated_at = excluded.updated_at
+    `).run(
+      workflow.id,
+      JSON.stringify(workflow),
+      workflow.status,
+      workflow.updatedAt
+    );
   }
 
   async get(id: string): Promise<SwarmWorkflow | null> {
+    await this.ensureLegacyImported();
     try {
-      const workflow = JSON.parse(await fs.readFile(this.filePath(id), "utf8")) as SwarmWorkflow;
-      if (!Array.isArray(workflow.proposals)) workflow.proposals = [];
-      if (!Array.isArray(workflow.taskIds)) workflow.taskIds = [];
-      if (!Array.isArray(workflow.messageIds)) workflow.messageIds = [];
-      if (!workflow.status) workflow.status = workflow.taskIds.length ? "active" : "initializing";
-      if (!workflow.recovery) workflow.recovery = { attempts: 0 };
-      return workflow;
+      this.validateId(id);
     } catch {
       return null;
     }
+    const row = this.database.connection.prepare(`
+      SELECT record_json FROM coordination_workflows WHERE id = ?
+    `).get(id) as { record_json: string } | undefined;
+    return row
+      ? this.normalize(JSON.parse(row.record_json) as SwarmWorkflow)
+      : null;
   }
 
   async list(): Promise<SwarmWorkflow[]> {
-    let entries: string[];
-    try {
-      entries = await fs.readdir(this.dir());
-    } catch {
-      return [];
-    }
-    const workflows = await Promise.all(
-      entries
-        .filter((entry) => entry.endsWith(".json"))
-        .map((entry) => this.get(entry.slice(0, -".json".length)))
+    await this.ensureLegacyImported();
+    const rows = this.database.connection.prepare(`
+      SELECT record_json FROM coordination_workflows
+      ORDER BY updated_at DESC
+    `).all() as unknown as Array<{ record_json: string }>;
+    return rows.map((row) =>
+      this.normalize(JSON.parse(row.record_json) as SwarmWorkflow)
     );
-    return workflows
-      .filter((workflow): workflow is SwarmWorkflow => workflow !== null)
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }
 
   async findProposal(proposalId: string): Promise<StoredSwarmProposal | null> {
     for (const workflow of await this.list()) {
-      const proposal = workflow.proposals.find((candidate) => candidate.id === proposalId);
+      const proposal = workflow.proposals.find(
+        (candidate) => candidate.id === proposalId
+      );
       if (proposal) return { workflow, proposal };
     }
     return null;
   }
 
   async findByTask(taskId: string): Promise<SwarmWorkflow | null> {
-    return (await this.list()).find((workflow) => workflow.taskIds.includes(taskId)) ?? null;
+    return (await this.list()).find(
+      (workflow) => workflow.taskIds.includes(taskId)
+    ) ?? null;
+  }
+
+  private normalize(workflow: SwarmWorkflow): SwarmWorkflow {
+    if (!Array.isArray(workflow.proposals)) workflow.proposals = [];
+    if (!Array.isArray(workflow.taskIds)) workflow.taskIds = [];
+    if (!Array.isArray(workflow.messageIds)) workflow.messageIds = [];
+    if (!workflow.status) {
+      workflow.status = workflow.taskIds.length ? "active" : "initializing";
+    }
+    if (!workflow.recovery) workflow.recovery = { attempts: 0 };
+    return workflow;
+  }
+
+  private validateId(id: string): void {
+    if (!/^swarm_[a-z0-9_-]+$/i.test(id)) {
+      throw new Error(`Invalid swarm workflow id "${id}".`);
+    }
+  }
+
+  private ensureLegacyImported(): Promise<void> {
+    this.importPromise ??= this.importLegacy();
+    return this.importPromise;
+  }
+
+  private async importLegacy(): Promise<void> {
+    const completed = this.database.connection.prepare(`
+      SELECT value FROM runtime_metadata
+      WHERE key = 'coordination_workflows_imported_v6'
+    `).get() as { value: string } | undefined;
+    if (completed?.value === "1") return;
+
+    const directory = path.join(this.homeDir, "swarms");
+    let names: string[] = [];
+    try {
+      names = (await fs.readdir(directory)).filter((name) => name.endsWith(".json"));
+    } catch {
+      // A missing legacy workflow directory is normal.
+    }
+    const insert = this.database.connection.prepare(`
+      INSERT OR IGNORE INTO coordination_workflows (
+        id, record_json, status, updated_at
+      ) VALUES (?, ?, ?, ?)
+    `);
+    for (const name of names) {
+      try {
+        const workflow = this.normalize(JSON.parse(
+          await fs.readFile(path.join(directory, name), "utf8")
+        ) as SwarmWorkflow);
+        this.validateId(workflow.id);
+        insert.run(
+          workflow.id,
+          JSON.stringify(workflow),
+          workflow.status,
+          workflow.updatedAt
+        );
+      } catch {
+        // Keep malformed legacy files untouched for manual recovery.
+      }
+    }
+    this.database.connection.prepare(`
+      INSERT INTO runtime_metadata (key, value, updated_at)
+      VALUES ('coordination_workflows_imported_v6', '1', ?)
+      ON CONFLICT(key) DO UPDATE SET value = '1', updated_at = excluded.updated_at
+    `).run(new Date().toISOString());
   }
 }

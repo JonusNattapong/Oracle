@@ -227,7 +227,9 @@ A: Yes! They're part of setting up Oracle for your team. Commit:
 Ignore: `~/.oracle/` (that's local agent state)
 
 **Q: Can I use this with multiple machines?**
-A: Not yet. Oracle uses local file-backed stores. For cross-machine coordination, you'd need to run an Oracle MCP server that other machines connect to. Currently designed for single-machine multi-agent coordination.
+A: Yes. Start Runtime with an explicit remote binding, issue one scoped token
+per agent, and use `oracle connect` plus `oracle team ...`. Put Runtime behind
+HTTPS or an encrypted private network. See [Remote Swarm](remote-swarm.md).
 
 **Q: Does memory get too big?**
 A: Memory auto-consolidates every hour (removes duplicates, promotes frequently-used facts). You can manually prune old facts: `oracle memory prune --days 30`

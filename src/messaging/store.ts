@@ -1,39 +1,28 @@
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import crypto from "node:crypto";
-import { withRetry } from "./retry.js";
+import { RuntimeDatabase } from "../runtime/database.js";
 
 /**
- * File-backed inter-agent message store. Oracle acts as the relay: every
- * agent (Claude Code session, opencode, another oracle-mcp client) talks to
- * its own stdio server process, but they all share this directory, so a
- * message written by one process is visible to inbox queries from any other.
+ * SQLite-backed inter-agent message bus.
  *
- * One JSON file per message, written atomically (tmp + rename) so concurrent
- * readers never see a partial file. Read state lives inside the message as a
- * `readBy` list, updated with the same atomic pattern.
- *
- * I/O operations are wrapped with exponential-backoff retry for transient
- * system errors. Messages for agents that disappear can be pruned to the
- * dead-letter directory via `prune()`.
+ * Version 0.5 keeps the public API stable while replacing the old
+ * read/modify/write JSON files with transactional rows. On first use, legacy
+ * ~/.oracle/messages/*.json files are imported with INSERT OR IGNORE and are
+ * intentionally left untouched as a recovery copy.
  */
 
 export interface AgentMessage {
   id: string;
-  /** ISO timestamp of when the message was stored. */
   ts: string;
   from: string;
-  /** Recipient agent name, or "*" for broadcast to everyone. */
   to: string;
   subject?: string;
   body: string;
-  /** id of the message this replies to, for threading. */
   replyTo?: string;
-  /** Task/workflow linkage used by the durable coordination outbox. */
   taskId?: string;
   workflowId?: string;
   coordinationEventId?: string;
-  /** Agent names that have acknowledged this message. */
   readBy: string[];
 }
 
@@ -48,34 +37,36 @@ export interface SendInput {
   coordinationEventId?: string;
 }
 
+interface MessageRow {
+  id: string;
+  ts: string;
+  from_agent: string;
+  to_agent: string;
+  subject: string | null;
+  body: string;
+  reply_to: string | null;
+  task_id: string | null;
+  workflow_id: string | null;
+  coordination_event_id: string | null;
+  dead_lettered_at: string | null;
+}
+
 function generateId(timestamp: string): string {
   const now = timestamp.replace(/[-:.TZ]/g, "").slice(0, 17);
   return `${now}-${crypto.randomBytes(4).toString("hex")}`;
 }
 
 export class MessageStore {
+  private readonly database: RuntimeDatabase;
+  private importPromise?: Promise<void>;
   private lastTimestampMs = 0;
 
-  constructor(private readonly homeDir: string) {}
-
-  private dir(): string {
-    return path.join(this.homeDir, "messages");
-  }
-
-  private filePath(id: string): string {
-    // ids are generated internally, but guard against path tricks anyway
-    if (!/^[a-z0-9-]+$/i.test(id)) throw new Error(`Invalid message id: ${id}`);
-    return path.join(this.dir(), `${id}.json`);
-  }
-
-  private async writeAtomic(filePath: string, msg: AgentMessage): Promise<void> {
-    const tmp = `${filePath}.${crypto.randomBytes(4).toString("hex")}.tmp`;
-    await withRetry(() => fs.writeFile(tmp, JSON.stringify(msg, null, 2), "utf8"));
-    await withRetry(() => fs.rename(tmp, filePath));
+  constructor(private readonly homeDir: string) {
+    this.database = new RuntimeDatabase(homeDir);
   }
 
   async send(input: SendInput): Promise<AgentMessage> {
-    await fs.mkdir(this.dir(), { recursive: true });
+    await this.ensureLegacyImported();
     const deterministicId = input.coordinationEventId
       ? `coord-${crypto.createHash("sha256")
         .update(`${input.taskId ?? ""}:${input.coordinationEventId}`)
@@ -86,12 +77,11 @@ export class MessageStore {
       const existing = await this.get(deterministicId);
       if (existing) return existing;
     }
-    // Preserve call order even when several messages are created within the
-    // same millisecond. This keeps inbox tail/limit behavior deterministic.
+
     const timestampMs = Math.max(Date.now(), this.lastTimestampMs + 1);
     this.lastTimestampMs = timestampMs;
     const timestamp = new Date(timestampMs).toISOString();
-    const msg: AgentMessage = {
+    const message: AgentMessage = {
       id: deterministicId ?? generateId(timestamp),
       ts: timestamp,
       from: input.from,
@@ -102,85 +92,79 @@ export class MessageStore {
       taskId: input.taskId,
       workflowId: input.workflowId,
       coordinationEventId: input.coordinationEventId,
-      readBy: [],
+      readBy: []
     };
-    await this.writeAtomic(this.filePath(msg.id), msg);
-    return msg;
+    this.insert(message, false);
+    return message;
   }
 
   async get(id: string): Promise<AgentMessage | null> {
-    const filePath = this.filePath(id); // validates id before any fs access
-    try {
-      const raw = await withRetry(() => fs.readFile(filePath, "utf8"));
-      const msg = JSON.parse(raw) as AgentMessage;
-      // Normalize shape: a hand-written or older-schema file missing readBy
-      // must not poison every inbox call that touches it (verified live —
-      // inbox() threw on m.readBy.includes and lost the whole inbox).
-      if (!Array.isArray(msg.readBy)) msg.readBy = [];
-      return msg;
-    } catch {
-      return null;
-    }
+    await this.ensureLegacyImported();
+    this.validateId(id);
+    const row = this.database.connection.prepare(`
+      SELECT * FROM coordination_messages WHERE id = ?
+    `).get(id) as MessageRow | undefined;
+    return row ? this.fromRow(row) : null;
   }
 
-  private async readAll(): Promise<AgentMessage[]> {
-    let entries: string[];
-    try {
-      entries = await withRetry(() => fs.readdir(this.dir()));
-    } catch {
-      return [];
-    }
-    const messages = await Promise.all(
-      entries
-        .filter((name) => name.endsWith(".json"))
-        .map((name) => this.get(name.slice(0, -".json".length)))
-    );
-    return messages
-      .filter((m): m is AgentMessage => m !== null)
-      .sort((a, b) => a.ts.localeCompare(b.ts));
-  }
-
-  /**
-   * Messages addressed to `agent` (directly or via broadcast), excluding the
-   * agent's own sends. `unreadOnly` filters out already-acked messages.
-   */
-  async inbox(agent: string, opts?: { unreadOnly?: boolean; limit?: number }): Promise<AgentMessage[]> {
+  async inbox(
+    agent: string,
+    opts?: { unreadOnly?: boolean; limit?: number }
+  ): Promise<AgentMessage[]> {
+    await this.ensureLegacyImported();
     const unreadOnly = opts?.unreadOnly ?? true;
-    const limit = opts?.limit ?? 50;
-    const all = await this.readAll();
-    return all
-      .filter((m) => (m.to === agent || m.to === "*") && m.from !== agent)
-      .filter((m) => !unreadOnly || !m.readBy.includes(agent))
-      .slice(-limit);
+    const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 1000);
+    const rows = this.database.connection.prepare(`
+      SELECT m.*
+      FROM coordination_messages m
+      WHERE m.dead_lettered_at IS NULL
+        AND (m.to_agent = ? OR m.to_agent = '*')
+        AND m.from_agent != ?
+        AND (
+          ? = 0 OR NOT EXISTS (
+            SELECT 1 FROM coordination_message_reads r
+            WHERE r.message_id = m.id AND r.agent_name = ?
+          )
+        )
+      ORDER BY m.ts DESC
+      LIMIT ?
+    `).all(agent, agent, unreadOnly ? 1 : 0, agent, limit) as unknown as MessageRow[];
+    return rows.reverse().map((row) => this.fromRow(row));
   }
 
-  /** Mark messages as read by `agent`. Returns the ids actually updated. */
   async ack(agent: string, ids: string[]): Promise<string[]> {
+    await this.ensureLegacyImported();
+    const now = new Date().toISOString();
     const acked: string[] = [];
-    for (const id of ids) {
-      const msg = await this.get(id);
-      if (!msg || msg.readBy.includes(agent)) continue;
-      msg.readBy.push(agent);
-      await this.writeAtomic(this.filePath(id), msg);
-      acked.push(id);
+    const exists = this.database.connection.prepare(`
+      SELECT id FROM coordination_messages
+      WHERE id = ? AND dead_lettered_at IS NULL
+    `);
+    const insert = this.database.connection.prepare(`
+      INSERT OR IGNORE INTO coordination_message_reads (
+        message_id, agent_name, read_at
+      ) VALUES (?, ?, ?)
+    `);
+    this.database.connection.exec("BEGIN IMMEDIATE");
+    try {
+      for (const id of ids) {
+        this.validateId(id);
+        if (!exists.get(id)) continue;
+        if (insert.run(id, agent, now).changes > 0) acked.push(id);
+      }
+      this.database.connection.exec("COMMIT");
+    } catch (error) {
+      this.database.connection.exec("ROLLBACK");
+      throw error;
     }
     return acked;
   }
 
-  /** Ack every currently-unread message for `agent`. Returns the acked ids. */
   async ackAll(agent: string): Promise<string[]> {
     const unread = await this.inbox(agent, { unreadOnly: true, limit: 1000 });
-    return this.ack(agent, unread.map((m) => m.id));
+    return this.ack(agent, unread.map((message) => message.id));
   }
 
-  /**
-   * Time-first search across the WHOLE bus (any sender/recipient) — for
-   * recalling what was discussed, e.g. "this morning's messages between
-   * frontend and backend". `since`/`until` bound the window (ISO strings;
-   * message `ts` is ISO so plain string compare is correct); `query` is an
-   * optional case-insensitive substring filter over body+subject. Read-only:
-   * never touches readBy — searching is recall, not receiving.
-   */
   async search(opts: {
     since?: string;
     until?: string;
@@ -189,31 +173,45 @@ export class MessageStore {
     to?: string;
     limit?: number;
   }): Promise<AgentMessage[]> {
-    const limit = opts.limit ?? 20;
-    const q = opts.query?.toLowerCase();
-    const all = await this.readAll();
-    return all
-      .filter((m) => !opts.since || m.ts >= opts.since)
-      .filter((m) => !opts.until || m.ts <= opts.until)
-      .filter((m) => !opts.from || m.from === opts.from)
-      .filter((m) => !opts.to || m.to === opts.to)
-      .filter((m) => !q || m.body.toLowerCase().includes(q) || (m.subject ?? "").toLowerCase().includes(q))
-      .slice(-limit)
-      .reverse(); // newest first — recency matters when recalling
+    await this.ensureLegacyImported();
+    const limit = Math.min(Math.max(opts.limit ?? 20, 1), 1000);
+    const rows = this.database.connection.prepare(`
+      SELECT * FROM coordination_messages
+      WHERE dead_lettered_at IS NULL
+      ORDER BY ts DESC
+    `).all() as unknown as MessageRow[];
+    const query = opts.query?.toLowerCase();
+    return rows
+      .filter((row) => !opts.since || row.ts >= opts.since)
+      .filter((row) => !opts.until || row.ts <= opts.until)
+      .filter((row) => !opts.from || row.from_agent === opts.from)
+      .filter((row) => !opts.to || row.to_agent === opts.to)
+      .filter((row) => {
+        if (!query) return true;
+        return row.body.toLowerCase().includes(query)
+          || (row.subject ?? "").toLowerCase().includes(query);
+      })
+      .slice(0, limit)
+      .map((row) => this.fromRow(row));
   }
 
-  /** All messages linked to a task, oldest first. */
   async listForTask(taskId: string): Promise<AgentMessage[]> {
-    return (await this.readAll()).filter((message) => message.taskId === taskId);
+    await this.ensureLegacyImported();
+    const rows = this.database.connection.prepare(`
+      SELECT * FROM coordination_messages
+      WHERE task_id = ? AND dead_lettered_at IS NULL
+      ORDER BY ts ASC
+    `).all(taskId) as unknown as MessageRow[];
+    return rows.map((row) => this.fromRow(row));
   }
 
-  /** Full thread for a message: walk up to the root, then collect all replies below it. */
   async thread(id: string): Promise<AgentMessage[]> {
+    await this.ensureLegacyImported();
+    this.validateId(id);
     const all = await this.readAll();
-    const byId = new Map(all.map((m) => [m.id, m]));
+    const byId = new Map(all.map((message) => [message.id, message]));
     let root = byId.get(id);
     if (!root) return [];
-    // Cycle guard: crafted replyTo cycles (a->b->a) must not hang the walk.
     const visited = new Set<string>([root.id]);
     while (root.replyTo && byId.get(root.replyTo) && !visited.has(root.replyTo)) {
       root = byId.get(root.replyTo)!;
@@ -227,104 +225,167 @@ export class MessageStore {
       const current = queue.shift()!;
       if (seen.has(current)) continue;
       seen.add(current);
-      const msg = byId.get(current);
-      if (msg) result.push(msg);
-      for (const m of all) if (m.replyTo === current) queue.push(m.id);
+      const message = byId.get(current);
+      if (message) result.push(message);
+      for (const candidate of all) {
+        if (candidate.replyTo === current) queue.push(candidate.id);
+      }
     }
     return result.sort((a, b) => a.ts.localeCompare(b.ts));
   }
 
-  // ─── Dead-letter queue ────────────────────────────────────────────
-
-  private deadLetterDir(): string {
-    return path.join(this.homeDir, "dead-letter");
-  }
-
-  /**
-   * Move a message to the dead-letter directory. Idempotent — returns false
-   * if the message does not exist or is already dead.
-   */
   async deadLetter(id: string): Promise<boolean> {
-    this.filePath(id); // validates id
-    const src = this.filePath(id);
-    await fs.mkdir(this.deadLetterDir(), { recursive: true });
-    const dst = path.join(this.deadLetterDir(), `${id}.json`);
-    try {
-      await withRetry(() => fs.rename(src, dst));
-      return true;
-    } catch {
-      return false; // already gone or concurrent move
-    }
+    await this.ensureLegacyImported();
+    this.validateId(id);
+    const result = this.database.connection.prepare(`
+      UPDATE coordination_messages
+      SET dead_lettered_at = ?
+      WHERE id = ? AND dead_lettered_at IS NULL
+    `).run(new Date().toISOString(), id);
+    return result.changes > 0;
   }
 
-  /**
-   * Prune messages from the live bus:
-   * - `orphanDays`: messages addressed to agents whose lastSeen is older than
-   *   this threshold. Pass an agent registry list to check liveness, or pass
-   *   `staleRecipients` directly for bulk dead-lettering.
-   * - `maxAgeDays`: any message older than this is moved (regardless of read state).
-   *
-   * Returns the count of pruned messages.
-   */
   async prune(opts: {
     staleRecipients?: string[];
     maxAgeDays?: number;
   }): Promise<number> {
+    await this.ensureLegacyImported();
     const all = await this.readAll();
     const now = Date.now();
     const staleRecipients = new Set(opts.staleRecipients ?? []);
-    const maxAge = opts.maxAgeDays ? opts.maxAgeDays * 86400_000 : 0;
-
+    const maxAge = opts.maxAgeDays ? opts.maxAgeDays * 86_400_000 : 0;
     let pruned = 0;
-    for (const msg of all) {
-      const tooOld = maxAge > 0 && now - new Date(msg.ts).getTime() > maxAge;
-      const orphan = staleRecipients.size > 0 && staleRecipients.has(msg.to);
-      if (tooOld || orphan) {
-        if (await this.deadLetter(msg.id)) pruned++;
-      }
+    for (const message of all) {
+      const tooOld = maxAge > 0 && now - Date.parse(message.ts) > maxAge;
+      const orphan = staleRecipients.has(message.to);
+      if ((tooOld || orphan) && await this.deadLetter(message.id)) pruned++;
     }
     return pruned;
   }
 
-  /** Count and total size of dead-letter files. */
   async deadLetterStats(): Promise<{ count: number; sizeBytes: number }> {
-    let entries: string[];
-    try {
-      entries = await withRetry(() => fs.readdir(this.deadLetterDir()));
-    } catch {
-      return { count: 0, sizeBytes: 0 };
-    }
-    const names = entries.filter((f) => f.endsWith(".json"));
-    let sizeBytes = 0;
-    for (const name of names) {
-      try {
-        const stat = await fs.stat(path.join(this.deadLetterDir(), name));
-        sizeBytes += stat.size;
-      } catch { /* best-effort */ }
-    }
-    return { count: names.length, sizeBytes };
+    await this.ensureLegacyImported();
+    const row = this.database.connection.prepare(`
+      SELECT
+        COUNT(*) AS count,
+        COALESCE(SUM(
+          length(body) + length(COALESCE(subject, '')) + length(id)
+        ), 0) AS size_bytes
+      FROM coordination_messages
+      WHERE dead_lettered_at IS NOT NULL
+    `).get() as { count: number; size_bytes: number };
+    return { count: row.count, sizeBytes: row.size_bytes };
   }
 
-  /** Permanently delete dead-letter files older than `maxAgeDays`. */
-  async purgeDeadLetter(maxAgeDays: number = 30): Promise<number> {
-    let entries: string[];
+  async purgeDeadLetter(maxAgeDays = 30): Promise<number> {
+    await this.ensureLegacyImported();
+    const cutoff = new Date(Date.now() - maxAgeDays * 86_400_000).toISOString();
+    const result = this.database.connection.prepare(`
+      DELETE FROM coordination_messages
+      WHERE dead_lettered_at IS NOT NULL AND dead_lettered_at < ?
+    `).run(cutoff);
+    return Number(result.changes);
+  }
+
+  private async readAll(): Promise<AgentMessage[]> {
+    const rows = this.database.connection.prepare(`
+      SELECT * FROM coordination_messages
+      WHERE dead_lettered_at IS NULL
+      ORDER BY ts ASC
+    `).all() as unknown as MessageRow[];
+    return rows.map((row) => this.fromRow(row));
+  }
+
+  private insert(message: AgentMessage, ignoreExisting: boolean): boolean {
+    const result = this.database.connection.prepare(`
+      INSERT ${ignoreExisting ? "OR IGNORE" : ""} INTO coordination_messages (
+        id, ts, from_agent, to_agent, subject, body, reply_to, task_id,
+        workflow_id, coordination_event_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      message.id,
+      message.ts,
+      message.from,
+      message.to,
+      message.subject ?? null,
+      message.body,
+      message.replyTo ?? null,
+      message.taskId ?? null,
+      message.workflowId ?? null,
+      message.coordinationEventId ?? null
+    );
+    if (result.changes > 0 && message.readBy.length) {
+      const insertRead = this.database.connection.prepare(`
+        INSERT OR IGNORE INTO coordination_message_reads (
+          message_id, agent_name, read_at
+        ) VALUES (?, ?, ?)
+      `);
+      for (const agent of message.readBy) {
+        insertRead.run(message.id, agent, message.ts);
+      }
+    }
+    return result.changes > 0;
+  }
+
+  private fromRow(row: MessageRow): AgentMessage {
+    const reads = this.database.connection.prepare(`
+      SELECT agent_name FROM coordination_message_reads
+      WHERE message_id = ? ORDER BY agent_name ASC
+    `).all(row.id) as unknown as Array<{ agent_name: string }>;
+    return {
+      id: row.id,
+      ts: row.ts,
+      from: row.from_agent,
+      to: row.to_agent,
+      subject: row.subject ?? undefined,
+      body: row.body,
+      replyTo: row.reply_to ?? undefined,
+      taskId: row.task_id ?? undefined,
+      workflowId: row.workflow_id ?? undefined,
+      coordinationEventId: row.coordination_event_id ?? undefined,
+      readBy: reads.map((row) => row.agent_name)
+    };
+  }
+
+  private validateId(id: string): void {
+    if (!/^[a-z0-9-]+$/i.test(id)) throw new Error(`Invalid message id: ${id}`);
+  }
+
+  private ensureLegacyImported(): Promise<void> {
+    this.importPromise ??= this.importLegacy();
+    return this.importPromise;
+  }
+
+  private async importLegacy(): Promise<void> {
+    const completed = this.database.connection.prepare(`
+      SELECT value FROM runtime_metadata
+      WHERE key = 'coordination_messages_imported_v5'
+    `).get() as { value: string } | undefined;
+    if (completed?.value === "1") return;
+
+    let names: string[] = [];
+    const directory = path.join(this.homeDir, "messages");
     try {
-      entries = await withRetry(() => fs.readdir(this.deadLetterDir()));
+      names = (await fs.readdir(directory)).filter((name) => name.endsWith(".json"));
     } catch {
-      return 0;
+      // A missing legacy directory is a normal fresh installation.
     }
-    const cutoff = Date.now() - maxAgeDays * 86400_000;
-    let removed = 0;
-    for (const name of entries) {
-      if (!name.endsWith(".json")) continue;
+    for (const name of names) {
       try {
-        const stat = await fs.stat(path.join(this.deadLetterDir(), name));
-        if (stat.mtimeMs < cutoff) {
-          await fs.rm(path.join(this.deadLetterDir(), name));
-          removed++;
-        }
-      } catch { /* best-effort */ }
+        const message = JSON.parse(
+          await fs.readFile(path.join(directory, name), "utf8")
+        ) as AgentMessage;
+        if (!Array.isArray(message.readBy)) message.readBy = [];
+        this.validateId(message.id);
+        this.insert(message, true);
+      } catch {
+        // Preserve malformed legacy files for manual recovery; skip importing.
+      }
     }
-    return removed;
+    this.database.connection.prepare(`
+      INSERT INTO runtime_metadata (key, value, updated_at)
+      VALUES ('coordination_messages_imported_v5', '1', ?)
+      ON CONFLICT(key) DO UPDATE SET value = '1', updated_at = excluded.updated_at
+    `).run(new Date().toISOString());
   }
 }

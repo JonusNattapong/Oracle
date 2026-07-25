@@ -49,7 +49,7 @@ Once Claude Code is restarted, try these tools:
 {
   "tool": "oracle_memory_remember",
   "input": {
-    "content": "Oracle uses file-backed stores in ~/.oracle/ for messages, tasks, and memory",
+    "content": "Oracle uses SQLite for messages, tasks, presence, workflows, Runtime events, and approvals",
     "tags": ["oracle", "architecture", "storage"]
   }
 }

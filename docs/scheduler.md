@@ -1,6 +1,6 @@
 # Scheduled Cron Tasks
 
-The `oracle schedule` command group uses the Runtime 0.2.0 Scheduler service —
+The `oracle schedule` command group uses the Runtime Scheduler service —
 define, list, update, run, and remove persistent cron tasks. While
 `oracle daemon` is running, commands go through its local API so the live
 engine reschedules immediately.

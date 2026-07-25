@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { DatabaseSync } from "node:sqlite";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cliPath = path.join(repositoryRoot, "dist", "cli.js");
@@ -60,10 +61,19 @@ try {
     throw new Error(`Settled workflow recovery was not idempotent:\n${recovery}`);
   }
 
-  const [workflow, task] = await Promise.all([
-    fs.readFile(path.join(homeDir, "swarms", `${workflowId}.json`), "utf8").then(JSON.parse),
-    fs.readFile(path.join(homeDir, "tasks", `${taskId}.json`), "utf8").then(JSON.parse)
-  ]);
+  const database = new DatabaseSync(path.join(homeDir, "runtime", "oracle.db"));
+  const workflowRow = database.prepare(
+    "SELECT record_json FROM coordination_workflows WHERE id = ?"
+  ).get(workflowId);
+  const taskRow = database.prepare(
+    "SELECT record_json FROM coordination_tasks WHERE id = ?"
+  ).get(taskId);
+  database.close();
+  if (!workflowRow || !taskRow) {
+    throw new Error("SQLite coordination records were not persisted.");
+  }
+  const workflow = JSON.parse(workflowRow.record_json);
+  const task = JSON.parse(taskRow.record_json);
   if (workflow.primaryTaskId !== taskId || task.workflowId !== workflowId) {
     throw new Error("Swarm workflow and task were not linked.");
   }
