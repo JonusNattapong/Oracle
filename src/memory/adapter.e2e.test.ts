@@ -197,6 +197,10 @@ describe("MemoryAdapter — end to end", () => {
     const recent = await memory.remember("me", "fact", "recent memory about caching");
 
     // Backdate the older entry so recency is the only thing separating them.
+    // Touching `recent` instead would be a no-op — it was written milliseconds
+    // ago, so both entries would share a timestamp and the assertion below
+    // would ride on tie-breaking rather than on the recency weighting.
+    // The on-disk directory for "fact" is "facts" (see TYPE_DIR in adapter.ts).
     const oldPath = path.join(tmp, ".oracle-memory", "facts", `${old.id}.json`);
     const oldRaw = JSON.parse(await fs.readFile(oldPath, "utf8"));
     oldRaw.lastAccessed = new Date(Date.now() - 365 * 86_400_000).toISOString();
