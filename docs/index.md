@@ -64,6 +64,7 @@ npx -p @oraclepersonal/oracle oracle ask "review this" -f "src/**/*.ts"
 | 17 | [Changelog](/CHANGELOG.md) | Release notes and version history |
 | 18 | [Init](getting-started.md#initialize-the-workspace) | Bootstrap `.oracle/` for a new project |
 | 19 | [Roadmap v0.6.0](roadmap-0.6.0.md) | Memory Engine foundation and agent coordination |
+| 20 | [Roadmap v0.7.0](roadmap-0.7.0.md) | Cost tracking, provider expansion, sandbox hardening, graph visualization |
 
 ## MCP Tools
 

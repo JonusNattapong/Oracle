@@ -1,0 +1,45 @@
+/**
+ * Memory Graph Visualization Component (v0.7.0)
+ *
+ * Displays entity graph with D3/Cytoscape
+ * - Force-directed layout
+ * - Hover: entity details + related memories
+ * - Click: drill into entity memories
+ * - Search: find path between entities
+ *
+ * TODO: Implement in v0.7.0
+ */
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: "service" | "tech" | "concept";
+  memoryCount: number;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  type: "mentions" | "depends-on" | "stores-in";
+  weight: number;
+}
+
+export interface MemoryGraphProps {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  onEntityClick?: (entityId: string) => void;
+  loading?: boolean;
+}
+
+/**
+ * React component using Cytoscape.js for force-directed layout
+ */
+export function MemoryGraph(props: MemoryGraphProps) {
+  // TODO: Implement in v0.7.0
+  // - Initialize Cytoscape container
+  // - Layout: fcose (force-directed)
+  // - Styles: node color by type, edge width by weight
+  // - Interactions: hover, click, search/highlight path
+  // - Stats: sidebar with entity counts, clustering coefficient
+  return <div>Memory Graph Visualization (v0.7.0)</div>;
+}
