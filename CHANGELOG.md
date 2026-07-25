@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Web dashboard Scheduler card with Run, Pause/Resume, and Delete job actions
+- Web dashboard Agents presence list with active/stale indicators and relative timestamps
+- Web dashboard filter input for approvals and Run maintenance button
+- Web dashboard toast component for non-disruptive success/error feedback
+- Web dashboard audit-chain integrity badge (`chain valid` / `broken @ N`)
+- Task workflow action buttons (Submit / Close) directly in the web dashboard
+- Ink TUI per-tab actions: task submit (`s`) and close (`c`), scheduler run (`r`), pause/resume (`p`), delete (`d`), memory maintenance (`m`)
+- Ink TUI WebSocket live updates with connection status indicator (`● LIVE` / `○ POLL`)
+- Ink TUI per-tab selection and scroll offset, responsive title width, and contextual key hints
+- Ink TUI global memory entries display (previously fetched but never rendered)
+- Shared `format.ts` helpers (`clean`, `truncate`, `shortAge`, `riskTone`) used by both TUIs and CLI
+- `POST /v1/control/tasks/:id/submit` and `POST /v1/control/tasks/:id/close` daemon endpoints
+- `POST /v1/control/memory/maintenance` daemon endpoint
+- `RuntimeClient.submitControlTask`, `closeControlTask`, `runMemoryMaintenance` methods
+- Unit tests for `format.ts`, `ink-state.ts`, and `live.ts` modules (46 tests)
+
+### Changed
+- `--actor` default fallback chain uses `os.userInfo().username` with `USER`/`USERNAME` env on Windows
+- Plain-TUI error handling catches decide and refresh failures into a status message instead of crashing the session
+- Plain-TUI rejection note now unifies with Ink TUI (`"Rejected from Oracle Control."`)
+- Ink TUI footer message color uses explicit `statusKind` property instead of substring-matching "error"
+- Ink TUI `ConnectionStatus` state machine extracted to pure module (`ink-state.ts`)
+- Web dashboard WebSocket handler debounces event-triggered reloads (250ms) and shows offline/polling immediately on disconnect
+- Web dashboard header shows relative `Updated X ago` timestamp
+- `oracle control url` CSP and page content unchanged
+
+### Fixed
+- Guard against undefined `selectedApproval` in Ink TUI confirm prompt
+- Ink TUI `j`/`k` no longer mutate approval selection while viewing other tabs
+- `agent.name`, `agent.role`, `schedule.cron`, `schedule.name`, `task.assignee` fields now sanitized with `clean()`
+
 ## [0.5.0] - 2026-07-24
 
 ### Added

@@ -1,9 +1,9 @@
-# Oracle Human Control Plane 0.4.0
+# Oracle Human Control Plane 0.5.0
 
 Control Center is Oracle's local human control plane. It combines an
 authorization-aware approval inbox, resumable agent checkpoints, an
-execute-once action gate, task and agent state, memory, scheduling, and a
-tamper-evident audit chain.
+execute-once action gate, task and agent state, memory, scheduling, a
+tamper-evident audit chain, and live WebSocket-driven updates.
 
 Runtime remains local-first: HTTP and WebSocket listeners bind only to
 loopback and every data or mutation route uses the owner-only Runtime token.
@@ -31,15 +31,26 @@ Restart Runtime from another project to change it.
 - Agents
 - Scheduler
 
-Keyboard controls:
+The TUI connects to Runtime via WebSocket for live updates. A connection
+status indicator (`● LIVE` in green, `○ POLL` in yellow) appears in the
+header. When Runtime is unreachable it falls back to polling every 10
+seconds and reconnects automatically.
 
-- left/right or Tab — change tab
-- `j`/`k` or up/down — move selection
-- Enter — show or hide approval details
-- `/` — filter approvals
-- `a` — open approval confirmation
-- `x` — enter a rejection reason, then confirm
-- `r` — refresh
+Keyboard controls and per-tab actions:
+
+- `←`/`→` or Tab — change tab
+- `j`/`k` or up/down — move selection (per-tab, separate for each tab)
+- Enter on Approvals — show or hide approval details
+- `/` — filter approvals (Approvals tab only)
+- `a` — open approval confirmation (Approvals tab only)
+- `x` — enter a rejection reason, then confirm (Approvals tab only)
+- `s` — submit selected task for review (Tasks tab, in_progress/pending/blocked)
+- `c` — close selected task (Tasks tab, review status)
+- `r` on Scheduler — run selected job now (Scheduler tab)
+- `p` — pause or resume selected job (Scheduler tab)
+- `d` — delete selected job (Scheduler tab, with confirmation)
+- `m` — run memory maintenance (Memory tab)
+- `r` — refresh snapshot
 - `q` — quit
 
 Use `--actor <identity>` to select the decision identity. It must match an
@@ -62,8 +73,27 @@ The printed URL carries the Runtime credential in its fragment. The dashboard
 moves it to tab-scoped session storage and removes it from the address bar.
 Do not share this URL.
 
+The dashboard now includes:
+
+- **Approval inbox** with client-side filter input, approve/reject buttons,
+  risk badge, quorum progress, and expiry display
+- **Task workflow** with 6-status lane counts, task table (status, title,
+  owner→agent, updated), and inline Submit / Close action buttons
+- **Scheduler** job table with Run, Pause/Resume, and Delete buttons per row
+- **Agents** presence list with active/stale dots, name, role, and relative
+  last-seen timestamps
+- **Memory distribution** bar chart (by type) with a Run maintenance button
+- **Audit activity** event timeline with chain integrity badge
+- **Toast notifications** for non-disruptive feedback on actions
+- Live WebSocket updates with debounced reload (250ms); offline/polling
+  indicator in the header
+- Relative `Updated X ago` timestamp in the header
+- Dark/light theme toggle; responsive layout down to mobile widths
+
 Dashboard decisions submit the approval version displayed on screen. A stale
 page receives a conflict instead of overwriting a newer vote.
+
+## Durable approval contract
 
 ## Durable approval contract
 
@@ -196,6 +226,9 @@ GET  /v1/control/approvals/:id
 POST /v1/control/approvals/:id/decision
 POST /v1/control/approvals/:id/execution/claim
 POST /v1/control/executions/:id/complete
+POST /v1/control/tasks/:id/submit          {"actor":"…", "summary":"…"}
+POST /v1/control/tasks/:id/close           {"actor":"…", "note":"…"}
+POST /v1/control/memory/maintenance
 ```
 
 Decision bodies include `decidedBy`, `expectedVersion`, and an optional
