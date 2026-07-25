@@ -166,4 +166,76 @@ describe("MemoryAdapter — end to end", () => {
     const afterForget = await memory.recall({ type: "fact", includeArchived: true, limit: 100 });
     expect(afterForget.filter((e) => !e.archived)).toHaveLength(0);
   });
+
+  // ── v0.6.0 Hybrid Retrieval Tests ────────────────────────────────
+
+  it("searchMemories returns BM25 + lexical results (hybrid fallback without embedder)", async () => {
+    await memory.remember("me", "fact", "The vector database stores embeddings efficiently");
+    await memory.remember("me", "fact", "A lexical search uses keyword matching");
+    await memory.remember("me", "fact", "Hybrid retrieval combines both approaches");
+
+    const hits = await memory.searchMemories("embeddings keyword hybrid");
+    expect(hits.length).toBeGreaterThan(0);
+    // All three results should rank because they contain query terms
+    const content = hits.map((h) => h.content);
+    expect(content.some((c) => c.includes("embeddings"))).toBe(true);
+  });
+
+  it("searchMemories ranks semantic + lexical results together", async () => {
+    // Store documents with different term overlap
+    await memory.remember("me", "fact", "Postgres is a relational database");
+    await memory.remember("me", "fact", "NoSQL databases use document storage");
+    await memory.remember("me", "fact", "In-memory caches like Redis speed up queries");
+
+    const hits = await memory.searchMemories("database performance");
+    // Should find matches across all three (lexical: database, performance; semantic: related concepts)
+    expect(hits.length).toBeGreaterThan(0);
+  });
+
+  it("scoredSearchMemories applies recency weighting to hybrid results", async () => {
+    const old = await memory.remember("me", "fact", "old memory about caching");
+    const recent = await memory.remember("me", "fact", "recent memory about caching");
+
+    // Manually boost recent's access count to simulate recency boost
+    const recentPath = path.join(tmp, ".oracle-memory", "fact", `${recent.id}.json`);
+    const recentRaw = JSON.parse(await fs.readFile(recentPath, "utf8"));
+    recentRaw.lastAccessed = new Date().toISOString();
+    await fs.writeFile(recentPath, JSON.stringify(recentRaw), "utf8");
+
+    const hits = await memory.scoredSearchMemories("caching");
+    expect(hits.length).toBeGreaterThan(0);
+    // Recent should rank higher due to recency bonus
+    expect(hits[0].id).toBe(recent.id);
+  });
+
+  it("searchMemories handles partial term matches and tag weighting", async () => {
+    await memory.remember("me", "fact", "Deployment uses CI/CD pipeline", {
+      tags: ["deployment", "ci-cd"],
+    });
+    await memory.remember("me", "fact", "Docker containers for isolation", {
+      tags: ["docker"],
+    });
+
+    const hits = await memory.searchMemories("deploy CI");
+    expect(hits.length).toBeGreaterThan(0);
+    expect(hits[0].content).toContain("Deployment");
+  });
+
+  it("consolidation works with hybrid results", async () => {
+    // Create near-duplicate memories indexed for hybrid search
+    await memory.remember("agent1", "fact", "Memory consolidation merges duplicates", {
+      tags: ["consolidation"],
+    });
+    await memory.remember("agent2", "fact", "Consolidation reduces memory size", {
+      tags: ["consolidation"],
+    });
+
+    const before = await memory.recall({ type: "fact" });
+    const result = await memory.consolidate();
+
+    // Should merge the two similar entries
+    expect(result.consolidated).toBeGreaterThan(0);
+    const after = await memory.recall({ type: "fact" });
+    expect(after.length).toBeLessThan(before.length);
+  });
 });
