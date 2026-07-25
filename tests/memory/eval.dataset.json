@@ -1,0 +1,131 @@
+{
+  "version": "1.0",
+  "description": "Memory retrieval evaluation dataset for recall@k metrics. Each query targets relevant memory IDs.",
+  "queries": [
+    {
+      "id": "q-001",
+      "query": "How does memory search work in Oracle?",
+      "relevantIds": ["mem-001", "mem-003"],
+      "category": "system-architecture"
+    },
+    {
+      "id": "q-002",
+      "query": "Memory engine SQLite schema design",
+      "relevantIds": ["mem-001", "mem-004"],
+      "category": "system-architecture"
+    },
+    {
+      "id": "q-003",
+      "query": "Vector embedding providers configuration",
+      "relevantIds": ["mem-002", "mem-005"],
+      "category": "configuration"
+    },
+    {
+      "id": "q-004",
+      "query": "Cross-session agent coordination",
+      "relevantIds": ["mem-003", "mem-006"],
+      "category": "agent-orchestration"
+    },
+    {
+      "id": "q-005",
+      "query": "Consolidation and memory cleanup strategies",
+      "relevantIds": ["mem-004", "mem-007"],
+      "category": "maintenance"
+    },
+    {
+      "id": "q-006",
+      "query": "Entity graph linking and deduplication",
+      "relevantIds": ["mem-005", "mem-008"],
+      "category": "data-structure"
+    },
+    {
+      "id": "q-007",
+      "query": "BM25 full-text search implementation",
+      "relevantIds": ["mem-006", "mem-009"],
+      "category": "search"
+    },
+    {
+      "id": "q-008",
+      "query": "Hybrid retrieval ranking and RRF fusion",
+      "relevantIds": ["mem-007", "mem-010"],
+      "category": "search"
+    },
+    {
+      "id": "q-009",
+      "query": "Migration from JSON vectors to SQLite",
+      "relevantIds": ["mem-008", "mem-011"],
+      "category": "data-migration"
+    },
+    {
+      "id": "q-010",
+      "query": "Remote swarm agent messaging and coordination",
+      "relevantIds": ["mem-009", "mem-012"],
+      "category": "agent-orchestration"
+    },
+    {
+      "id": "q-011",
+      "query": "Token TTL and session expiry",
+      "relevantIds": ["mem-010", "mem-013"],
+      "category": "security"
+    },
+    {
+      "id": "q-012",
+      "query": "Memory audit integrity and verification",
+      "relevantIds": ["mem-011", "mem-014"],
+      "category": "maintenance"
+    },
+    {
+      "id": "q-013",
+      "query": "How does the control center dashboard work?",
+      "relevantIds": ["mem-012"],
+      "category": "ui"
+    },
+    {
+      "id": "q-014",
+      "query": "Approval workflow and decision tracking",
+      "relevantIds": ["mem-013"],
+      "category": "workflow"
+    },
+    {
+      "id": "q-015",
+      "query": "Scheduler cron tasks and runtime daemon",
+      "relevantIds": ["mem-014"],
+      "category": "runtime"
+    },
+    {
+      "id": "q-016",
+      "query": "Debugging multi-agent conflicts",
+      "relevantIds": ["mem-003", "mem-012"],
+      "category": "troubleshooting"
+    },
+    {
+      "id": "q-017",
+      "query": "Cost accounting and token tracking",
+      "relevantIds": ["mem-001", "mem-009"],
+      "category": "observability"
+    },
+    {
+      "id": "q-018",
+      "query": "Sandbox isolation and resource limits",
+      "relevantIds": ["mem-005", "mem-010"],
+      "category": "security"
+    },
+    {
+      "id": "q-019",
+      "query": "Provider coverage and API integration",
+      "relevantIds": ["mem-002", "mem-007"],
+      "category": "configuration"
+    },
+    {
+      "id": "q-020",
+      "query": "Memory graph visualization and UI exploration",
+      "relevantIds": ["mem-008", "mem-014"],
+      "category": "ui"
+    }
+  ],
+  "metrics": {
+    "recall_targets": [1, 5, 10],
+    "mrr": true,
+    "description": "Recall@k = fraction of relevant docs in top-k results. MRR = 1 / rank of first relevant."
+  }
+}

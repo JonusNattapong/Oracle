@@ -420,8 +420,44 @@ export class RuntimeDatabase {
       version = 6;
     }
 
-    if (version > 6) {
-      throw new Error(`Runtime database schema ${version} is newer than supported schema 6.`);
+    if (version < 7) {
+      this.applyMigration(7, `
+        CREATE TABLE memory_embeddings (
+          id TEXT PRIMARY KEY,
+          memory_id TEXT NOT NULL UNIQUE,
+          vector BLOB NOT NULL,
+          updated_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX memory_embeddings_memory_idx
+          ON memory_embeddings(memory_id);
+
+        CREATE TABLE memory_content_fts (
+          id TEXT PRIMARY KEY,
+          memory_id TEXT NOT NULL UNIQUE,
+          content TEXT NOT NULL
+        ) STRICT;
+
+        CREATE VIRTUAL TABLE memory_content_search USING fts5(
+          content,
+          memory_id UNINDEXED
+        );
+
+        CREATE TABLE memory_search_cache (
+          query_hash TEXT PRIMARY KEY,
+          results_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          expires_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX memory_search_cache_expiry_idx
+          ON memory_search_cache(expires_at);
+      `);
+      version = 7;
+    }
+
+    if (version > 7) {
+      throw new Error(`Runtime database schema ${version} is newer than supported schema 7.`);
     }
   }
 
