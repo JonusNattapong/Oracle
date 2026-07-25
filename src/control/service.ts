@@ -1,5 +1,6 @@
 import { CoordinationService } from "../coordination/service.js";
 import { MemoryAdapter, type MemoryStoreEntry } from "../memory/adapter.js";
+import type { MaintenanceResult } from "../memory/maintenance.js";
 import { MessageStore } from "../messaging/store.js";
 import { AgentRegistry } from "../messaging/registry.js";
 import { AuditLogger, type AuditRecord } from "../observability/audit.js";
@@ -237,6 +238,51 @@ export class ControlCenterService {
       decision.note
     );
     return updated;
+  }
+
+  async submitTaskForReview(
+    taskId: string,
+    actor: string,
+    summary?: string
+  ): Promise<TaskRecord> {
+    const task = await this.coordination.submitTask(
+      taskId,
+      actor,
+      summary ?? "Submitted for review from Control Center."
+    );
+    this.events.publish("swarm.task.submitted", {
+      taskId: task.id,
+      actor,
+      status: task.status
+    });
+    return task;
+  }
+
+  async closeTask(taskId: string, actor: string, note?: string): Promise<TaskRecord> {
+    const task = await this.coordination.closeTask(taskId, actor, true, note);
+    this.events.publish("swarm.task.closed", {
+      taskId: task.id,
+      actor,
+      approved: true
+    });
+    return task;
+  }
+
+  async runMemoryMaintenance(): Promise<{
+    project: MaintenanceResult;
+    global: MaintenanceResult;
+  }> {
+    const [project, globalMemory] = await Promise.all([
+      this.projectMemory.runMaintenance(),
+      this.globalMemory.runMaintenance()
+    ]);
+    this.events.publish("memory.maintenance.completed", {
+      projectPruned: project.pruned.length,
+      projectPromoted: project.promoted.length,
+      globalPruned: globalMemory.pruned.length,
+      globalPromoted: globalMemory.promoted.length
+    });
+    return { project, global: globalMemory };
   }
 
   async claimExecution(

@@ -317,6 +317,32 @@ export class LocalApiServer {
         }
       }
 
+      const taskControlMatch = url.pathname.match(
+        /^\/v1\/control\/tasks\/([a-z0-9-]+)\/(submit|close)$/i
+      );
+      if (request.method === "POST" && taskControlMatch) {
+        const body = await this.body(request);
+        const actor = this.requiredString(body.actor, "actor");
+        const task = taskControlMatch[2] === "submit"
+          ? await this.options.control.submitTaskForReview(
+              taskControlMatch[1],
+              actor,
+              this.optionalString(body.summary, "summary")
+            )
+          : await this.options.control.closeTask(
+              taskControlMatch[1],
+              actor,
+              this.optionalString(body.note, "note")
+            );
+        this.json(response, 200, { task });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/control/memory/maintenance") {
+        this.json(response, 200, { result: await this.options.control.runMemoryMaintenance() });
+        return;
+      }
+
       if (request.method === "GET" && url.pathname === "/v1/schedules") {
         this.json(response, 200, { tasks: await this.options.scheduler.list() });
         return;

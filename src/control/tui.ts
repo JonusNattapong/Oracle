@@ -1,4 +1,5 @@
 import type { ApprovalRequest, ControlCenterSnapshot } from "./types.js";
+import { clean, riskTone, shortAge, truncate } from "./format.js";
 
 const BLUE = "\x1b[38;5;39m";
 const CYAN = "\x1b[38;5;45m";
@@ -72,7 +73,8 @@ function approvalRows(items: ApprovalRequest[], selected: number, width: number)
   if (!items.length) return [` ${GREEN}✓ No pending approvals${RESET}`];
   return items.slice(0, 8).map((item, index) => {
     const marker = index === selected ? `${INVERT}>${RESET}` : " ";
-    const risk = item.risk === "high" ? RED : item.risk === "medium" ? AMBER : GREEN;
+    const tone = riskTone(item.risk);
+    const risk = tone === "danger" ? RED : tone === "warn" ? AMBER : GREEN;
     const titleWidth = Math.max(22, width - 58);
     return `${marker} ${risk}${item.risk.toUpperCase().padEnd(6)}${RESET} ${truncate(item.title, titleWidth).padEnd(titleWidth)} ${MUTED}${truncate(item.assignedTo, 16).padEnd(16)} ${shortAge(item.createdAt)}${RESET}`;
   });
@@ -96,23 +98,6 @@ function auditRows(snapshot: ControlCenterSnapshot, width: number): string[] {
     const targetWidth = Math.max(20, width - 48);
     return ` ${color}●${RESET} ${record.action.padEnd(14)} ${truncate(record.target, targetWidth).padEnd(targetWidth)} ${MUTED}${shortAge(record.timestamp)}${RESET}`;
   });
-}
-
-function clean(value: unknown): string {
-  return String(value ?? "").replace(/[\u0000-\u001f\u007f-\u009f]/g, " ");
-}
-
-function truncate(value: unknown, width: number): string {
-  const text = clean(value);
-  return text.length <= width ? text : `${text.slice(0, Math.max(1, width - 1))}…`;
-}
-
-function shortAge(timestamp: string): string {
-  const elapsed = Math.max(0, Date.now() - new Date(timestamp).getTime());
-  if (elapsed < 60_000) return `${Math.floor(elapsed / 1000)}s`;
-  if (elapsed < 3_600_000) return `${Math.floor(elapsed / 60_000)}m`;
-  if (elapsed < 86_400_000) return `${Math.floor(elapsed / 3_600_000)}h`;
-  return `${Math.floor(elapsed / 86_400_000)}d`;
 }
 
 function pad(count: number): string {

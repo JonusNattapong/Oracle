@@ -40,6 +40,7 @@ import {
   type SwarmConnectionProfile
 } from "./runtime/swarmClient.js";
 import { daemonStatus, startDaemon, stopDaemon } from "./runtime/control.js";
+import { riskTone } from "./control/format.js";
 import type {
   CreateTaskInput as CreateCronTaskInput,
   CronTask,
@@ -1359,13 +1360,23 @@ async function requireRuntimeClient(): Promise<RuntimeClient> {
   return client;
 }
 
+function defaultActor(): string {
+  if (process.env.USER) return process.env.USER;
+  if (process.env.USERNAME) return process.env.USERNAME;
+  try {
+    return os.userInfo().username || "operator";
+  } catch {
+    return "operator";
+  }
+}
+
 const controlCmd = program
   .command("control")
   .description("Open the Control Center TUI for approvals, tasks, memory, and audit")
   .option("--once", "Render one snapshot and exit", false)
   .option("--plain", "Use the dependency-free ANSI TUI", false)
   .option("--interval <ms>", "Refresh interval in milliseconds", "2000")
-  .option("--actor <name>", "Approval actor recorded by the TUI", process.env.USER ?? "operator")
+  .option("--actor <name>", "Approval actor recorded by the TUI", defaultActor())
   .action(async (options) => {
     const client = await requireRuntimeClient();
     const { renderControlTui } = await import("./control/tui.js");
@@ -1385,10 +1396,12 @@ const controlCmd = program
       });
       return;
     }
+    let statusMessage = "";
     const render = () => {
       const screen = renderControlTui(snapshot, selected);
       if (process.stdout.isTTY && !options.once) process.stdout.write("\x1b[2J\x1b[H");
       process.stdout.write(`${screen}\n`);
+      if (statusMessage) process.stdout.write(`\x1b[33m${statusMessage}\x1b[0m\n`);
     };
     render();
     if (options.once || !process.stdin.isTTY || !process.stdout.isTTY) return;
@@ -1400,6 +1413,10 @@ const controlCmd = program
       try {
         snapshot = await client.getControlSnapshot();
         selected = Math.min(selected, Math.max(0, snapshot.approvals.items.length - 1));
+        statusMessage = "";
+        render();
+      } catch (error) {
+        statusMessage = error instanceof Error ? error.message : String(error);
         render();
       } finally {
         refreshing = false;
@@ -1410,24 +1427,24 @@ const controlCmd = program
     process.stdin.resume();
     process.stdin.setEncoding("utf8");
     let onKey: ((key: string) => void) | undefined;
-    await new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve) => {
       onKey = (key: string) => {
-        if (key === "q" || key === "\u0003") {
+        if (key === "q" || key === "") {
           resolve();
           return;
         }
-        if (key === "j" || key === "\u001b[B") {
+        if (key === "j" || key === "[B") {
           selected = Math.min(selected + 1, Math.max(0, snapshot.approvals.items.length - 1));
           render();
           return;
         }
-        if (key === "k" || key === "\u001b[A") {
+        if (key === "k" || key === "[A") {
           selected = Math.max(0, selected - 1);
           render();
           return;
         }
         if (key === "r") {
-          void refresh().catch(reject);
+          void refresh();
           return;
         }
         if ((key === "a" || key === "x") && snapshot.approvals.items[selected]) {
@@ -1437,8 +1454,14 @@ const controlCmd = program
             decidedBy: options.actor,
             expectedVersion: approval.version,
             channel: "tui",
-            note: key === "x" ? "Rejected from Control Center TUI." : undefined
-          }).then(refresh, reject);
+            note: key === "x" ? "Rejected from Oracle Control." : undefined
+          }).then(
+            () => refresh(),
+            (error: unknown) => {
+              statusMessage = error instanceof Error ? error.message : String(error);
+              render();
+            }
+          );
         }
       };
       process.stdin.on("data", onKey);
@@ -1471,11 +1494,8 @@ const approvalCmd = program
   .description("Manage the persistent Control Center approval inbox");
 
 function printApproval(approval: import("./control/types.js").ApprovalRequest): void {
-  const riskColor = approval.risk === "high"
-    ? "\x1b[31m"
-    : approval.risk === "medium"
-      ? "\x1b[33m"
-      : "\x1b[32m";
+  const tone = riskTone(approval.risk);
+  const riskColor = tone === "danger" ? "\x1b[31m" : tone === "warn" ? "\x1b[33m" : "\x1b[32m";
   console.log(
     `${riskColor}${approval.risk.toUpperCase()}\x1b[0m ${approval.id} | ${approval.status} | ${approval.title}`
   );

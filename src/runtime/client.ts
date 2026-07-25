@@ -7,6 +7,8 @@ import type {
   ControlCenterSnapshot,
   CreateApprovalInput
 } from "../control/types.js";
+import type { MaintenanceResult } from "../memory/maintenance.js";
+import type { TaskRecord } from "../tasks/store.js";
 import { readDaemonState, type DaemonState } from "./state.js";
 import type { SwarmToken } from "./swarmService.js";
 
@@ -175,6 +177,42 @@ export class RuntimeClient {
       true,
       10_000
     )).execution;
+  }
+
+  async submitControlTask(
+    id: string,
+    input: { actor: string; summary?: string }
+  ): Promise<TaskRecord> {
+    return (await this.request<{ task: TaskRecord }>(
+      "POST",
+      `/v1/control/tasks/${encodeURIComponent(id)}/submit`,
+      input,
+      true,
+      10_000
+    )).task;
+  }
+
+  async closeControlTask(
+    id: string,
+    input: { actor: string; note?: string }
+  ): Promise<TaskRecord> {
+    return (await this.request<{ task: TaskRecord }>(
+      "POST",
+      `/v1/control/tasks/${encodeURIComponent(id)}/close`,
+      input,
+      true,
+      10_000
+    )).task;
+  }
+
+  async runMemoryMaintenance(): Promise<{ project: MaintenanceResult; global: MaintenanceResult }> {
+    return (await this.request<{ result: { project: MaintenanceResult; global: MaintenanceResult } }>(
+      "POST",
+      "/v1/control/memory/maintenance",
+      undefined,
+      true,
+      60_000
+    )).result;
   }
 
   controlCenterUrl(): string {
