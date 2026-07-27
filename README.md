@@ -128,11 +128,11 @@ This generates `.claude/mcp.json` with the config. Restart Claude Code; you'll s
 ### Set a model provider
 
 ```bash
-export ANTHROPIC_API_KEY=sk-...    # or OPENAI_API_KEY, etc.
+export ANTHROPIC_API_KEY=sk-...    # or OPENAI_API_KEY, GEMINI_API_KEY, etc.
 oracle doctor                       # verify it works
 ```
 
-Supported: `anthropic`, `openai`, `opencode`, `codex`
+Supported: `anthropic`, `openai`, `opencode`, `codex`, `gemini`
 
 ### Connect agents on different machines
 

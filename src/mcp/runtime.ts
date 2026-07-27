@@ -71,7 +71,9 @@ export async function createOracleMcpServer(
   //          graph prune every 2h,
   //          LLM reflection every 4h (if ANTHROPIC_API_KEY is set).
   memory.startAutoMaintenance?.();
-  console.error("[oracle-mcp] background memory maintenance started (1h interval, graph prune 2h, reflection 4h)");
+  if (process.env.ORACLE_DEBUG) {
+    console.error("[oracle-mcp] background memory maintenance started (1h interval, graph prune 2h, reflection 4h)");
+  }
 
   let agent: AgentService | undefined;
   let agentUnavailableReason: string | undefined;

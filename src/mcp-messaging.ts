@@ -1,18 +1,37 @@
 #!/usr/bin/env node
 console.log = console.error;
-import "dotenv/config";
-import os from "node:os";
-import path from "node:path";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { MessageStore } from "./messaging/store.js";
-import { AgentRegistry } from "./messaging/registry.js";
-import { TaskStore } from "./tasks/store.js";
-import { SwarmStore } from "./orchestrator/swarmStore.js";
-import { CoordinationService } from "./coordination/service.js";
-import { registerMessagingTools, MESSAGING_INSTRUCTIONS } from "./mcp/messagingTools.js";
-import { registerTaskTools, TASK_INSTRUCTIONS } from "./mcp/taskTools.js";
-import { VERSION } from "./version.js";
+console.info = console.error;
+console.warn = console.error;
+console.debug = console.error;
+
+await import("dotenv/config");
+const [
+  os,
+  path,
+  { McpServer },
+  { StdioServerTransport },
+  { MessageStore },
+  { AgentRegistry },
+  { TaskStore },
+  { SwarmStore },
+  { CoordinationService },
+  { registerMessagingTools, MESSAGING_INSTRUCTIONS },
+  { registerTaskTools, TASK_INSTRUCTIONS },
+  { VERSION }
+] = await Promise.all([
+  import("node:os"),
+  import("node:path"),
+  import("@modelcontextprotocol/sdk/server/mcp.js"),
+  import("@modelcontextprotocol/sdk/server/stdio.js"),
+  import("./messaging/store.js"),
+  import("./messaging/registry.js"),
+  import("./tasks/store.js"),
+  import("./orchestrator/swarmStore.js"),
+  import("./coordination/service.js"),
+  import("./mcp/messagingTools.js"),
+  import("./mcp/taskTools.js"),
+  import("./version.js")
+]);
 
 /**
  * Standalone coordination MCP server: exposes the `oracle_msg_*` messaging

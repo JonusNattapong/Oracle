@@ -44,6 +44,7 @@ otherwise it returns `ORACLE_AGENT_UNAVAILABLE`.
 | `--resume <id>` | Resume from a saved checkpoint after a crash or max-steps hit |
 | `--json` | Structured output: `finalText`, `turns`, `steps`, `checkpointId`, `usage` |
 | `--read-only` | Drops all mutating tools (write/edit/bash); investigation only |
+| `--sandbox <mode>` | Enforce process/network containment (`docker`, `namespace`, or `none`) |
 | `--max-steps <n>` | Cap the loop (default 20, max 50) |
 | `--provider <name>` | Override provider for this run |
 | `--model <name>` | Override model for this run |
@@ -69,6 +70,7 @@ access is confined to the workspace root — a single trust boundary
 
 ## Safety boundaries
 
+- **Container & Process Sandbox** — Docker container isolation (`--sandbox=docker`) drops all capabilities (`--cap-drop ALL`), disables networking (`--network=none`), limits CPU/memory/pids (fork-bomb ceiling), and mounts workspace as a read-only root with a writable workspace mount. Linux namespace fallback (`--sandbox=namespace`) uses `unshare(1)` and `ulimit -u`.
 - **Shell confined** — the `bash` tool runs in the workspace root with a timeout; it is disabled in readOnly mode. Every command is logged to the audit trail. On Windows, `$SHELL` is respected (e.g. Git Bash); on Unix, the user's shell is used.
 - **Workspace confinement** — every path is resolved against the workspace root;
   traversal outside it (`../`) is rejected before any I/O happens.
@@ -222,6 +224,7 @@ Set the provider in `.oracle/config.json`:
 | `src/agent/loop.ts` | Provider-agnostic tool-use loop + checkpoint save/resume |
 | `src/agent/checkpoint.ts` | Disk-backed checkpoint store for crash recovery |
 | `src/agent/policy.ts` | Safety policy: workspace confinement, read-only mode, bash allowlist |
+| `src/agent/sandbox.ts` | Process and network isolation (Docker container / Linux namespace fallback) |
 | `src/agent/audit.ts` | Audit trail: records every file mutation with a content hash |
 | `src/agent/service.ts` | `AgentService` — wires tools + provider, runs the loop |
 | `src/providers/anthropicProvider.ts` | `runAgentTurn` via native tool use |

@@ -1,8 +1,8 @@
 # Oracle Roadmap: v0.7.0
 
+**Status:** Completed (Implemented in commit `1030b9f`)  
+**Completed Date:** July 25, 2026  
 **Theme:** Advanced Features — Cost Tracking, Provider Expansion, Sandbox Hardening, Memory Visualization
-
-Release target: Q4 2026 (after v0.6.0 stabilizes)
 
 ## Overview
 
@@ -294,7 +294,7 @@ Redis:
 | 0.4 | Human Control Plane | ✓ Complete |
 | 0.5 | Remote Swarm | ✓ Complete |
 | 0.6 | Memory Engine | ✓ Complete |
-| **0.7** | **Advanced Features** | → Start here |
+| **0.7** | **Advanced Features** | ✓ Complete |
 | 0.8+ | ML optimization, distributed accounting | Future |
 
 ---

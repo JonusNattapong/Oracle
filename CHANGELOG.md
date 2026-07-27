@@ -7,37 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- **Anthropic OAuth was entirely non-functional.** `oracle login` completed and
-  stored a token that nothing ever read, so every subsequent call still demanded
-  `ANTHROPIC_API_KEY`. Three defects compounded:
-  - `createProvider`/`createAgentProvider` built `new AnthropicProvider()` with
-    no OAuth client. Since the provider only consults OAuth when handed one, the
-    bearer-token path, the `anthropic-beta` header, plan-tier routing, and the
-    whole refresh mechanism were unreachable dead code.
-  - `checkProvider("anthropic")` tested only `ANTHROPIC_API_KEY`, so `oracle ask`
-    rejected an authenticated user at the credential gate before the provider
-    ran. An expired-but-refreshable session now also counts as usable, since the
-    provider renews it on first call.
-  - Refresh used the constructor's client id, which the factory has no way to
-    supply. The client id is now recorded at login and resolved from the stored
-    session, so refresh works in shells without `ANTHROPIC_CLIENT_ID`.
-- OAuth token files are written owner-only (`0600`, in a `0700` directory). These
-  are long-lived credentials and were being created world-readable.
-- `oracle ask` exited 1 printing nothing when a consult failed — the reason was
-  recorded on the result but never surfaced, leaving no way to distinguish an
-  auth failure from a network one. It now reports the error.
-
-### Added
-- `oracle login --status` reports the stored session's plan and whether it is
-  active, refreshable, or needs a re-login. Notes when `ANTHROPIC_API_KEY` is set
-  and therefore takes precedence over the session.
-- First tests for the auth module (32): token store round-trips, permissions,
-  corrupt-file handling, refresh rotation, concurrent-refresh de-duplication,
-  cross-process refresh adoption, plan-tier decoding, and factory OAuth wiring.
-- Web dashboard Scheduler card with Run, Pause/Resume, and Delete job actions
-
-## [0.7.0] - 2026-07-25
+## [0.7.0] - 2026-07-27
 
 ### Added
 - **Cost & token accounting** — provider spend is recorded and queryable
@@ -74,6 +44,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     as the whole graph
   - `EntityGraph.getEntity()` returns relations with direction and weight
   - `oracle memory graph show|entity|path`
+
+- `oracle login --status` reports the stored session's plan and whether it is
+  active, refreshable, or needs a re-login. Notes when `ANTHROPIC_API_KEY` is set
+  and therefore takes precedence over the session.
+- Tests for the auth module (32): token store round-trips, permissions,
+  corrupt-file handling, refresh rotation, concurrent-refresh de-duplication,
+  cross-process refresh adoption, plan-tier decoding, and factory OAuth wiring.
+- Web dashboard Scheduler card with Run, Pause/Resume, and Delete job actions
+
+### Fixed
+- **Anthropic OAuth functionality:** fixed provider building, `checkProvider("anthropic")` credential testing, refresh client id resolution, owner-only token file permissions (`0600`), and error reporting for consult failures.
 
 ### Changed
 - `ConsultService` accepts an optional `CostSink`; accounting failures are
