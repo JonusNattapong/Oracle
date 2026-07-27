@@ -45,6 +45,8 @@ const ACTIVE_TASK_STATUSES = new Set<TaskStatus>([
 export class ControlCenterService {
   readonly approvals: ApprovalStore;
   private readonly tasks: TaskStore;
+  private readonly messages: MessageStore;
+  private readonly swarms: SwarmStore;
   private readonly coordination: CoordinationService;
   private readonly agents: AgentRegistry;
   private readonly projectMemory: MemoryAdapter;
@@ -65,10 +67,12 @@ export class ControlCenterService {
   ) {
     this.approvals = new ApprovalStore(database);
     this.tasks = new TaskStore(options.homeDir);
+    this.messages = new MessageStore(options.homeDir);
+    this.swarms = new SwarmStore(options.homeDir);
     this.coordination = new CoordinationService(
       this.tasks,
-      new MessageStore(options.homeDir),
-      new SwarmStore(options.homeDir)
+      this.messages,
+      this.swarms
     );
     this.agents = new AgentRegistry(options.homeDir);
     this.projectMemory = new MemoryAdapter(options.workspaceRoot);
@@ -105,6 +109,13 @@ export class ControlCenterService {
     clearInterval(this.expiryTimer);
     this.expiryTimer = undefined;
     this.telegram.stopCallbacks();
+  }
+
+  dispose(): void {
+    this.tasks.dispose();
+    this.messages.dispose();
+    this.swarms.dispose();
+    this.agents.dispose();
   }
 
   async snapshot(): Promise<ControlCenterSnapshot> {

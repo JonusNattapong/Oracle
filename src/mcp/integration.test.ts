@@ -28,6 +28,9 @@ const provider: Provider = {
 let root: string;
 let client: Client;
 let server: McpServer;
+let messages: MessageStore;
+let agentRegistry: AgentRegistry;
+let tasks: TaskStore;
 
 beforeAll(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-mcp-test-"));
@@ -49,9 +52,9 @@ beforeAll(async () => {
     memory: new MemoryAdapter(root),
     globalMemory: new MemoryAdapter(root, "global-memory"),
     profile: new ProfileStore(root),
-    messages: new MessageStore(root),
-    agentRegistry: new AgentRegistry(root),
-    tasks: new TaskStore(root),
+    messages: (messages = new MessageStore(root)),
+    agentRegistry: (agentRegistry = new AgentRegistry(root)),
+    tasks: (tasks = new TaskStore(root)),
     providerChecks: async () => [{ name: "provider", ok: true, detail: "test" }]
   });
   client = new Client({ name: "oracle-test-client", version: "1.0.0" });
@@ -60,6 +63,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  messages?.dispose();
+  agentRegistry?.dispose();
+  tasks?.dispose();
   await client.close();
   await server.close();
   await fs.rm(root, { recursive: true, force: true });
@@ -364,11 +370,13 @@ describe("Oracle MCP tools", () => {
   });
 
   test("coordination recovery delivers pending task messages idempotently", async () => {
-    const task = await new TaskStore(root).create({
+    const recoveryStore = new TaskStore(root);
+    const task = await recoveryStore.create({
       title: "Recover MCP notification",
       createdBy: "lead",
       assignee: "recovery-worker"
     });
+    recoveryStore.dispose();
 
     const first = await client.callTool({ name: "oracle_coordination_recover", arguments: {} });
     const second = await client.callTool({ name: "oracle_coordination_recover", arguments: {} });

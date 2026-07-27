@@ -65,6 +65,10 @@ export class MessageStore {
     this.database = new RuntimeDatabase(homeDir);
   }
 
+  dispose(): void {
+    this.database.close();
+  }
+
   async send(input: SendInput): Promise<AgentMessage> {
     await this.ensureLegacyImported();
     const deterministicId = input.coordinationEventId

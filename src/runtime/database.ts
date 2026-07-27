@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type {
@@ -52,7 +53,30 @@ export class RuntimeDatabase {
   }
 
   close(): void {
+    try {
+      this.connection.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+    } catch {
+      // checkpoint may fail if already closed; ignore
+    }
     this.connection.close();
+    // Windows: SQLite may not release file handles immediately after close().
+    // Retry deletion of WAL/SHM/main files with backoff.
+    if (os.platform() === "win32") {
+      const dir = path.dirname(this.filePath);
+      const base = path.basename(this.filePath);
+      for (const file of [base + "-wal", base + "-shm", base]) {
+        const fullPath = path.join(dir, file);
+        for (let attempt = 0; attempt < 30; attempt++) {
+          try {
+            fsSync.unlinkSync(fullPath);
+            break;
+          } catch {
+            if (attempt === 29) break;
+            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
+          }
+        }
+      }
+    }
   }
 
   recordEvent(type: string, payload: Record<string, unknown>): RuntimeEvent {

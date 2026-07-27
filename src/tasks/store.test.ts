@@ -14,6 +14,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  store.dispose();
   await fs.rm(home, { recursive: true, force: true });
 });
 
@@ -97,23 +98,18 @@ describe("TaskStore", () => {
       approvalThresholdRatio: 0.5
     });
 
-    const first = await new TaskStore(home).castProposalVote(
-      proposal.id,
-      "reviewer",
-      "approve",
-      "looks good"
-    );
-    expect(first?.proposal.status).toBe("pending");
-    expect(first?.proposal.votes).toHaveLength(1);
+    const store2 = new TaskStore(home);
+    try {
+      const first = await store2.castProposalVote(proposal.id, "reviewer", "approve", "looks good");
+      expect(first?.proposal.status).toBe("pending");
+      expect(first?.proposal.votes).toHaveLength(1);
 
-    const second = await new TaskStore(home).castProposalVote(
-      proposal.id,
-      "qa",
-      "approve",
-      "tests pass"
-    );
-    expect(second?.proposal.status).toBe("approved");
-    expect(second?.proposal.votes.map((vote) => vote.agentId)).toEqual(["reviewer", "qa"]);
+      const second = await store2.castProposalVote(proposal.id, "qa", "approve", "tests pass");
+      expect(second?.proposal.status).toBe("approved");
+      expect(second?.proposal.votes.map((vote) => vote.agentId)).toEqual(["reviewer", "qa"]);
+    } finally {
+      store2.dispose();
+    }
   });
 
   test("persists task-message outbox events and linked message ids", async () => {
@@ -123,13 +119,19 @@ describe("TaskStore", () => {
       assignee: "builder",
       workflowId: "swarm_1234_abcd"
     });
-    const pending = await new TaskStore(home).pendingCoordinationEvents(task.id);
-    expect(pending).toHaveLength(1);
-    expect(pending[0].event).toMatchObject({
-      type: "task_assigned",
-      status: "pending",
-      workflowId: "swarm_1234_abcd"
-    });
+    const store2 = new TaskStore(home);
+    let pending: Awaited<ReturnType<TaskStore["pendingCoordinationEvents"]>>;
+    try {
+      pending = await store2.pendingCoordinationEvents(task.id);
+      expect(pending).toHaveLength(1);
+      expect(pending[0].event).toMatchObject({
+        type: "task_assigned",
+        status: "pending",
+        workflowId: "swarm_1234_abcd"
+      });
+    } finally {
+      store2.dispose();
+    }
 
     const updated = await store.markCoordinationEventSent(
       task.id,

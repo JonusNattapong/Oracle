@@ -50,5 +50,10 @@ export async function watchInbox(
   watcher.on("all", () => {
     void scan();
   });
+  const origClose = watcher.close.bind(watcher);
+  watcher.close = () => {
+    store.dispose();
+    return origClose() as Promise<void>;
+  };
   return watcher;
 }

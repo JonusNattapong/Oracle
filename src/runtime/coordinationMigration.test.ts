@@ -63,29 +63,47 @@ describe("SQLite coordination migration", () => {
       JSON.stringify(agent)
     );
 
-    expect(await new MessageStore(home).inbox("worker")).toMatchObject([
-      { id: message.id, body: "legacy message" }
-    ]);
-    expect(await new TaskStore(home).get(task.id)).toMatchObject({
-      id: task.id,
-      title: "Legacy task"
-    });
-    expect(await new AgentRegistry(home).get("worker")).toMatchObject({
-      name: "worker",
-      role: "tests"
-    });
+    const ms = new MessageStore(home);
+    try {
+      expect(await ms.inbox("worker")).toMatchObject([
+        { id: message.id, body: "legacy message" }
+      ]);
+    } finally {
+      ms.dispose();
+    }
+    const ts = new TaskStore(home);
+    try {
+      expect(await ts.get(task.id)).toMatchObject({
+        id: task.id,
+        title: "Legacy task"
+      });
+    } finally {
+      ts.dispose();
+    }
+    const ar = new AgentRegistry(home);
+    try {
+      expect(await ar.get("worker")).toMatchObject({
+        name: "worker",
+        role: "tests"
+      });
+    } finally {
+      ar.dispose();
+    }
 
     const database = new RuntimeDatabase(home);
-    expect(database.connection.prepare(
-      "SELECT COUNT(*) AS count FROM coordination_messages"
-    ).get()).toEqual({ count: 1 });
-    expect(database.connection.prepare(
-      "SELECT COUNT(*) AS count FROM coordination_tasks"
-    ).get()).toEqual({ count: 1 });
-    expect(database.connection.prepare(
-      "SELECT COUNT(*) AS count FROM coordination_agents"
-    ).get()).toEqual({ count: 1 });
-    database.close();
+    try {
+      expect(database.connection.prepare(
+        "SELECT COUNT(*) AS count FROM coordination_messages"
+      ).get()).toEqual({ count: 1 });
+      expect(database.connection.prepare(
+        "SELECT COUNT(*) AS count FROM coordination_tasks"
+      ).get()).toEqual({ count: 1 });
+      expect(database.connection.prepare(
+        "SELECT COUNT(*) AS count FROM coordination_agents"
+      ).get()).toEqual({ count: 1 });
+    } finally {
+      database.close();
+    }
 
     await expect(fs.stat(path.join(home, "messages", `${message.id}.json`))).resolves.toBeDefined();
     await expect(fs.stat(path.join(home, "tasks", `${task.id}.json`))).resolves.toBeDefined();

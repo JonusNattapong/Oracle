@@ -30,6 +30,10 @@ export class AgentRegistry {
     this.database = new RuntimeDatabase(homeDir);
   }
 
+  dispose(): void {
+    this.database.close();
+  }
+
   async register(name: string, role?: string): Promise<AgentRecord> {
     await this.ensureLegacyImported();
     const normalized = this.validateName(name);

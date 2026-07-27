@@ -13,6 +13,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  store.dispose();
   await fs.rm(home, { recursive: true, force: true });
 });
 
@@ -121,6 +122,7 @@ describe("MessageStore", () => {
       JSON.stringify({ id: "20260722000000000-deadbeef", ts: "2026-07-22T00:00:00Z", from: "a", to: "b", body: "no readBy" }),
       "utf8"
     );
+    store.dispose();
     store = new MessageStore(home);
     const good = await store.send({ from: "a", to: "b", body: "good" });
 
@@ -142,7 +144,9 @@ describe("MessageStore", () => {
       coordinationEventId: "event-1"
     };
     const first = await store.send(input);
-    const replay = await new MessageStore(home).send(input);
+    const store2 = new MessageStore(home);
+    const replay = await store2.send(input);
+    store2.dispose();
 
     expect(replay.id).toBe(first.id);
     expect(await store.listForTask("task-1")).toHaveLength(1);

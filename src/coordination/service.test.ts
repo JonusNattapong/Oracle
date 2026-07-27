@@ -23,6 +23,9 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  tasks.dispose();
+  messages.dispose();
+  swarms.dispose();
   await fs.rm(home, { recursive: true, force: true });
 });
 
@@ -36,7 +39,9 @@ describe("CoordinationService", () => {
 
     expect(task.messageIds).toHaveLength(1);
     expect(task.coordinationEvents[0].status).toBe("sent");
-    const linked = await new MessageStore(home).listForTask(task.id);
+    const ms = new MessageStore(home);
+    const linked = await ms.listForTask(task.id);
+    ms.dispose();
     expect(linked).toHaveLength(1);
     expect(linked[0].subject).toContain("Task assigned");
   });
@@ -60,14 +65,17 @@ describe("CoordinationService", () => {
       coordinationEventId: event.id
     });
 
-    const first = await new CoordinationService(
-      new TaskStore(home),
-      new MessageStore(home)
-    ).recover();
-    const second = await new CoordinationService(
-      new TaskStore(home),
-      new MessageStore(home)
-    ).recover();
+    const ts1 = new TaskStore(home);
+    const ms1 = new MessageStore(home);
+    const first = await new CoordinationService(ts1, ms1).recover();
+    ts1.dispose();
+    ms1.dispose();
+
+    const ts2 = new TaskStore(home);
+    const ms2 = new MessageStore(home);
+    const second = await new CoordinationService(ts2, ms2).recover();
+    ts2.dispose();
+    ms2.dispose();
 
     expect(first.messagesDelivered).toBe(1);
     expect(second.messagesDelivered).toBe(0);
@@ -101,16 +109,25 @@ describe("CoordinationService", () => {
     expect(task?.proposals[0].taskId).toBe(task?.id);
     expect(recovered?.messageIds).toEqual(task?.messageIds);
 
-    const firstVote = await new CoordinationService(
-      new TaskStore(home),
-      new MessageStore(home),
-      new SwarmStore(home)
-    ).voteOnSwarmProposal(task!.proposals[0].id, "reviewer-1", "approve", "review passed");
-    const secondVote = await new CoordinationService(
-      new TaskStore(home),
-      new MessageStore(home),
-      new SwarmStore(home)
-    ).voteOnSwarmProposal(task!.proposals[0].id, "qa-1", "approve", "tests passed");
+    const ts1 = new TaskStore(home);
+    const ms1 = new MessageStore(home);
+    const ss1 = new SwarmStore(home);
+    const firstVote = await new CoordinationService(ts1, ms1, ss1).voteOnSwarmProposal(
+      task!.proposals[0].id, "reviewer-1", "approve", "review passed"
+    );
+    ts1.dispose();
+    ms1.dispose();
+    ss1.dispose();
+
+    const ts2 = new TaskStore(home);
+    const ms2 = new MessageStore(home);
+    const ss2 = new SwarmStore(home);
+    const secondVote = await new CoordinationService(ts2, ms2, ss2).voteOnSwarmProposal(
+      task!.proposals[0].id, "qa-1", "approve", "tests passed"
+    );
+    ts2.dispose();
+    ms2.dispose();
+    ss2.dispose();
 
     expect(firstVote?.proposal.status).toBe("pending");
     expect(secondVote?.proposal.status).toBe("approved");

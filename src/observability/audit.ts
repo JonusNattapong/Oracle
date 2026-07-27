@@ -229,7 +229,9 @@ export class AuditLogger {
       try {
         handle = await fs.open(lockPath, "wx", 0o600);
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+        const code = (error as NodeJS.ErrnoException).code;
+        // Windows may report EPERM instead of EEXIST for existing/stale locks
+        if (code !== "EEXIST" && code !== "EPERM") throw error;
         try {
           const stat = await fs.stat(lockPath);
           if (Date.now() - stat.mtimeMs > 30_000) {

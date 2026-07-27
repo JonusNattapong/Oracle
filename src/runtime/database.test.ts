@@ -21,7 +21,9 @@ afterEach(async () => {
 describe("RuntimeDatabase", () => {
   test("creates the SQLite file with owner-only permissions", async () => {
     const stat = await fs.stat(database.filePath);
-    expect(stat.mode & 0o777).toBe(0o600);
+    if (os.platform() !== "win32") {
+      expect(stat.mode & 0o777).toBe(0o600);
+    }
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
     ).get()).toEqual({ value: "8" });

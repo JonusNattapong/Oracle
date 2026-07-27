@@ -21,6 +21,10 @@ export class SwarmStore {
     this.database = new RuntimeDatabase(homeDir);
   }
 
+  dispose(): void {
+    this.database.close();
+  }
+
   async save(workflow: SwarmWorkflow): Promise<void> {
     await this.ensureLegacyImported();
     this.validateId(workflow.id);

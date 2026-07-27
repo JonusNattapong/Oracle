@@ -14,6 +14,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  store.dispose();
   await fs.rm(home, { recursive: true, force: true });
 });
 
@@ -34,7 +35,9 @@ describe("SwarmStore", () => {
     );
     await store.save(workflow);
 
-    const reloaded = await new SwarmStore(home).get(workflow.id);
+    const store2 = new SwarmStore(home);
+    const reloaded = await store2.get(workflow.id);
+    store2.dispose();
     expect(reloaded?.title).toBe("Ship feature");
     expect(reloaded?.proposals).toHaveLength(1);
     expect(reloaded?.proposals[0].id).toBe(proposal.id);
@@ -59,6 +62,7 @@ describe("SwarmStore", () => {
     await fs.mkdir(directory, { recursive: true });
     await fs.writeFile(filePath, JSON.stringify(workflow), "utf8");
 
+    store.dispose();
     store = new SwarmStore(home);
     expect(await store.get(workflow.id)).toMatchObject({
       id: workflow.id,

@@ -31,7 +31,9 @@ describe("OracleDaemon", () => {
     });
     const state = await daemon.start();
     const stateStat = await fs.stat(path.join(home, "runtime", "daemon.json"));
-    expect(stateStat.mode & 0o777).toBe(0o600);
+    if (os.platform() !== "win32") {
+      expect(stateStat.mode & 0o777).toBe(0o600);
+    }
     const client = await RuntimeClient.connect(home);
     expect(client).not.toBeNull();
     const unauthorized = await fetch(`http://${state.host}:${state.port}/v1/schedules`);
@@ -47,7 +49,7 @@ describe("OracleDaemon", () => {
       storage: "sqlite"
     });
     expect(await client!.getControlSnapshot()).toMatchObject({
-      version: "0.5.0",
+      version: "0.7.0",
       workspaceRoot: home,
       approvals: { pending: 0 }
     });

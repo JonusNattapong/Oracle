@@ -34,6 +34,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  service.dispose();
   database.close();
   await fs.rm(home, { recursive: true, force: true });
   await fs.rm(workspace, { recursive: true, force: true });

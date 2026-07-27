@@ -77,6 +77,10 @@ export class TaskStore {
     this.database = new RuntimeDatabase(homeDir);
   }
 
+  dispose(): void {
+    this.database.close();
+  }
+
   private dir(): string {
     return path.join(this.homeDir, "tasks");
   }

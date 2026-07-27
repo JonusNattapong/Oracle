@@ -141,6 +141,7 @@ export class OracleDaemon {
     if (!state) return;
     this.events?.publish("daemon.stopping", { pid: state.pid });
     this.control?.stop();
+    this.control?.dispose();
     await this.scheduler?.stop();
     await this.api?.stop();
     this.database?.close();
