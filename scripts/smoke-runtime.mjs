@@ -6,6 +6,13 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cliPath = path.join(repositoryRoot, "dist", "cli.js");
+const packageJson = JSON.parse(
+  await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8")
+);
+const expectedVersion = packageJson.version;
+if (typeof expectedVersion !== "string" || !expectedVersion) {
+  throw new Error("package.json is missing a version.");
+}
 const temporaryRoot = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-runtime-smoke-"));
 
 function run(args, allowFailure = false) {
@@ -37,7 +44,7 @@ try {
   if (!parsedStatus.running || parsedStatus.health?.storage !== "sqlite") {
     throw new Error(`Unexpected daemon status: ${status}`);
   }
-  if (parsedStatus.health?.version !== "0.5.0") {
+  if (parsedStatus.health?.version !== expectedVersion) {
     throw new Error(`Unexpected Runtime version: ${status}`);
   }
   if (JSON.stringify(parsedStatus).includes("token")) {
@@ -68,7 +75,7 @@ try {
   }
 
   const snapshot = JSON.parse(run(["control", "snapshot"]));
-  if (snapshot.version !== "0.5.0" || snapshot.approvals?.pending !== 0) {
+  if (snapshot.version !== expectedVersion || snapshot.approvals?.pending !== 0) {
     throw new Error(`Unexpected Control Center snapshot: ${JSON.stringify(snapshot)}`);
   }
   const tui = run(["control", "--once"]);
