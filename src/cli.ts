@@ -11,8 +11,16 @@ import {
   checkProvider,
   createProvider,
   createAgentProvider,
-  parseProviderName
+  parseProviderName,
+  parseProviderSelection
 } from "./providers/factory.js";
+import { resolveProviderRoute } from "./providers/router.js";
+import { loadProjectConfig } from "./config/project.js";
+import {
+  buildBrowserServiceInvocation,
+  formatBrowserServiceInvocation,
+  runBrowserService,
+} from "./browser/service.js";
 import { AgentService } from "./agent/service.js";
 import { FileSessionStore } from "./session/store.js";
 import {
@@ -102,18 +110,84 @@ program
   .option("--include-docs", "Search .oracle/docs/ for relevant documentation")
   .option("-m, --model <model>", "Model override")
   .option("--provider <provider>", "Provider override")
+  .option("--remote-chrome <host>", "Chrome DevTools endpoint")
+  .option("--remote-host <host>", "Remote Oracle browser service")
+  .option("--remote-token <token>", "Remote browser token (prefer ORACLE_REMOTE_TOKEN)")
+  .option("--browser-manual-login", "Use a persistent manual-login Chrome profile")
+  .option("--browser-attach-running", "Attach to an already-running local Chrome")
+  .option("--browser-model-strategy <strategy>", "select, current, or ignore")
+  .option("--browser-timeout <duration>", "Overall browser response timeout")
+  .option("--browser-auto-reattach-delay <duration>", "Delay before first reattach")
+  .option("--browser-auto-reattach-interval <duration>", "Reattach interval")
+  .option("--browser-auto-reattach-timeout <duration>", "Per-attempt reattach timeout")
   .option("--cwd <path>", "Working directory", process.cwd())
   .option("--agent <name>", "Attribute this call to an agent for cost accounting")
   .action(async (question, options) => {
     const cwd = path.resolve(options.cwd);
-    const finalProvider = options.provider ?? "codex";
-    const parsedProvider = parseProviderName(finalProvider);
-    const checks = await checkProvider(parsedProvider);
+    const config = await loadProjectConfig(cwd);
+    const selection = parseProviderSelection(options.provider ?? config.provider);
+    const requestedModel =
+      options.model ??
+      (selection === "browser" ? config.browser.model : config.model);
+    const route = resolveProviderRoute({
+      model: requestedModel,
+      selection,
+      selectionSource: options.provider ? "explicit" : "project-config",
+      config,
+    });
+    const browserOptions = {
+      manualLogin: options.browserManualLogin ?? config.browser.manualLogin,
+      attachRunning: options.browserAttachRunning ?? config.browser.attachRunning,
+      remoteChrome: options.remoteChrome ?? config.browser.remoteChrome,
+      remoteHost:
+        options.remoteHost ?? process.env.ORACLE_REMOTE_HOST ?? config.browser.remoteHost,
+      remoteToken: options.remoteToken ?? process.env.ORACLE_REMOTE_TOKEN,
+      chatgptUrl: config.browser.chatgptUrl,
+      modelStrategy: options.browserModelStrategy ?? config.browser.modelStrategy,
+      tab: config.browser.tab,
+      thinkingTime: config.browser.thinkingTime,
+      research: config.browser.research,
+      followUps: config.browser.followUps,
+      archive: config.browser.archive,
+      attachments: config.browser.attachments,
+      bundleFiles: config.browser.bundleFiles,
+      bundleFormat: config.browser.bundleFormat,
+      port: config.browser.port,
+      browserTimeout: options.browserTimeout ?? config.browser.timeout,
+      browserInputTimeout: config.browser.inputTimeout,
+      attachmentTimeout: config.browser.attachmentTimeout,
+      recheckDelay: config.browser.recheckDelay,
+      recheckTimeout: config.browser.recheckTimeout,
+      heartbeat: config.browser.heartbeat,
+      reuseWait: config.browser.reuseWait,
+      profileLockTimeout: config.browser.profileLockTimeout,
+      maxConcurrentTabs: String(config.browser.maxConcurrentTabs),
+      hideWindow: config.browser.hideWindow,
+      autoReattachDelay:
+        options.browserAutoReattachDelay ?? config.browser.autoReattachDelay,
+      autoReattachInterval:
+        options.browserAutoReattachInterval ?? config.browser.autoReattachInterval,
+      autoReattachTimeout:
+        options.browserAutoReattachTimeout ?? config.browser.autoReattachTimeout,
+    };
+    const checks = await checkProvider(route.provider, undefined, {
+      azure: config.azure,
+      openrouter: config.openrouter,
+      browser: browserOptions,
+    });
     const failedCheck = checks.find((chk) => !chk.ok);
     if (failedCheck) throw new Error(`${failedCheck.name}: ${failedCheck.detail}`);
 
     const { sink: costSink, close: closeCostSink } = await createCostSink();
-    const service = new ConsultService(createProvider(parsedProvider), undefined, costSink);
+    const service = new ConsultService(
+      createProvider(route.provider, {
+        browser: browserOptions,
+        azure: config.azure,
+        openrouter: config.openrouter,
+      }),
+      undefined,
+      costSink
+    );
     const soulsDir = path.join(homeDir(), "souls");
 
     // Build system prompt — use specific soul if --soul given, otherwise auto-detect mood
@@ -139,9 +213,9 @@ program
     const result = await service.consult({
       prompt: `${ctxBlock}\n\n## Question\n${question}`,
       preset: "review",
-      provider: finalProvider,
+      provider: route.provider,
       files: hasFiles ? options.file : [],
-      model: options.model ?? "gpt-5.4",
+      model: route.model,
       cwd,
       systemPrompt,
       allowEmptyFiles: !hasFiles,
@@ -739,8 +813,50 @@ webCmd
 
 // ── existing commands ────────────────────────────────────────────
 program
+  .command("serve")
+  .description("Run the signed-in browser as a remote Oracle service")
+  .option("--host <address>", "Interface to bind")
+  .option("--port <number>", "TCP port")
+  .option("--token <value>", "Access token (prefer ORACLE_SERVE_TOKEN)")
+  .option("--manual-login", "Use a persistent manual-login Chrome profile")
+  .option("--no-manual-login", "Use browser cookie sync instead of manual login")
+  .option("--profile-dir <path>", "Persistent manual-login Chrome profile directory")
+  .option("--print-command", "Print the redacted upstream command without starting it")
+  .option("--cwd <path>", "Project configuration root", process.cwd())
+  .action(async (options) => {
+    const cwd = path.resolve(options.cwd);
+    const config = await loadProjectConfig(cwd);
+    const port = Number(options.port ?? config.serve.port);
+    if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+      throw new Error("--port must be an integer between 1 and 65535.");
+    }
+    const serviceOptions = {
+      host: options.host ?? config.serve.host,
+      port,
+      token: options.token ?? process.env.ORACLE_SERVE_TOKEN,
+      manualLogin: options.manualLogin ?? config.serve.manualLogin,
+      profileDir: options.profileDir ?? config.serve.profileDir,
+      cwd,
+    };
+    const invocation = buildBrowserServiceInvocation(serviceOptions, {
+      platform: process.platform,
+      execPath: process.execPath,
+      appData: process.env.APPDATA,
+    });
+    if (options.printCommand) {
+      console.log(formatBrowserServiceInvocation(invocation));
+      return;
+    }
+    console.log(
+      `Starting browser service at ${serviceOptions.host}:${serviceOptions.port} ` +
+        `(${serviceOptions.manualLogin ? "manual-login profile" : "cookie sync"}).`
+    );
+    process.exitCode = await runBrowserService(serviceOptions);
+  });
+
+program
   .command("doctor")
-  .option("--provider <provider>", "Provider: codex, openai, anthropic, or opencode", "codex")
+  .option("--provider <provider>", "Provider to check", "codex")
   .action(async (options) => {
     const checks = await checkProvider(parseProviderName(options.provider));
     for (const check of checks) {
