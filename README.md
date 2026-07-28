@@ -201,6 +201,32 @@ oracle ask "what's in our latest PR?" --include-gh
 
 **MCP:** `oracle_ask { question, files?, soul?, ... }`
 
+#### Browser mode and remote service
+
+Use a signed-in ChatGPT browser when you do not want to call a model API:
+
+```bash
+oracle ask "review this package" -f package.json \
+  --provider browser --model gpt-5.6-sol \
+  --browser-manual-login
+```
+
+The manual-login profile is persistent, so the first successful sign-in is
+reused on later runs. Long responses support automatic reattach using the
+`browser.autoReattach*` project settings.
+
+Run the signed-in browser as a local remote service:
+
+```bash
+oracle serve
+oracle serve --print-command
+```
+
+The default service binds to `127.0.0.1:9473` and uses a persistent
+manual-login profile. Clients connect with `--remote-host` and
+`ORACLE_REMOTE_TOKEN`. Binding to `0.0.0.0` requires a strong token and an
+appropriate firewall rule.
+
 ### 3. Autonomous Agent (Sandbox + Audit Trail)
 
 `oracle agent` is an **agentic tool-use loop** that reads/writes files and runs shell commands to complete a task autonomously. It:
@@ -388,6 +414,14 @@ ORACLE_TELEGRAM_ALLOWED_USER_IDS # Optional comma-separated callback allowlist
 ORACLE_MEMORY_LLM_GRAPH    # Enable LLM-based memory graph reflection (default: off)
 ANTHROPIC_API_KEY          # For Claude models (required if using Anthropic)
 OPENAI_API_KEY             # For GPT (required if using OpenAI)
+OPENROUTER_API_KEY         # OpenRouter vendor/model routes
+AZURE_OPENAI_API_KEY       # Azure OpenAI credential
+AZURE_OPENAI_ENDPOINT      # Azure OpenAI resource endpoint
+AZURE_OPENAI_DEPLOYMENT    # Azure deployment name
+AZURE_OPENAI_API_VERSION   # Azure API version
+ORACLE_REMOTE_HOST         # Remote Oracle browser host
+ORACLE_REMOTE_TOKEN        # Remote browser bearer token
+ORACLE_SERVE_TOKEN         # Fixed browser-service host token (optional)
 ```
 
 ### Setup Steps

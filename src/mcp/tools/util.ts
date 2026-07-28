@@ -4,7 +4,7 @@ import os from "node:os";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ProjectConfig } from "../../config/project.js";
 import { serializeOracleError } from "../../errors.js";
-import { checkProvider } from "../../providers/factory.js";
+import { checkProvider, parseProviderName } from "../../providers/factory.js";
 
 function success(text: string, structuredContent: Record<string, unknown>) {
   return { content: [{ type: "text" as const, text }], structuredContent };
@@ -52,7 +52,7 @@ export function registerUtilTool(
           { name: "project configuration", ok: true, detail: `${deps.providerId}/${deps.config.model}` },
           { name: "workspace readable", ok: true, detail: deps.workspaceRoot },
           { name: "session storage writable", ok: true, detail: os.tmpdir() },
-          ...(await providerChecks(deps.config.provider))
+          ...(await providerChecks(parseProviderName(deps.providerId)))
         ];
         return success(JSON.stringify(checks, null, 2), {
           healthy: checks.every((check) => check.ok),

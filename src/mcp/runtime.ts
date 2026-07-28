@@ -4,6 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { loadProjectConfig } from "../config/project.js";
 import { ConsultService } from "../core/consult.js";
 import { createProvider, createAgentProvider } from "../providers/factory.js";
+import { resolveProviderRoute } from "../providers/router.js";
 import { AgentService } from "../agent/service.js";
 import { SkillRegistry } from "../skills/registry.js";
 import { OracleRegistry } from "../oracles/registry.js";
@@ -25,6 +26,19 @@ export async function createOracleMcpServer(
 ): Promise<McpServer> {
   const workspaceRoot = path.resolve(workspace);
   const config = await loadProjectConfig(workspaceRoot);
+  const requestedModel =
+    config.provider === "browser" ? config.browser.model : config.model;
+  const route = resolveProviderRoute({
+    model: requestedModel,
+    selection: config.provider,
+    selectionSource: "project-config",
+    config,
+  });
+  const resolvedConfig = {
+    ...config,
+    provider: route.provider,
+    model: route.model,
+  };
   const homeDir = process.env.ORACLE_HOME_DIR ?? path.join(os.homedir(), ".oracle");
   const skills = new SkillRegistry(homeDir, path.join(workspaceRoot, ".oracle", "skills"));
   await skills.load();
@@ -78,7 +92,9 @@ export async function createOracleMcpServer(
   let agent: AgentService | undefined;
   let agentUnavailableReason: string | undefined;
   try {
-    agent = new AgentService(createAgentProvider(config.provider));
+    const agentProvider =
+      config.provider === "auto" ? config.routing.defaultProvider : config.provider;
+    agent = new AgentService(createAgentProvider(agentProvider));
   } catch (error) {
     agentUnavailableReason = error instanceof Error ? error.message : String(error);
   }
@@ -89,10 +105,46 @@ export async function createOracleMcpServer(
 
   registerOracleTools({
     server,
-    service: new ConsultService(createProvider(config.provider)),
-    config,
+    service: new ConsultService(
+      createProvider(route.provider, {
+        browser: {
+          manualLogin: config.browser.manualLogin,
+          attachRunning: config.browser.attachRunning,
+          remoteChrome: config.browser.remoteChrome,
+          remoteHost: process.env.ORACLE_REMOTE_HOST ?? config.browser.remoteHost,
+          remoteToken: process.env.ORACLE_REMOTE_TOKEN,
+          chatgptUrl: config.browser.chatgptUrl,
+          modelStrategy: config.browser.modelStrategy,
+          tab: config.browser.tab,
+          thinkingTime: config.browser.thinkingTime,
+          research: config.browser.research,
+          followUps: config.browser.followUps,
+          archive: config.browser.archive,
+          attachments: config.browser.attachments,
+          bundleFiles: config.browser.bundleFiles,
+          bundleFormat: config.browser.bundleFormat,
+          port: config.browser.port,
+          hideWindow: config.browser.hideWindow,
+          browserTimeout: config.browser.timeout,
+          browserInputTimeout: config.browser.inputTimeout,
+          attachmentTimeout: config.browser.attachmentTimeout,
+          recheckDelay: config.browser.recheckDelay,
+          recheckTimeout: config.browser.recheckTimeout,
+          heartbeat: config.browser.heartbeat,
+          reuseWait: config.browser.reuseWait,
+          profileLockTimeout: config.browser.profileLockTimeout,
+          maxConcurrentTabs: String(config.browser.maxConcurrentTabs),
+          autoReattachDelay: config.browser.autoReattachDelay,
+          autoReattachInterval: config.browser.autoReattachInterval,
+          autoReattachTimeout: config.browser.autoReattachTimeout,
+        },
+        azure: config.azure,
+        openrouter: config.openrouter,
+      })
+    ),
+    config: resolvedConfig,
     workspaceRoot,
-    providerId: config.provider,
+    providerId: route.provider,
     skills,
     oracles,
     memory,
