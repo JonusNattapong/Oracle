@@ -1,0 +1,484 @@
+- generic [active] [ref=e1]:
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - button "Toggle Sidebar" [ref=e11] [cursor=pointer]
+          - link "Home" [ref=e16] [cursor=pointer]:
+            - /url: /docs
+            - img "Command Code" [ref=e17]
+        - generic [ref=e20]:
+          - link [ref=e22] [cursor=pointer]:
+            - /url: https://x.com/CommandCodeAI
+          - link [ref=e25] [cursor=pointer]:
+            - /url: https://commandcode.ai/discord
+          - link [ref=e28] [cursor=pointer]:
+            - /url: https://github.com/CommandCodeAI/command-code
+          - button "Switch to dark theme" [ref=e32] [cursor=pointer]
+      - generic [ref=e36]:
+        - main [ref=e37]:
+          - generic [ref=e38]:
+            - generic [ref=e41]:
+              - button "Copy Page" [ref=e42] [cursor=pointer]
+              - button [ref=e45] [cursor=pointer]
+            - article [ref=e49]:
+              - generic [ref=e50]:
+                - heading "Command Code Provider API" [level=1] [ref=e51]
+                - paragraph [ref=e52]: Every top model, one API. Call Command Code's models from any OpenAI- or Anthropic-compatible client. Pay as you go, no markup, every deal applied automatically.
+                - heading [level=2] [ref=e54]:
+                  - link [ref=e56] [cursor=pointer]:
+                    - /url: "#why-the-provider-api"
+                - list [ref=e61]:
+                  - listitem [ref=e62]:
+                    - strong [ref=e63]: "Every top model:"
+                    - text: "The best open & closed models on one API: Claude, GPT, Gemini, & top open-models."
+                  - listitem [ref=e64]:
+                    - strong [ref=e65]: "Fast, no limits:"
+                    - text: Best-in-class speed and performance, with rate limits built for production, not demos.
+                  - listitem [ref=e66]:
+                    - strong [ref=e67]: "Build anything:"
+                    - text: Standard OpenAI and Anthropic endpoints. Use any agent, anywhere. No lock-in.
+                - heading [level=2] [ref=e69]:
+                  - link "Pricing" [ref=e71] [cursor=pointer]:
+                    - /url: "#pricing"
+                - paragraph [ref=e72]:
+                  - text: The
+                  - link [ref=e73] [cursor=pointer]:
+                    - /url: https://commandcode.ai/provider
+                    - strong [ref=e74]: Provider
+                  - text: plan starts at $15/month + $1.01 card processing fee. Pay as you go, no markup.
+                - list [ref=e75]:
+                  - listitem [ref=e76]:
+                    - strong [ref=e77]: "Pay as you go:"
+                    - text: Start with $15 of API credit, then top up as needed. No monthly minimums or commitments.
+                  - listitem [ref=e78]:
+                    - strong [ref=e79]: "No markup:"
+                    - text: Requests bill at the underlying API rates. Best prices on every model, with no hidden fees.
+                  - listitem [ref=e80]:
+                    - strong [ref=e81]: "All deals apply:"
+                    - text: Permanent discounts and usage multipliers are applied automatically to every request.
+                  - listitem [ref=e82]:
+                    - strong [ref=e83]: "Credits never expire:"
+                    - text: Any unused credit rolls over and never expire.
+                - paragraph [ref=e84]:
+                  - text: Per-model rates and the full plan comparison live on
+                  - link "Pricing & Limits" [ref=e85] [cursor=pointer]:
+                    - /url: /docs/resources/pricing-limits#models
+                  - text: .
+                - generic [ref=e86]:
+                  - link "DEAL deepseek-v4-pro 4× usage. Every dollar of credit goes 4× further on this model. permanent" [ref=e88] [cursor=pointer]:
+                    - /url: "#deepseek-v4-pro-4x-usage"
+                    - generic [ref=e89]: DEAL
+                    - generic [ref=e90]:
+                      - code [ref=e91]: deepseek-v4-pro
+                      - text: 4× usage. Every dollar of credit goes 4× further on this model.
+                    - generic [ref=e92]: permanent
+                  - link "DEAL minimax-m3 2× usage. Every credit goes 2× further. permanent" [ref=e95] [cursor=pointer]:
+                    - /url: "#minimax-m3-2x-usage"
+                    - generic [ref=e96]: DEAL
+                    - generic [ref=e97]:
+                      - code [ref=e98]: minimax-m3
+                      - text: 2× usage. Every credit goes 2× further.
+                    - generic [ref=e99]: permanent
+                  - link "DEAL mimo-v2.5 + mimo-v2.5-pro Up to 99% off. Every dollar of credit goes further on these models. permanent" [ref=e102] [cursor=pointer]:
+                    - /url: "#mimo-v2.5-pro-99-off"
+                    - generic [ref=e103]: DEAL
+                    - generic [ref=e104]:
+                      - code [ref=e105]: mimo-v2.5
+                      - text: +
+                      - code [ref=e106]: mimo-v2.5-pro
+                      - text: Up to 99% off. Every dollar of credit goes further on these models.
+                    - generic [ref=e107]: permanent
+                  - link "DEAL laguna-s-2.1-free is free. Requests on this model cost no credits. while capacity lasts" [ref=e110] [cursor=pointer]:
+                    - /url: "#laguna-s-2.1-free"
+                    - generic [ref=e111]: DEAL
+                    - generic [ref=e112]:
+                      - code [ref=e113]: laguna-s-2.1-free
+                      - text: is free. Requests on this model cost no credits.
+                    - generic [ref=e114]: while capacity lasts
+                  - link "DEAL ling-3.0-flash-free is free. Requests on this model cost no credits. through August 2, 2026" [ref=e117] [cursor=pointer]:
+                    - /url: "#ling-3.0-flash-free"
+                    - generic [ref=e118]: DEAL
+                    - generic [ref=e119]:
+                      - code [ref=e120]: ling-3.0-flash-free
+                      - text: is free. Requests on this model cost no credits.
+                    - generic [ref=e121]: through August 2, 2026
+                - heading [level=2] [ref=e123]:
+                  - link "Endpoints" [ref=e125] [cursor=pointer]:
+                    - /url: "#endpoints"
+                - table [ref=e128]:
+                  - rowgroup [ref=e129]:
+                    - row [ref=e130]:
+                      - columnheader "Endpoint" [ref=e131]
+                      - columnheader "Method" [ref=e132]
+                      - columnheader "Format" [ref=e133]
+                  - rowgroup [ref=e134]:
+                    - row [ref=e135]:
+                      - cell [ref=e136]:
+                        - generic [ref=e137]:
+                          - code [ref=e138]: https://api.commandcode.ai/provider/v1/chat/completions
+                          - button "Copy" [ref=e139] [cursor=pointer]
+                      - cell "POST" [ref=e143]
+                      - cell "OpenAI Chat Completions" [ref=e144]
+                    - row [ref=e145]:
+                      - cell [ref=e146]:
+                        - generic [ref=e147]:
+                          - code [ref=e148]: https://api.commandcode.ai/provider/v1/messages
+                          - button "Copy" [ref=e149] [cursor=pointer]
+                      - cell "POST" [ref=e153]
+                      - cell "Anthropic Messages" [ref=e154]
+                    - row [ref=e155]:
+                      - cell [ref=e156]:
+                        - generic [ref=e157]:
+                          - code [ref=e158]: https://api.commandcode.ai/provider/v1/models
+                          - button "Copy" [ref=e159] [cursor=pointer]
+                      - cell "GET" [ref=e163]
+                      - cell "Models list" [ref=e164]
+                - heading [level=2] [ref=e166]:
+                  - link "Quickstart" [ref=e168] [cursor=pointer]:
+                    - /url: "#quickstart"
+                - list [ref=e169]:
+                  - listitem [ref=e170]:
+                    - generic [ref=e172]: "1"
+                    - generic [ref=e174]:
+                      - paragraph [ref=e175]: Subscribe and get an API key
+                      - paragraph [ref=e177]:
+                        - text: The Provider API needs the
+                        - link [ref=e178] [cursor=pointer]:
+                          - /url: https://commandcode.ai/pricing
+                          - strong [ref=e179]: Provider
+                        - text: plan or higher (see
+                        - link "Pricing" [ref=e180] [cursor=pointer]:
+                          - /url: "#pricing"
+                        - text: above). Subscribe, then create your
+                        - link "API key" [ref=e181] [cursor=pointer]:
+                          - /url: /docs/studio#api-keys
+                        - text: from
+                        - link "Studio" [ref=e182] [cursor=pointer]:
+                          - /url: https://commandcode.ai/studio/
+                        - text: . The same key authenticates the CLI and the API.
+                  - listitem [ref=e183]:
+                    - generic [ref=e185]: "2"
+                    - generic [ref=e187]:
+                      - paragraph [ref=e188]: Send a request
+                      - generic [ref=e189]:
+                        - paragraph [ref=e190]: Once you have your API key, you can send a request to one of the following endpoints.
+                        - paragraph [ref=e191]:
+                          - strong [ref=e192]: OpenAI Chat Completions
+                          - code [ref=e193]: /v1/chat/completions
+                        - paragraph [ref=e194]:
+                          - text: Request and response bodies follow the
+                          - link "OpenAI Chat Completions schema" [ref=e195] [cursor=pointer]:
+                            - /url: https://platform.openai.com/docs/api-reference/chat/create
+                          - text: .
+                        - generic [ref=e197]:
+                          - tablist [ref=e199]:
+                            - tab "curl" [selected] [ref=e200] [cursor=pointer]
+                            - tab "typescript (OpenAI SDK)" [ref=e201] [cursor=pointer]
+                            - tab "typescript (AI SDK)" [ref=e202] [cursor=pointer]
+                          - tabpanel "curl" [ref=e204]:
+                            - generic [ref=e206]:
+                              - code [ref=e211]: "curl https://api.commandcode.ai/provider/v1/chat/completions \\ -H \"Authorization: Bearer <CMD_API_KEY>\" \\ -H \"Content-Type: application/json\" \\ -d '{ \"model\": \"deepseek/deepseek-v4-flash\", \"messages\": [{\"role\": \"user\", \"content\": \"Write a haiku about race conditions.\"}] }'"
+                              - button "Copy" [ref=e212] [cursor=pointer]:
+                                - generic: Copied!
+                        - paragraph [ref=e213]:
+                          - strong [ref=e214]: Anthropic Messages
+                          - code [ref=e215]: /v1/messages
+                        - paragraph [ref=e216]:
+                          - text: Request and response bodies follow the
+                          - link "Anthropic Messages schema" [ref=e217] [cursor=pointer]:
+                            - /url: https://platform.claude.com/docs/en/api/messages/create
+                          - text: .
+                        - generic [ref=e219]:
+                          - tablist [ref=e221]:
+                            - tab "curl" [selected] [ref=e222] [cursor=pointer]
+                            - tab "typescript (Anthropic SDK)" [ref=e223] [cursor=pointer]
+                            - tab "typescript (AI SDK)" [ref=e224] [cursor=pointer]
+                          - tabpanel "curl" [ref=e226]:
+                            - generic [ref=e228]:
+                              - code [ref=e233]: "curl https://api.commandcode.ai/provider/v1/messages \\ -H \"Authorization: Bearer <CMD_API_KEY>\" \\ -H \"Content-Type: application/json\" \\ -d '{ \"model\": \"claude-sonnet-4-6\", \"max_tokens\": 1024, \"messages\": [{\"role\": \"user\", \"content\": \"Write a haiku about race conditions.\"}] }'"
+                              - button "Copy" [ref=e234] [cursor=pointer]:
+                                - generic: Copied!
+                - heading [level=2] [ref=e236]:
+                  - link "Models" [ref=e238] [cursor=pointer]:
+                    - /url: "#models"
+                - paragraph [ref=e239]:
+                  - text: All Command Code models are available via the API, see
+                  - link "Pricing & Limits" [ref=e240] [cursor=pointer]:
+                    - /url: /docs/resources/pricing-limits#models
+                  - text: for the full model list and per-model pricing. You can fetch the live models list at runtime from
+                  - code [ref=e241]: /provider/v1/models
+                  - text: .
+                - generic [ref=e243]:
+                  - heading "List models" [level=3] [ref=e245]
+                  - generic [ref=e247]:
+                    - code [ref=e252]: curl https://api.commandcode.ai/provider/v1/models
+                    - button "Copy" [ref=e253] [cursor=pointer]:
+                      - generic: Copied!
+                - heading [level=2] [ref=e255]:
+                  - link "Streaming" [ref=e257] [cursor=pointer]:
+                    - /url: "#streaming"
+                - paragraph [ref=e258]:
+                  - text: Streaming is supported and can be received by setting
+                  - code [ref=e259]: "stream: true"
+                  - text: .
+                - generic [ref=e261]:
+                  - generic [ref=e262]:
+                    - heading "Streaming" [level=3] [ref=e263]
+                    - tablist [ref=e264]:
+                      - tab "OpenAI (v1/chat/completions)" [selected] [ref=e265] [cursor=pointer]
+                      - tab "Anthropic (/messages)" [ref=e266] [cursor=pointer]
+                  - tabpanel "OpenAI (v1/chat/completions)" [ref=e268]:
+                    - generic [ref=e270]:
+                      - code [ref=e275]: "curl https://api.commandcode.ai/provider/v1/chat/completions \\ -H \"Authorization: Bearer <CMD_API_KEY>\" \\ -H \"Content-Type: application/json\" \\ --no-buffer \\ -d '{ \"model\": \"deepseek/deepseek-v4-flash\", \"messages\": [{\"role\": \"user\", \"content\": \"Count to 5.\"}], \"stream\": true, \"stream_options\": {\"include_usage\": true} }'"
+                      - button "Copy" [ref=e276] [cursor=pointer]:
+                        - generic: Copied!
+                - paragraph [ref=e277]:
+                  - text: Both endpoints emit token usage at the end of every stream - OpenAI clients see a final
+                  - code [ref=e278]: usage
+                  - text: chunk, Anthropic clients see usage in the
+                  - code [ref=e279]: message_delta
+                  - text: event. No opt-in required.
+                - heading [level=2] [ref=e281]:
+                  - link "Zero data retention (ZDR)" [ref=e283] [cursor=pointer]:
+                    - /url: "#zero-data-retention-zdr"
+                - paragraph [ref=e284]:
+                  - text: Send the header
+                  - code [ref=e285]: "x-cmdc-zdr: 1"
+                  - text: on any request to enforce zero data retention and no prompt training - the same opt-in the CLI exposes via
+                  - code [ref=e286]: CMD_ZDR=1
+                  - text: ". When set, the request routes only through ZDR-capable upstreams: if a model has no ZDR-capable upstream the request"
+                  - strong [ref=e287]: fails
+                  - text: with a
+                  - code [ref=e288]: "422"
+                  - text: (
+                  - code [ref=e289]: cmd_zdr_no_providers
+                  - text: ) rather than falling back to a non-ZDR provider.
+                - paragraph [ref=e290]:
+                  - text: ZDR can change which upstream serves your request, so it may cost more depending on the provider. Anthropic models on
+                  - code [ref=e291]: /v1/messages
+                  - text: are zero-data-retention at the account level, so the header is accepted there for parity but does not change routing.
+                - generic [ref=e293]:
+                  - heading "Zero data retention" [level=3] [ref=e295]
+                  - generic [ref=e297]:
+                    - code [ref=e302]: "curl https://api.commandcode.ai/provider/v1/chat/completions \\ -H \"Authorization: Bearer <CMD_API_KEY>\" \\ -H \"Content-Type: application/json\" \\ -H \"x-cmdc-zdr: 1\" \\ -d '{ \"model\": \"deepseek/deepseek-v4-flash\", \"messages\": [{\"role\": \"user\", \"content\": \"Write a haiku about race conditions.\"}] }'"
+                    - button "Copy" [ref=e303] [cursor=pointer]:
+                      - generic: Copied!
+                - heading [level=2] [ref=e305]:
+                  - link "Errors" [ref=e307] [cursor=pointer]:
+                    - /url: "#errors"
+                - paragraph [ref=e308]: "OpenAI clients see the standard error envelope:"
+                - generic [ref=e312]:
+                  - code [ref=e317]: "{ \"error\": { \"message\": \"…\", \"type\": \"invalid_request_error\" | \"authentication_error\" | \"permission_error\" | \"rate_limit_error\" | \"server_error\", \"code\": \"…\", \"param\": \"…\" } }"
+                  - button "Copy" [ref=e318] [cursor=pointer]:
+                    - generic: Copied!
+                - paragraph [ref=e319]: "Anthropic clients see:"
+                - generic [ref=e323]:
+                  - code [ref=e328]: "{ \"type\": \"error\", \"error\": { \"type\": \"invalid_request_error\" | \"authentication_error\" | \"permission_error\" | \"rate_limit_error\" | \"api_error\", \"message\": \"…\" } }"
+                  - button "Copy" [ref=e329] [cursor=pointer]:
+                    - generic: Copied!
+                - paragraph [ref=e330]: "Here are the common error cases:"
+                - table [ref=e333]:
+                  - rowgroup [ref=e334]:
+                    - row [ref=e335]:
+                      - columnheader "Status" [ref=e336]
+                      - columnheader "Code / Type" [ref=e337]
+                      - columnheader "When" [ref=e338]
+                  - rowgroup [ref=e339]:
+                    - row [ref=e340]:
+                      - cell [ref=e341]:
+                        - code [ref=e342]: "400"
+                      - cell [ref=e343]:
+                        - code [ref=e344]: unsupported_model
+                      - cell [ref=e345]:
+                        - text: Model isn't in the catalog (OpenAI shape only -
+                        - code [ref=e346]: code
+                        - text: is on the OpenAI envelope; the Anthropic envelope has
+                        - code [ref=e347]: "type: invalid_request_error"
+                        - text: instead).
+                    - row [ref=e348]:
+                      - cell [ref=e349]:
+                        - code [ref=e350]: "400"
+                      - cell [ref=e351]:
+                        - code [ref=e352]: invalid_request_error
+                      - cell [ref=e353]:
+                        - text: Wrong endpoint for the model (Claude on
+                        - code [ref=e354]: /chat/completions
+                        - text: or non-Anthropic on
+                        - code [ref=e355]: /messages
+                        - text: ), bad request body, or malformed JSON.
+                    - row [ref=e356]:
+                      - cell [ref=e357]:
+                        - code [ref=e358]: "401"
+                      - cell [ref=e359]:
+                        - code [ref=e360]: authentication_error
+                      - cell [ref=e361]:
+                        - text: Missing or invalid auth - pass
+                        - code [ref=e362]: "Authorization: Bearer <token>"
+                        - text: (any route) or
+                        - code [ref=e363]: "x-api-key: <token>"
+                        - text: (Anthropic SDK on
+                        - code [ref=e364]: /messages
+                        - text: ).
+                    - row [ref=e365]:
+                      - cell [ref=e366]:
+                        - code [ref=e367]: "403"
+                      - cell [ref=e368]:
+                        - code [ref=e369]: upgrade_required
+                      - cell "Upgrade to Provider plan or higher." [ref=e370]
+                    - row [ref=e371]:
+                      - cell [ref=e372]:
+                        - code [ref=e373]: "422"
+                      - cell [ref=e374]:
+                        - code [ref=e375]: cmd_zdr_no_providers
+                      - cell [ref=e376]:
+                        - code [ref=e377]: "x-cmdc-zdr: 1"
+                        - text: was set but the model has no zero-data-retention upstream. Remove the header or pick a different model.
+                    - row [ref=e378]:
+                      - cell [ref=e379]:
+                        - code [ref=e380]: "429"
+                      - cell [ref=e381]:
+                        - code [ref=e382]: rate_limit_error
+                      - cell "Rate-limited by the upstream. Retry with backoff." [ref=e383]
+                    - row [ref=e384]:
+                      - cell [ref=e385]:
+                        - code [ref=e386]: 5xx
+                      - cell [ref=e387]:
+                        - code [ref=e388]: server_error
+                        - text: /
+                        - code [ref=e389]: api_error
+                      - cell "Upstream failure. The body carries the upstream provider's error message." [ref=e390]
+                - heading [level=2] [ref=e392]:
+                  - link "FAQs" [ref=e394] [cursor=pointer]:
+                    - /url: "#faqs"
+                - generic [ref=e395]:
+                  - group [ref=e396]:
+                    - generic "What is Command Provider?" [ref=e397] [cursor=pointer]:
+                      - paragraph [ref=e401]:
+                        - generic [ref=e402]: What is Command Provider?
+                        - button "Copy link to this FAQ" [ref=e403]
+                  - group [ref=e412]:
+                    - generic "Why use it?" [ref=e413] [cursor=pointer]:
+                      - paragraph [ref=e417]:
+                        - generic [ref=e418]: Why use it?
+                        - button "Copy link to this FAQ" [ref=e419]
+                  - group [ref=e428]:
+                    - generic "Will it work with my agent?" [ref=e429] [cursor=pointer]:
+                      - paragraph [ref=e433]:
+                        - generic [ref=e434]: Will it work with my agent?
+                        - button "Copy link to this FAQ" [ref=e435]
+                  - group [ref=e444]:
+                    - generic "Which models can I call?" [ref=e445] [cursor=pointer]:
+                      - paragraph [ref=e449]:
+                        - generic [ref=e450]: Which models can I call?
+                        - button "Copy link to this FAQ" [ref=e451]
+                  - group [ref=e460]:
+                    - generic "What can I send in a message?" [ref=e461] [cursor=pointer]:
+                      - paragraph [ref=e465]:
+                        - generic [ref=e466]: What can I send in a message?
+                        - button "Copy link to this FAQ" [ref=e467]
+                  - group [ref=e476]:
+                    - generic "What does it cost?" [ref=e477] [cursor=pointer]:
+                      - paragraph [ref=e481]:
+                        - generic [ref=e482]: What does it cost?
+                        - button "Copy link to this FAQ" [ref=e483]
+                  - group [ref=e492]:
+                    - generic "Which plan do I need to access Command models via API?" [ref=e493] [cursor=pointer]:
+                      - paragraph [ref=e497]:
+                        - generic [ref=e498]: Which plan do I need to access Command models via API?
+                        - button "Copy link to this FAQ" [ref=e499]
+                  - group [ref=e508]:
+                    - generic "Are the deals included?" [ref=e509] [cursor=pointer]:
+                      - paragraph [ref=e513]:
+                        - generic [ref=e514]: Are the deals included?
+                        - button "Copy link to this FAQ" [ref=e515]
+                  - group [ref=e524]:
+                    - generic "Can I cancel?" [ref=e525] [cursor=pointer]:
+                      - paragraph [ref=e529]:
+                        - generic [ref=e530]: Can I cancel?
+                        - button "Copy link to this FAQ" [ref=e531]
+                  - group [ref=e540]:
+                    - generic "What happens to my data?" [ref=e541] [cursor=pointer]:
+                      - paragraph [ref=e545]:
+                        - generic [ref=e546]: What happens to my data?
+                        - button "Copy link to this FAQ" [ref=e547]
+                  - group [ref=e556]:
+                    - generic "Do you support zero data retention (ZDR)?" [ref=e557] [cursor=pointer]:
+                      - paragraph [ref=e561]:
+                        - generic [ref=e562]: Do you support zero data retention (ZDR)?
+                        - button "Copy link to this FAQ" [ref=e563]
+          - navigation [ref=e572]:
+            - generic [ref=e573]:
+              - img "Table of Contents" [ref=e574]
+              - text: On This Page
+            - list [ref=e576]:
+              - listitem [ref=e577]:
+                - link "Why the Provider API" [ref=e579] [cursor=pointer]:
+                  - /url: "#why-the-provider-api"
+              - listitem [ref=e580]:
+                - link "Pricing" [ref=e581] [cursor=pointer]:
+                  - /url: "#pricing"
+              - listitem [ref=e582]:
+                - link "Endpoints" [ref=e583] [cursor=pointer]:
+                  - /url: "#endpoints"
+              - listitem [ref=e584]:
+                - link "Quickstart" [ref=e585] [cursor=pointer]:
+                  - /url: "#quickstart"
+              - listitem [ref=e586]:
+                - link "Models" [ref=e587] [cursor=pointer]:
+                  - /url: "#models"
+              - listitem [ref=e588]:
+                - link "Streaming" [ref=e589] [cursor=pointer]:
+                  - /url: "#streaming"
+              - listitem [ref=e590]:
+                - link "Zero data retention (ZDR)" [ref=e591] [cursor=pointer]:
+                  - /url: "#zero-data-retention-zdr"
+              - listitem [ref=e592]:
+                - link "Errors" [ref=e593] [cursor=pointer]:
+                  - /url: "#errors"
+              - listitem [ref=e594]:
+                - link "FAQs" [ref=e595] [cursor=pointer]:
+                  - /url: "#faqs"
+        - generic [ref=e596]:
+          - generic [ref=e598]:
+            - 'link "NEXT: Available Models" [ref=e600] [cursor=pointer]':
+              - /url: /docs/reference/cli/models
+              - text: Available Models
+              - generic [ref=e601]: // NEXT
+            - 'link "PREV: Pro & Max" [ref=e605] [cursor=pointer]':
+              - /url: /docs/plans/pro-max
+              - generic [ref=e608]: // PREV
+              - text: Pro & Max
+          - generic [ref=e610]:
+            - generic [ref=e611]:
+              - heading "Join our Discord" [level=3] [ref=e614]
+              - paragraph [ref=e615]: Chat with us and become part of the Command Code community.
+              - link "Join Discord" [ref=e616] [cursor=pointer]:
+                - /url: https://commandcode.ai/discord
+            - generic [ref=e619]:
+              - heading "Need help?" [level=3] [ref=e627]
+              - paragraph [ref=e628]:
+                - text: Open an
+                - link "issue on GitHub" [ref=e629] [cursor=pointer]:
+                  - /url: https://github.com/CommandCodeAI/command-code/issues
+                - text: ", ask on"
+                - link "Discord" [ref=e630] [cursor=pointer]:
+                  - /url: https://commandcode.ai/discord
+                - text: ", or reach out on"
+                - link "𝕏" [ref=e631] [cursor=pointer]:
+                  - /url: https://x.com/MrAhmadAwais
+                - text: .
+              - link "Get help" [ref=e632] [cursor=pointer]:
+                - /url: https://commandcode.ai/contact
+          - generic [ref=e635]:
+            - generic [ref=e636]: "2261 Market St #5698, San Francisco, CA 94114."
+            - generic [ref=e638]:
+              - link "Follow us on X" [ref=e639] [cursor=pointer]:
+                - /url: https://x.com/CommandCodeAI
+              - link "Follow on LinkedIn" [ref=e643] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/commandcodeai/
+              - link "Join our Discord server" [ref=e647] [cursor=pointer]:
+                - /url: https://commandcode.ai/discord
+              - link "Follow us on GitHub" [ref=e651] [cursor=pointer]:
+                - /url: https://github.com/CommandCodeAI/command-code
+  - alert [ref=e655]

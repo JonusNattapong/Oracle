@@ -29,8 +29,8 @@ stores and does not replace their existing sources of truth.
 | **Runtime daemon** | Long-lived Scheduler owner, SQLite backend, local/admin API, project-scoped Remote Swarm API, WebSocket events | `src/runtime/`, `src/daemon.ts` |
 | **Remote Swarm** | Cross-machine messages, presence, verified tasks, scoped tokens, reconnect replay | `src/runtime/swarmService.ts`, `src/runtime/swarmClient.ts` |
 | **Control Center** | Web dashboard, Ink TUI, quorum/expiry approvals, execute-once gate, optional Telegram callbacks | `src/control/` |
-| **ConsultService** | Core loop: load files → build context (memory + docs + web) → call provider → answer | `src/core/consult.ts` |
-| **Provider layer** | Codex CLI, Anthropic, OpenAI, OpenCode | `src/providers/` |
+| **ConsultService** | Core loop: build a validated file bundle → select execution backend → record answer | `src/core/consult.ts`, `src/context/bundleService.ts` |
+| **Execution backends** | Codex CLI, Anthropic, OpenAI, Gemini, OpenCode, and experimental ChatGPT Browser Mode | `src/backends/`, `src/providers/` |
 | **Agent sandbox** | Autonomous file read/write/edit loop with a bash tool for shell commands. Every mutation hashed and logged to an audit trail. | `src/agent/` |
 | **Memory system** | BM25 + vector search + entity knowledge graph + auto-consolidation + background maintenance | `src/memory/` |
 | **Messaging bus** | Transactional SQLite message store, presence registry, real-time watcher, Stop-hook wake-up | `src/messaging/` |
@@ -90,14 +90,20 @@ turns "I'm done" from a claim into something that's actually been verified
 before the task creator is notified — see [MESSAGING.md](MESSAGING.md#task-planning--tracking-built-on-top-of-messaging)
 for the full lifecycle.
 
-## Provider routing
+## Execution backend routing
 
-| Provider | Auth |
+| Backend | Auth |
 |---|---|
 | codex (default) | Codex CLI login |
 | anthropic | `ANTHROPIC_API_KEY` |
 | openai | `OPENAI_API_KEY` |
 | opencode | `OPENCODE_API_KEY` |
+| gemini | `GEMINI_API_KEY` or `GOOGLE_API_KEY` |
+| chatgpt-browser (experimental) | Manual login in Oracle's isolated Chrome profile |
+
+The legacy `provider` config key remains accepted and is normalized to
+`backend`. Browser Mode is consult-only and must also be enabled with
+`experimental.browserMode`.
 
 ## Storage layout
 

@@ -1,5 +1,6 @@
 import type { Provider, ProviderRequest } from "./provider.js";
 import type { ProviderResponse } from "../types.js";
+import type { DoctorCheck, ExecutionBackendCapabilities } from "../backends/backend.js";
 
 /**
  * Google Gemini provider over the REST API.
@@ -33,6 +34,14 @@ interface GeminiResponseBody {
 
 export class GeminiProvider implements Provider {
   readonly id = "gemini";
+  readonly capabilities: ExecutionBackendCapabilities = Object.freeze({
+    consult: true,
+    toolUse: false,
+    images: true,
+    continuation: false,
+    structuredUsage: true,
+    supportedPlatforms: Object.freeze(["darwin" as NodeJS.Platform, "linux" as NodeJS.Platform, "win32" as NodeJS.Platform])
+  });
   private readonly apiKey: string;
   private readonly baseUrl: string;
 
@@ -41,6 +50,26 @@ export class GeminiProvider implements Provider {
     if (!key) throw new Error("GEMINI_API_KEY is not set.");
     this.apiKey = key;
     this.baseUrl = baseUrl ?? process.env.GEMINI_API_BASE ?? DEFAULT_BASE;
+  }
+
+  async healthCheck(): Promise<DoctorCheck[]> {
+    const key = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
+    return [
+      {
+        name: "GEMINI_API_KEY",
+        ok: Boolean(key),
+        detail: process.env.GEMINI_API_KEY
+          ? "set"
+          : process.env.GOOGLE_API_KEY
+            ? "set (GOOGLE_API_KEY)"
+            : "not set",
+      },
+      {
+        name: "GEMINI_API_BASE",
+        ok: true,
+        detail: process.env.GEMINI_API_BASE ?? "default (generativelanguage.googleapis.com)",
+      },
+    ];
   }
 
   async run(request: ProviderRequest): Promise<ProviderResponse> {

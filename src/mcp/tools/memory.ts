@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import type { MemoryPort } from "../../orchestrator/ports.js";
 import { OracleError, serializeOracleError } from "../../errors.js";

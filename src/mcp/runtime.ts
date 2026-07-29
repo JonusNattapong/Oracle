@@ -1,9 +1,13 @@
 import path from "node:path";
 import os from "node:os";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { loadProjectConfig } from "../config/project.js";
 import { ConsultService } from "../core/consult.js";
-import { createProvider, createAgentProvider } from "../providers/factory.js";
+import {
+  createExecutionBackend,
+  createAgentBackend,
+  parseBackendName
+} from "../providers/factory.js";
 import { AgentService } from "../agent/service.js";
 import { SkillRegistry } from "../skills/registry.js";
 import { OracleRegistry } from "../oracles/registry.js";
@@ -75,10 +79,22 @@ export async function createOracleMcpServer(
     console.error("[oracle-mcp] background memory maintenance started (1h interval, graph prune 2h, reflection 4h)");
   }
 
+  const backendName = config.backend ?? config.provider ?? "codex";
+  const configuredProfile = config.browser?.profileDir;
+  const backendOptions = {
+    homeDir,
+    experimentalBrowserMode: config.experimental?.browserMode,
+    browser: {
+      ...config.browser,
+      profileDir: configuredProfile
+        ? path.resolve(homeDir, configuredProfile)
+        : path.join(homeDir, "chrome-profile")
+    }
+  };
   let agent: AgentService | undefined;
   let agentUnavailableReason: string | undefined;
   try {
-    agent = new AgentService(createAgentProvider(config.provider));
+    agent = new AgentService(createAgentBackend(backendName));
   } catch (error) {
     agentUnavailableReason = error instanceof Error ? error.message : String(error);
   }
@@ -89,10 +105,16 @@ export async function createOracleMcpServer(
 
   registerOracleTools({
     server,
-    service: new ConsultService(createProvider(config.provider)),
+    service: new ConsultService(
+      createExecutionBackend(backendName, backendOptions),
+      undefined,
+      undefined,
+      undefined,
+      (requested) => createExecutionBackend(parseBackendName(requested), backendOptions)
+    ),
     config,
     workspaceRoot,
-    providerId: config.provider,
+    providerId: backendName,
     skills,
     oracles,
     memory,

@@ -1,9 +1,9 @@
 import path from "node:path";
 import os from "node:os";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import type { ProjectConfig } from "../config/project.js";
 import type { ConsultService } from "../core/consult.js";
-import { checkProvider } from "../providers/factory.js";
+import { checkBackend } from "../providers/factory.js";
 import type { SkillRegistry } from "../skills/registry.js";
 import type { OracleRegistry } from "../oracles/registry.js";
 import { ProfileStore } from "../identity/profile.js";
@@ -42,7 +42,7 @@ interface OracleServerDependencies {
   agentRegistry: AgentRegistry;
   tasks: TaskStore;
   coordination?: CoordinationService;
-  providerChecks?: typeof checkProvider;
+  providerChecks?: typeof checkBackend;
   agent?: AgentService;
   agentUnavailableReason?: string;
 }
@@ -74,7 +74,7 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
     agentRegistry,
     tasks,
     coordination,
-    providerChecks = checkProvider,
+    providerChecks = checkBackend,
     agent,
     agentUnavailableReason,
   } = deps;
@@ -104,7 +104,13 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
   registerSessionTools(server, service);
 
   // Util / diagnostics (oracle_doctor)
-  registerUtilTool(server, { config, workspaceRoot, providerId, providerChecks });
+  registerUtilTool(server, {
+    config,
+    workspaceRoot,
+    providerId,
+    providerChecks,
+    homeDir: oracleHomeDir
+  });
 
   // ── Inter-agent messaging & tasks ─────────────────────────────────
   // (already separated — these register in their own category files)

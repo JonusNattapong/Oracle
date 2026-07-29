@@ -3,6 +3,7 @@ import type { Provider, ProviderRequest } from "./provider.js";
 import type { ProviderResponse } from "../types.js";
 import { AnthropicOAuthClient, type PlanTier } from "../auth/anthropic-oauth.js";
 import type { AgentMessage, AgentProvider, AgentTool, AgentTurn, ToolCall, ContentBlock } from "../agent/types.js";
+import type { DoctorCheck, ExecutionBackendCapabilities } from "../backends/backend.js";
 
 const OAUTH_BETA_HEADER = "oauth-2025-04-20";
 
@@ -85,8 +86,18 @@ function toAnthropicMessages(messages: AgentMessage[]): Anthropic.MessageParam[]
   });
 }
 
+const ANTHROPIC_CAPABILITIES: ExecutionBackendCapabilities = {
+  consult: true,
+  toolUse: true,
+  images: true,
+  continuation: false,
+  structuredUsage: true,
+  supportedPlatforms: ["darwin", "linux", "win32"]
+};
+
 export class AnthropicProvider implements Provider, AgentProvider {
   readonly id = "anthropic";
+  readonly capabilities = ANTHROPIC_CAPABILITIES;
   private client?: Anthropic;
   private planTier: PlanTier = "api";
   private readonly oauth: AnthropicOAuthClient | null;
@@ -98,6 +109,28 @@ export class AnthropicProvider implements Provider, AgentProvider {
   ) {
     this.oauth = oauth ?? null;
     this.apiKey = apiKey;
+  }
+
+  async healthCheck(): Promise<DoctorCheck[]> {
+    if (this.apiKey) {
+      return [{ name: "anthropic credentials", ok: true, detail: "ANTHROPIC_API_KEY set" }];
+    }
+    const entry = this.oauth ? await this.oauth.readSessionEntry() : null;
+    if (!entry) {
+      return [{
+        name: "anthropic credentials",
+        ok: false,
+        detail: "no ANTHROPIC_API_KEY and no OAuth session — run `oracle login --provider anthropic`"
+      }];
+    }
+    const expired = Boolean(entry.expiresAt && Date.now() >= entry.expiresAt);
+    const usable = !expired || Boolean(entry.refreshToken);
+    const detail = !expired
+      ? `OAuth session (plan: ${entry.planTier ?? "api"})`
+      : entry.refreshToken
+        ? "OAuth session expired, refreshes on next use"
+        : "OAuth session expired — run `oracle login --provider anthropic`";
+    return [{ name: "anthropic credentials", ok: usable, detail }];
   }
 
   private async getClient(): Promise<Anthropic> {

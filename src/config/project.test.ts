@@ -30,10 +30,32 @@ describe("loadProjectConfig", () => {
   test("merges a valid partial config", async () => {
     const root = await rootWith({ model: "gpt-5.5", include: ["lib/**/*.ts"] });
     await expect(loadProjectConfig(root)).resolves.toMatchObject({
+      backend: "codex",
       provider: "codex",
       model: "gpt-5.5",
       include: ["lib/**/*.ts"]
     });
+  });
+
+  test("supports backend key and legacy provider key migration", async () => {
+    const rootBackend = await rootWith({ backend: "anthropic" });
+    const configBackend = await loadProjectConfig(rootBackend);
+    expect(configBackend.backend).toBe("anthropic");
+
+    const rootProvider = await rootWith({ provider: "openai" });
+    const configProvider = await loadProjectConfig(rootProvider);
+    expect(configProvider.backend).toBe("openai");
+    expect(configProvider.provider).toBe("openai");
+  });
+
+  test("loads experimental.browserMode flag", async () => {
+    const root = await rootWith({
+      experimental: { browserMode: true },
+      browser: { timeoutMs: 60_000 }
+    });
+    const config = await loadProjectConfig(root);
+    expect(config.experimental?.browserMode).toBe(true);
+    expect(config.browser).toEqual({ timeoutMs: 60_000 });
   });
 
   test.each([

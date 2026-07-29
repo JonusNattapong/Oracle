@@ -568,6 +568,9 @@ export class MemoryAdapter implements MemoryPort {
     // Run once immediately, then on the interval
     run();
     this.maintenanceTimer = setInterval(run, intervalMs);
+    // Maintenance must not keep short-lived MCP stdio processes alive after
+    // their client disconnects; the transport itself owns process lifetime.
+    this.maintenanceTimer.unref();
 
     return () => this.stopAutoMaintenance();
   }

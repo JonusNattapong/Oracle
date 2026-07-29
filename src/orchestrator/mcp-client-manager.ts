@@ -1,6 +1,5 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { AgentTool, AgentContext } from "../agent/types.js";
 import type { McpServerConfig } from "../config/project.js";
 import { logMcp, logSandbox } from "../observability/log.js";
@@ -57,7 +56,10 @@ export class McpClientManager {
   }
 
   private async connectServer(server: McpServerConfig): Promise<AgentTool[]> {
-    const client = new Client({ name: "oracle-agent", version: "0.1.0" }, { capabilities: {} });
+    const client = new Client(
+      { name: "oracle-agent", version: "0.1.0" },
+      { capabilities: {}, versionNegotiation: { mode: "auto" } }
+    );
     let transport: StdioClientTransport | StreamableHTTPClientTransport;
 
     if (server.url) {

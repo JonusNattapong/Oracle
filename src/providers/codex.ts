@@ -5,6 +5,7 @@ import path from "node:path";
 import type { Provider, ProviderRequest } from "./provider.js";
 import type { ProviderResponse } from "../types.js";
 import type { AgentMessage, AgentProvider, AgentTool, AgentTurn, ToolCall } from "../agent/types.js";
+import type { DoctorCheck, ExecutionBackendCapabilities } from "../backends/backend.js";
 
 interface CommandResult {
   exitCode: number;
@@ -70,12 +71,48 @@ export const runCommand: CommandRunner = (command, args, options) =>
     child.stdin.end(options.input);
   });
 
+const CODEX_CAPABILITIES: ExecutionBackendCapabilities = {
+  consult: true,
+  toolUse: true,
+  images: false,
+  continuation: false,
+  structuredUsage: false,
+  supportedPlatforms: ["darwin", "linux", "win32"]
+};
+
 export class CodexCliProvider implements Provider, AgentProvider {
   readonly id = "codex";
+  readonly capabilities = CODEX_CAPABILITIES;
   private readonly runner: CommandRunner;
 
   constructor(options: { runner?: CommandRunner } = {}) {
     this.runner = options.runner ?? runCommand;
+  }
+
+  async healthCheck(): Promise<DoctorCheck[]> {
+    try {
+      const version = await this.runner("codex", ["--version"], {});
+      if (version.exitCode !== 0) {
+        return [{ name: "codex executable", ok: false, detail: version.stderr.trim() }];
+      }
+      const login = await this.runner("codex", ["login", "status"], {});
+      return [
+        { name: "codex executable", ok: true, detail: version.stdout.trim() },
+        {
+          name: "codex authentication",
+          ok: login.exitCode === 0,
+          detail: (login.stdout || login.stderr).trim()
+        }
+      ];
+    } catch (error) {
+      return [
+        {
+          name: "codex executable",
+          ok: false,
+          detail: error instanceof Error ? error.message : String(error)
+        }
+      ];
+    }
   }
 
   async run(request: ProviderRequest): Promise<ProviderResponse> {

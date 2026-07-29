@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **ChatGPT Browser Mode (experimental desktop backend; macOS-first with Windows/Linux compatibility)**
+  - Automated Chrome automation via Chrome DevTools Protocol (`--remote-debugging-port`) using Oracle's isolated profile.
+  - Commands: `oracle browser setup`, `oracle browser login` (manual OAuth recovery flow), `oracle browser status`, `oracle browser status --live` (live session verification), `oracle browser open`.
+  - Native Conversation Continuation via `--conversation <id>` or `conversationId` allowing continuous multi-turn threads on `chatgpt.com`.
+  - Explicit ChatGPT account Saved Memory writes via CLI `--remember <text>` or MCP/Runtime `accountMemory`, isolated from the normal project bundle with confirmation-only session metadata.
+  - PNG/JPEG/WebP round-trip support: workspace-confined image upload through the ChatGPT composer, assistant-image capture into session artifacts, MCP image content responses, and Runtime/CLI metadata.
+  - Image hardening with magic-byte MIME verification, input/output size and count limits, realpath containment, generated artifact names, and in-browser asset fetching to avoid Node-side SSRF.
+  - Self-healing response recovery via automatic page reload (`Page.reload`) when the ChatGPT response stream or UI stalls without completion controls.
+  - CDP execution-context retries for handling transient DOM destruction errors (`Execution context was destroyed`, `Promise was collected`, `Cannot find context`).
+  - Strict no-partial-response enforcement ensuring outputs are returned only when completion action buttons (`hasCompletionAction`) are confirmed.
+  - Backends integration (`--backend chatgpt-browser`) for `oracle ask` and `oracle doctor`.
+  - HTTP endpoints `POST /v1/consult` and `GET /v1/consult/:sessionId` in Runtime API.
+  - Isolated Chrome profile, visible/manual login, profile-owned dynamic CDP port,
+    response-stream stabilization, timeouts, and diagnostic screenshots.
+
+- **Centralized `BundleService` & `ExecutionBackend` Abstraction**
+  - Unified file resolution, secret scanning, size validation, token estimation, and manifest generation across all backends.
+  - Standardized capability reporting (`ExecutionBackendCapabilities`) and `healthCheck()` contract.
+  - Automatic migration from legacy `"provider"` configuration key to `"backend"`.
+
+### Changed
+- Migrated from the monolithic MCP TypeScript SDK v1 to the stable v2
+  `@modelcontextprotocol/server`, `@modelcontextprotocol/client`, and
+  `@modelcontextprotocol/core` packages.
+- Oracle's stdio servers now negotiate the stateless MCP `2026-07-28`
+  protocol while retaining automatic compatibility with legacy 2025 clients.
+- Oracle's outbound MCP clients now auto-negotiate modern or legacy protocol
+  eras, and the MCP smoke test reports the negotiated version and era.
+
+### Fixed
+- Background memory maintenance no longer keeps an MCP stdio process alive
+  after its client disconnects.
+- Runtime consult requests now confine `cwd` to the daemon workspace root.
+- MCP per-call backend overrides now resolve the requested backend instead of
+  only changing session metadata.
+
 ## [0.7.0] - 2026-07-27
 
 ### Added

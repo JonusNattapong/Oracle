@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import type { ProjectConfig } from "../../config/project.js";
 import { serializeOracleError } from "../../errors.js";
-import { checkProvider } from "../../providers/factory.js";
+import { checkBackend } from "../../providers/factory.js";
 
 function success(text: string, structuredContent: Record<string, unknown>) {
   return { content: [{ type: "text" as const, text }], structuredContent };
@@ -25,10 +25,11 @@ export function registerUtilTool(
     config: ProjectConfig;
     workspaceRoot: string;
     providerId: string;
-    providerChecks?: typeof checkProvider;
+    homeDir: string;
+    providerChecks?: typeof checkBackend;
   }
 ): void {
-  const providerChecks = deps.providerChecks ?? checkProvider;
+  const providerChecks = deps.providerChecks ?? checkBackend;
 
   server.registerTool(
     "oracle_doctor",
@@ -43,6 +44,8 @@ export function registerUtilTool(
         const sessionProbe = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-doctor-"));
         await fs.rm(sessionProbe, { recursive: true, force: true });
         await fs.access(deps.workspaceRoot, fs.constants.R_OK);
+        const backendName = deps.config.backend ?? deps.config.provider ?? "codex";
+        const configuredProfile = deps.config.browser?.profileDir;
         const checks = [
           {
             name: "node runtime",
@@ -52,7 +55,16 @@ export function registerUtilTool(
           { name: "project configuration", ok: true, detail: `${deps.providerId}/${deps.config.model}` },
           { name: "workspace readable", ok: true, detail: deps.workspaceRoot },
           { name: "session storage writable", ok: true, detail: os.tmpdir() },
-          ...(await providerChecks(deps.config.provider))
+          ...(await providerChecks(backendName, {
+            homeDir: deps.homeDir,
+            experimentalBrowserMode: deps.config.experimental?.browserMode,
+            browser: {
+              ...deps.config.browser,
+              profileDir: configuredProfile
+                ? path.resolve(deps.homeDir, configuredProfile)
+                : path.join(deps.homeDir, "chrome-profile")
+            }
+          }))
         ];
         return success(JSON.stringify(checks, null, 2), {
           healthy: checks.every((check) => check.ok),

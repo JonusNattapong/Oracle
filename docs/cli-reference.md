@@ -21,6 +21,8 @@ oracle ask "Why is service X timing out?"
 oracle ask "review this" -f "src/**/*.ts"
 oracle ask "what's in our latest PR?" --include-gh
 oracle ask "review" --soul engineer
+oracle ask "review this" --remember "I prefer concise reviews" --backend chatgpt-browser
+oracle ask "describe this image" -f "docs/assets/arch_flow.png" --backend chatgpt-browser
 ```
 
 | Flag | Purpose |
@@ -29,9 +31,46 @@ oracle ask "review" --soul engineer
 | `--include-docs` | Inject `.oracle/docs/` knowledge base |
 | `--include-gh` | Include GitHub PR/issue context |
 | `--soul <name>` | Personality: `engineer`, `socratic`, `witty`, etc. |
-| `--conversation <id>` | Multi-turn: recall prior answers in same conversation |
+| `--conversation <id>` | Multi-turn recall; continuation-capable backends also resume their native conversation |
+| `--remember <text>` | Explicitly save a high-level fact/preference to the signed-in ChatGPT account (`chatgpt-browser` only) |
 | `--scope <project\|global>` | Memory scope (default: project) |
+| `--backend <name>` | Override the execution backend, including experimental `chatgpt-browser` |
+| `--provider <name>` | Deprecated alias for `--backend` |
 | `--json` | Output structured JSON |
+
+---
+
+### oracle browser
+
+Manage the isolated Chrome profile used by experimental ChatGPT Browser Mode.
+
+Use `oracle browser status --live` to open or reuse the isolated Chrome profile
+and verify that it contains an authenticated ChatGPT account session rather
+than a guest session.
+
+If ChatGPT or an OAuth provider refuses sign-in in the automation-enabled
+window, run `oracle browser login`. Oracle restarts only its isolated Chrome
+profile without automation flags. Complete login, close that window, then run
+`oracle browser status --live`.
+
+```bash
+oracle browser setup
+oracle browser login
+oracle browser status
+oracle browser status --live
+oracle browser open
+```
+
+Browser Mode must also be enabled with `experimental.browserMode` in
+`.oracle/config.json`. See [browser-mode.md](browser-mode.md).
+
+`--remember` changes account-global ChatGPT Saved Memory, not Oracle's project
+memory. It is explicit per call; do not use it for secrets, code, or large
+templates. Manage or delete saved items in ChatGPT Settings > Personalization.
+
+For Browser Mode, `-f/--file` also uploads PNG, JPEG, and WebP images to the
+ChatGPT composer. Generated images are stored under the consult session's
+`artifacts/images/` directory and their paths are printed after the text answer.
 
 ---
 

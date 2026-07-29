@@ -1,0 +1,19 @@
+[    2554ms] [ERROR] Loading the script 'https://platform.claude.com/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js' violates the following Content Security Policy directive: "script-src 'report-sample' 'strict-dynamic' https: 'nonce-k1KwsMf30gZj/bPTtOb+8g==' https://via.intercom.io https://api.intercom.io https://api.au.intercom.io https://api.eu.intercom.io https://api-iam.intercom.io https://api-iam.eu.intercom.io https://api-iam.au.intercom.io https://api-ping.intercom.io https://nexus-websocket-a.intercom.io wss://nexus-websocket-a.intercom.io https://nexus-websocket-b.intercom.io wss://nexus-websocket-b.intercom.io https://nexus-europe-websocket.intercom.io wss://nexus-europe-websocket.intercom.io https://nexus-australia-websocket.intercom.io wss://nexus-australia-websocket.intercom.io https://uploads.intercomcdn.com https://uploads.intercomcdn.eu https://uploads.au.intercomcdn.com https://uploads.eu.intercomcdn.com https://uploads.intercomusercontent.com https://maps.googleapis.com https://maps.gstatic.com 'wasm-unsafe-eval'". Note that 'strict-dynamic' is present, so host-based allowlisting is disabled. Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked. @ https://platform.claude.com/docs/en/about-claude/pricing:0
+[    3856ms] [INFO] [O11Y] [DatadogRUM] Initialized {service: app-console, env: production, version: bf0be05d0d14dce3cd5c2763d5e64b481701c0d0} @ https://platform.claude.com/_next/static/chunks/47971-3221edcc35880b9a.js:46
+[   12552ms] Error: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at rZ (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:37455)
+    at id (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:89195)
+    at sh (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:129366)
+    at https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:129211
+    at sm (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:129219)
+    at sr (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:124359)
+    at sY (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:151044)
+    at sj (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:149257)
+    at sN (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:146903)
+    at https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:144329
+    at sw (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:144335)
+    at sl (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:127481)
+    at sr (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:125717)
+    at sq (https://platform.claude.com/_next/static/chunks/4bd1b696-0c35474705d96f14.js:1:150923)
+    at MessagePort.j (https://platform.claude.com/_next/static/chunks/47971-3221edcc35880b9a.js:1:37045)
+[   18345ms] [WARNING] [Intercom] The App ID in your code snippet has not been set. Set it to your App ID found in settings to complete installation: https://app.intercom.com/a/apps/_/settings/web @ https://js.intercomcdn.com/frame-modern.20f6c86e.js:0

@@ -1,7 +1,7 @@
 import path from "node:path";
 import { ControlCenterService } from "../control/service.js";
 import { VERSION } from "../version.js";
-import { LocalApiServer } from "./api.js";
+import { LocalApiServer, type LocalApiServerOptions } from "./api.js";
 import { RuntimeDatabase } from "./database.js";
 import { RuntimeEventBus } from "./events.js";
 import { RemoteSwarmService } from "./swarmService.js";
@@ -22,6 +22,7 @@ export interface OracleDaemonOptions {
   token?: string;
   databasePath?: string;
   workspaceRoot?: string;
+  backendFactory?: LocalApiServerOptions["backendFactory"];
   allowRemote?: boolean;
   onShutdown?: () => void;
 }
@@ -91,6 +92,9 @@ export class OracleDaemon {
       port: requestedPort,
       token: provisional.token,
       version: VERSION,
+      homeDir: this.options.homeDir,
+      workspaceRoot,
+      backendFactory: this.options.backendFactory,
       scheduler: this.scheduler,
       control: this.control,
       events: this.events,

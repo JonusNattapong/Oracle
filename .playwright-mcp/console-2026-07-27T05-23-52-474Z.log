@@ -1,0 +1,9 @@
+[    2753ms] [ERROR] Access to XMLHttpRequest at 'https://cloudflareinsights.com/cdn-cgi/rum' from origin 'https://commandcode.ai' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://commandcode.ai/docs/provider:0
+[    2753ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://cloudflareinsights.com/cdn-cgi/rum:0
+[    3518ms] [ERROR] Access to fetch at 'https://discord.com/invite/qz6VsMtvXU' (redirected from 'https://commandcode.ai/discord?_rsc=v0aGNaLXOdI8rZW1') from origin 'https://commandcode.ai' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://commandcode.ai/docs/provider:0
+[    3519ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://discord.com/invite/qz6VsMtvXU:0
+[    3519ms] [ERROR] Failed to fetch RSC payload for https://commandcode.ai/discord. Falling back to browser navigation. TypeError: Failed to fetch
+    at y (https://commandcode.ai/docs/_next/static/chunks/4910-c3c523c0b201f2fb.js:1:97647)
+    at async _ (https://commandcode.ai/docs/_next/static/chunks/4910-c3c523c0b201f2fb.js:1:96505)
+    at async Object.o [as task] (https://commandcode.ai/docs/_next/static/chunks/4910-c3c523c0b201f2fb.js:1:123811) @ https://commandcode.ai/docs/_next/static/chunks/4910-c3c523c0b201f2fb.js:0
+[    6830ms] [WARNING] The resource https://commandcode.ai/docs/top.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://commandcode.ai/docs/provider:0

@@ -8,11 +8,17 @@ import { Command } from "commander";
 import { VERSION } from "./version.js";
 import { ConsultService } from "./core/consult.js";
 import {
+  checkBackend,
+  createExecutionBackend,
+  createAgentBackend,
+  AGENT_BACKENDS,
+  parseBackendName,
   checkProvider,
   createProvider,
   createAgentProvider,
   parseProviderName
 } from "./providers/factory.js";
+import { loadProjectConfig, type ProjectConfig } from "./config/project.js";
 import { AgentService } from "./agent/service.js";
 import { FileSessionStore } from "./session/store.js";
 import {
@@ -86,6 +92,20 @@ async function createCostSink(): Promise<{
 const homeDir = (): string =>
   process.env.ORACLE_HOME_DIR ?? path.join(os.homedir(), ".oracle");
 
+function backendRuntimeOptions(config: ProjectConfig) {
+  const configuredProfile = config.browser?.profileDir;
+  return {
+    homeDir: homeDir(),
+    experimentalBrowserMode: config.experimental?.browserMode,
+    browser: {
+      ...config.browser,
+      profileDir: configuredProfile
+        ? path.resolve(homeDir(), configuredProfile)
+        : path.join(homeDir(), "chrome-profile")
+    }
+  };
+}
+
 const program = new Command()
   .name("oracle")
   .description("Oracle — MCP-powered AI coding consultant")
@@ -99,21 +119,33 @@ program
   .option("--soul <name>", "Soul prompt name (~/.oracle/souls/<name>.md)")
   .option("-f, --file <pattern...>", "File paths or glob patterns to include")
   .option("--conversation <id>", "Stable id so Oracle recalls what it already told you across calls")
+  .option("--remember <text>", "Explicitly save a high-level fact or preference to ChatGPT account memory (chatgpt-browser only)")
   .option("--include-docs", "Search .oracle/docs/ for relevant documentation")
   .option("-m, --model <model>", "Model override")
-  .option("--provider <provider>", "Provider override")
+  .option("--backend <backend>", "Backend override (codex, openai, anthropic, gemini, opencode, chatgpt-browser)")
+  .option("--provider <provider>", "Provider override (deprecated: use --backend)")
   .option("--cwd <path>", "Working directory", process.cwd())
   .option("--agent <name>", "Attribute this call to an agent for cost accounting")
   .action(async (question, options) => {
     const cwd = path.resolve(options.cwd);
-    const finalProvider = options.provider ?? "codex";
-    const parsedProvider = parseProviderName(finalProvider);
-    const checks = await checkProvider(parsedProvider);
+    const projectConfig = await loadProjectConfig(cwd);
+    const rawBackend = options.backend
+      ?? options.provider
+      ?? projectConfig.backend
+      ?? projectConfig.provider
+      ?? "codex";
+    const backendName = parseBackendName(rawBackend);
+    const runtimeOptions = backendRuntimeOptions(projectConfig);
+    const checks = await checkBackend(backendName, runtimeOptions);
     const failedCheck = checks.find((chk) => !chk.ok);
     if (failedCheck) throw new Error(`${failedCheck.name}: ${failedCheck.detail}`);
 
     const { sink: costSink, close: closeCostSink } = await createCostSink();
-    const service = new ConsultService(createProvider(parsedProvider), undefined, costSink);
+    const service = new ConsultService(
+      createExecutionBackend(backendName, runtimeOptions),
+      undefined,
+      costSink
+    );
     const soulsDir = path.join(homeDir(), "souls");
 
     // Build system prompt — use specific soul if --soul given, otherwise auto-detect mood
@@ -139,9 +171,11 @@ program
     const result = await service.consult({
       prompt: `${ctxBlock}\n\n## Question\n${question}`,
       preset: "review",
-      provider: finalProvider,
+      provider: backendName,
+      conversationId: options.conversation,
+      accountMemory: options.remember,
       files: hasFiles ? options.file : [],
-      model: options.model ?? "gpt-5.4",
+      model: options.model ?? projectConfig.model,
       cwd,
       systemPrompt,
       allowEmptyFiles: !hasFiles,
@@ -164,6 +198,12 @@ program
     }
 
     console.log(result.output);
+    for (const image of result.images ?? []) {
+      console.log(`[image] ${image.path} (${image.mimeType}, ${image.sizeBytes} bytes)`);
+    }
+    for (const warning of result.artifactWarnings ?? []) {
+      console.warn(`[artifact warning] ${warning}`);
+    }
   });
 
 // ── oracle ───────────────────────────────────────────────────────
@@ -171,7 +211,8 @@ program
   .command("agent")
   .description("Autonomously carry out a coding task with a tool-use loop")
   .argument("<task>", "The task to carry out")
-  .option("--provider <provider>", "Provider override (anthropic, opencode, or codex)")
+  .option("--backend <backend>", "Backend override (anthropic, opencode, or codex)")
+  .option("--provider <provider>", "Provider override (deprecated: use --backend)")
   .option("-m, --model <model>", "Model override", "auto")
   .option("--read-only", "Investigate only")
   .option("--max-steps <n>", "Max agent turns before stopping", "20")
@@ -184,12 +225,24 @@ program
   .option("--yes", "Skip confirmation prompts (use with --plan)")
   .action(async (task, options) => {
     const cwd = path.resolve(options.cwd);
-    const parsedProvider = parseProviderName(options.provider ?? "codex");
-    const checks = await checkProvider(parsedProvider);
+    const projectConfig = await loadProjectConfig(cwd);
+    const backendName = parseBackendName(
+      options.backend
+        ?? options.provider
+        ?? projectConfig.backend
+        ?? projectConfig.provider
+        ?? "codex"
+    );
+    if (!AGENT_BACKENDS.includes(backendName)) {
+      throw new Error(
+        `Backend '${backendName}' does not support agent tool use. `
+        + `Choose one of: ${AGENT_BACKENDS.join(", ")}.`
+      );
+    }
+    const checks = await checkBackend(backendName, backendRuntimeOptions(projectConfig));
     const failedCheck = checks.find((chk) => !chk.ok);
     if (failedCheck) throw new Error(`${failedCheck.name}: ${failedCheck.detail}`);
-    const provider = createAgentProvider(parsedProvider);
-    const agent = new AgentService(provider);
+    const agent = new AgentService(createAgentBackend(backendName));
     if (
       options.approvalMode
       && !["off", "risky", "all-mutations"].includes(options.approvalMode)
@@ -737,12 +790,109 @@ webCmd
     console.error(`\nSource: ${result.sourceUrl}`);
   });
 
+// ── browser ──────────────────────────────────────────────────────────
+const browserCmd = program
+  .command("browser")
+  .description("Manage ChatGPT Browser Mode (experimental)");
+
+browserCmd
+  .command("setup")
+  .description("Initialize Chrome profile for Oracle ChatGPT session and open ChatGPT for login")
+  .action(async () => {
+    const projectConfig = await loadProjectConfig(process.cwd());
+    const runtimeOptions = backendRuntimeOptions(projectConfig);
+    const profileDir = runtimeOptions.browser.profileDir;
+    await fs.mkdir(profileDir, { recursive: true });
+    const { openChatGptInOracleChrome } = await import("./backends/chatgpt-browser/chrome.js");
+    console.log(`Launching Chrome with Oracle profile at: ${profileDir}`);
+    console.log("Please log into your ChatGPT account in the browser window.");
+    await openChatGptInOracleChrome({
+      profileDir,
+      enabled: true,
+      headed: true,
+      timeoutMs: runtimeOptions.browser.timeoutMs
+    });
+  });
+
+browserCmd
+  .command("login")
+  .description("Open the isolated Oracle profile without automation flags for manual ChatGPT login")
+  .action(async () => {
+    const projectConfig = await loadProjectConfig(process.cwd());
+    const runtimeOptions = backendRuntimeOptions(projectConfig);
+    const profileDir = runtimeOptions.browser.profileDir;
+    const { openChatGptForManualLogin } = await import(
+      "./backends/chatgpt-browser/chrome.js"
+    );
+    console.log("Restarting the dedicated Oracle Chrome profile in manual login mode...");
+    await openChatGptForManualLogin({
+      profileDir,
+      enabled: true,
+      headed: true,
+      timeoutMs: runtimeOptions.browser.timeoutMs
+    });
+    console.log("Complete ChatGPT login, then CLOSE this Chrome window.");
+    console.log("After it closes, run `oracle browser status --live` to verify the saved session.");
+  });
+
+browserCmd
+  .command("status")
+  .description("Check ChatGPT Browser Mode status and diagnostics")
+  .option("--live", "Open or reuse Oracle Chrome and verify the authenticated ChatGPT session")
+  .action(async (options) => {
+    const projectConfig = await loadProjectConfig(process.cwd());
+    const runtimeOptions = backendRuntimeOptions(projectConfig);
+    const checks = await checkBackend("chatgpt-browser", runtimeOptions);
+    if (options.live) {
+      const { checkLiveChatGptAuthentication } = await import(
+        "./backends/chatgpt-browser/diagnostics.js"
+      );
+      checks.push(await checkLiveChatGptAuthentication({
+        profileDir: runtimeOptions.browser.profileDir,
+        enabled: projectConfig.experimental?.browserMode ?? false,
+        headed: true,
+        timeoutMs: runtimeOptions.browser.timeoutMs
+      }));
+    }
+    console.log("ChatGPT Browser Mode Status:");
+    for (const check of checks) {
+      console.log(`  ${check.ok ? "[OK]" : "[FAIL]"} ${check.name}: ${check.detail}`);
+    }
+  });
+
+browserCmd
+  .command("open")
+  .description("Open ChatGPT in Chrome with Oracle profile")
+  .action(async () => {
+    const projectConfig = await loadProjectConfig(process.cwd());
+    const runtimeOptions = backendRuntimeOptions(projectConfig);
+    const profileDir = runtimeOptions.browser.profileDir;
+    await fs.mkdir(profileDir, { recursive: true });
+    const { openChatGptInOracleChrome } = await import("./backends/chatgpt-browser/chrome.js");
+    console.log(`Opening ChatGPT in Chrome profile...`);
+    await openChatGptInOracleChrome({
+      profileDir,
+      enabled: true,
+      headed: true,
+      timeoutMs: runtimeOptions.browser.timeoutMs
+    });
+  });
+
 // ── existing commands ────────────────────────────────────────────
 program
   .command("doctor")
-  .option("--provider <provider>", "Provider: codex, openai, anthropic, or opencode", "codex")
+  .option("--backend <backend>", "Backend: codex, openai, anthropic, opencode, gemini, or chatgpt-browser")
+  .option("--provider <provider>", "Provider (deprecated): use --backend instead")
   .action(async (options) => {
-    const checks = await checkProvider(parseProviderName(options.provider));
+    const projectConfig = await loadProjectConfig(process.cwd());
+    const backendName = parseBackendName(
+      options.backend
+        ?? options.provider
+        ?? projectConfig.backend
+        ?? projectConfig.provider
+        ?? "codex"
+    );
+    const checks = await checkBackend(backendName, backendRuntimeOptions(projectConfig));
     for (const check of checks) {
       console.log(`${check.ok ? "OK" : "FAIL"}  ${check.name}: ${check.detail}`);
     }

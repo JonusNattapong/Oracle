@@ -9,6 +9,7 @@ import type {
 } from "../control/types.js";
 import type { MaintenanceResult } from "../memory/maintenance.js";
 import type { TaskRecord } from "../tasks/store.js";
+import type { SessionRecord } from "../types.js";
 import { readDaemonState, type DaemonState } from "./state.js";
 import type { SwarmToken } from "./swarmService.js";
 
@@ -213,6 +214,37 @@ export class RuntimeClient {
       true,
       60_000
     )).result;
+  }
+
+  async consult(input: {
+    question: string;
+    files?: string[];
+    backend?: string;
+    provider?: string;
+    model?: string;
+    systemPrompt?: string;
+    cwd?: string;
+    conversationId?: string;
+    previousResponseId?: string;
+    accountMemory?: string;
+  }): Promise<SessionRecord> {
+    return await this.request<SessionRecord>(
+      "POST",
+      "/v1/consult",
+      input,
+      true,
+      input.accountMemory ? 360_000 : 120_000
+    );
+  }
+
+  async getConsultSession(sessionId: string): Promise<SessionRecord> {
+    return await this.request<SessionRecord>(
+      "GET",
+      `/v1/consult/${encodeURIComponent(sessionId)}`,
+      undefined,
+      true,
+      10_000
+    );
   }
 
   controlCenterUrl(): string {

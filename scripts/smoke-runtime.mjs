@@ -6,6 +6,9 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cliPath = path.join(repositoryRoot, "dist", "cli.js");
+const packageVersion = JSON.parse(
+  await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8")
+).version;
 const temporaryRoot = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-runtime-smoke-"));
 
 function run(args, allowFailure = false) {
@@ -37,7 +40,7 @@ try {
   if (!parsedStatus.running || parsedStatus.health?.storage !== "sqlite") {
     throw new Error(`Unexpected daemon status: ${status}`);
   }
-  if (parsedStatus.health?.version !== "0.5.0") {
+  if (parsedStatus.health?.version !== packageVersion) {
     throw new Error(`Unexpected Runtime version: ${status}`);
   }
   if (JSON.stringify(parsedStatus).includes("token")) {
@@ -68,7 +71,7 @@ try {
   }
 
   const snapshot = JSON.parse(run(["control", "snapshot"]));
-  if (snapshot.version !== "0.5.0" || snapshot.approvals?.pending !== 0) {
+  if (snapshot.version !== packageVersion || snapshot.approvals?.pending !== 0) {
     throw new Error(`Unexpected Control Center snapshot: ${JSON.stringify(snapshot)}`);
   }
   const tui = run(["control", "--once"]);
@@ -117,7 +120,12 @@ try {
   await fs.stat(databasePath);
 } finally {
   run(["daemon", "stop"], true);
-  await fs.rm(temporaryRoot, { recursive: true, force: true });
+  await fs.rm(temporaryRoot, {
+    recursive: true,
+    force: true,
+    maxRetries: 10,
+    retryDelay: 100
+  });
 }
 
 console.log("Runtime smoke tests passed.");

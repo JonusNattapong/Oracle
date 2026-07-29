@@ -1,16 +1,18 @@
 import crypto from "node:crypto";
-import type { ConsultRequest, ConsultResult, ContextFile, SessionRecord } from "../types.js";
-import { estimateTokens } from "../tokens.js";
-import { resolveFiles } from "../context/files.js";
-import { scanFilesForSecrets } from "../context/secrets.js";
-import {
-  buildUserPrompt,
-  DEFAULT_SYSTEM_PROMPT,
-  renderBundle
-} from "../context/bundle.js";
+import fs from "node:fs/promises";
+import path from "node:path";
+import type {
+  ConsultRequest,
+  ConsultResult,
+  ContextFile,
+  ImageArtifact,
+  SessionRecord
+} from "../types.js";
+import { BundleService } from "../context/bundleService.js";
 import type { Provider } from "../providers/provider.js";
 import { FileSessionStore } from "../session/store.js";
 import { OracleError } from "../errors.js";
+import { scanFilesForSecrets } from "../context/secrets.js";
 
 function createSessionId(prompt: string): string {
   const slug =
@@ -20,6 +22,36 @@ function createSessionId(prompt: string): string {
       .replace(/^-|-$/g, "")
       .slice(0, 36) || "consult";
   return `${slug}-${crypto.randomUUID().slice(0, 8)}`;
+}
+
+async function validateImageArtifacts(
+  images: ImageArtifact[] | undefined,
+  artifactsDir: string
+): Promise<ImageArtifact[] | undefined> {
+  if (!images?.length) return undefined;
+  const root = await fs.realpath(artifactsDir);
+  const validated: ImageArtifact[] = [];
+  for (const image of images) {
+    const realPath = await fs.realpath(image.path);
+    const relative = path.relative(root, realPath);
+    if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+      throw new OracleError(
+        "ORACLE_INVALID_REQUEST",
+        "Backend image artifact escaped the session artifact directory.",
+        "Inspect the selected execution backend before retrying."
+      );
+    }
+    const stat = await fs.stat(realPath);
+    if (!stat.isFile() || stat.size !== image.sizeBytes) {
+      throw new OracleError(
+        "ORACLE_INVALID_REQUEST",
+        "Backend image artifact metadata does not match the stored file.",
+        "Inspect the selected execution backend before retrying."
+      );
+    }
+    validated.push({ ...image, path: realPath });
+  }
+  return validated;
 }
 
 /**
@@ -34,65 +66,100 @@ export type CostSink = (entry: {
   outputTokens: number;
 }) => void;
 
+export type BackendResolver = (id: string) => Provider;
+
 export class ConsultService {
   constructor(
     private readonly provider: Provider,
     private readonly sessions = new FileSessionStore(),
-    private readonly costSink?: CostSink
+    private readonly costSink?: CostSink,
+    private readonly bundleService = new BundleService(),
+    private readonly backendResolver?: BackendResolver
   ) {}
 
   async consult(request: ConsultRequest): Promise<ConsultResult> {
     const cwd = request.cwd ?? process.cwd();
     const model = request.model ?? "gpt-5.4";
-    const files = await resolveFiles(request.files ?? [], {
-      cwd,
-      maxFileSizeBytes: request.maxFileSizeBytes
-    });
-    // ponytail: allow prompt-only consults (e.g. context injected into the prompt)
-    if (files.length === 0 && !request.allowEmptyFiles) {
-      throw new OracleError(
-        "ORACLE_NO_FILES",
-        "No files matched the consultation request.",
-        "Check the project include patterns or pass existing project files."
-      );
+    const requestedBackend = request.provider ?? this.provider.id;
+    let activeProvider = this.provider;
+    if (requestedBackend !== this.provider.id) {
+      if (!this.backendResolver) {
+        throw new OracleError(
+          "ORACLE_PROVIDER_UNAVAILABLE",
+          `Backend override '${requestedBackend}' is not available in this runtime.`,
+          `Use the configured backend '${this.provider.id}' or start Oracle with a backend resolver.`
+        );
+      }
+      activeProvider = this.backendResolver(requestedBackend);
     }
 
-    const secretFindings = scanFilesForSecrets(files);
-    if (secretFindings.length > 0) {
+    const accountMemory = request.accountMemory?.trim();
+    if (request.accountMemory !== undefined && !accountMemory) {
       throw new OracleError(
-        "ORACLE_SECRET_DETECTED",
-        "Potential secrets were detected in selected files.",
-        "Remove the files from the selection or replace credentials with placeholders.",
-        { findings: secretFindings }
+        "ORACLE_ACCOUNT_MEMORY_INVALID",
+        "ChatGPT account memory text must not be empty.",
+        "Pass a short, high-level fact or preference, or omit accountMemory."
       );
     }
-
-    const inputBytes = Buffer.byteLength(request.prompt) + files.reduce((sum, file) => sum + file.sizeBytes, 0);
-    if (inputBytes > (request.maxInputBytes ?? 5_000_000)) {
+    if (accountMemory && !activeProvider.capabilities.accountMemory) {
       throw new OracleError(
-        "ORACLE_INPUT_TOO_LARGE",
-        "The selected input exceeds the configured size limit.",
-        "Select fewer or smaller files.",
-        { inputBytes, maxInputBytes: request.maxInputBytes ?? 5_000_000 }
+        "ORACLE_ACCOUNT_MEMORY_UNSUPPORTED",
+        `Backend '${activeProvider.id}' cannot write account-level memory.`,
+        "Use backend 'chatgpt-browser' with an authenticated ChatGPT account."
       );
     }
+    if (accountMemory) {
+      const secretFindings = scanFilesForSecrets([{
+        path: "<account-memory>",
+        content: accountMemory,
+        sizeBytes: Buffer.byteLength(accountMemory)
+      }]);
+      if (secretFindings.length > 0) {
+        throw new OracleError(
+          "ORACLE_SECRET_DETECTED",
+          "Potential secrets were detected in the requested ChatGPT account memory.",
+          "Remove credentials or tokens. Account memory should contain only a high-level fact or preference.",
+          { findings: secretFindings }
+        );
+      }
+    }
 
-    const systemPrompt = request.systemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT;
-    const userPrompt = buildUserPrompt(request.prompt, files);
-    const bundle = renderBundle({
+    let previousResponseId = request.previousResponseId;
+    if (
+      !previousResponseId
+      && request.conversationId
+      && activeProvider.capabilities.continuation
+    ) {
+      const priorSessions = await this.sessions.list(500);
+      previousResponseId = priorSessions.find(
+        (session) =>
+          session.status === "completed"
+          && session.provider === activeProvider.id
+          && session.conversationId === request.conversationId
+          && Boolean(session.responseId)
+      )?.responseId;
+    }
+
+    const bundleResult = await this.bundleService.createBundle({
       prompt: request.prompt,
-      files,
-      systemPrompt
+      files: request.files,
+      cwd,
+      systemPrompt: request.systemPrompt,
+      maxFileSizeBytes: request.maxFileSizeBytes,
+      maxInputBytes: request.maxInputBytes,
+      allowEmptyFiles: request.allowEmptyFiles
     });
 
-    const estimatedInputTokens = estimateTokens(systemPrompt) + estimateTokens(userPrompt);
+    const { systemPrompt, userPrompt, bundle, files, estimatedInputTokens } = bundleResult;
     const id = createSessionId(request.prompt);
     let record = await this.sessions.create({
       id,
       cwd,
       prompt: request.prompt,
       model,
-      provider: request.provider ?? this.provider.id,
+      provider: activeProvider.id,
+      conversationId: request.conversationId,
+      accountMemoryRequested: Boolean(accountMemory),
       preset: request.preset,
       files: files.map((file) => file.path),
       bundle
@@ -100,21 +167,32 @@ export class ConsultService {
     record = { ...record, estimatedInputTokens };
 
     try {
-      const response = await this.provider.run({
+      const artifactsDir = path.join(path.dirname(record.bundlePath), "artifacts");
+      const response = await activeProvider.run({
         model,
         systemPrompt,
         userPrompt,
         cwd,
-        previousResponseId: request.previousResponseId,
+        previousResponseId,
+        accountMemory,
+        artifactsDir,
         images: files
           .filter((f): f is ContextFile & { base64: string; mimeType: string } => !!f.base64 && !!f.mimeType)
-          .map((f) => ({ base64: f.base64, mimeType: f.mimeType }))
+          .map((f) => ({
+            base64: f.base64,
+            mimeType: f.mimeType,
+            fileName: path.basename(f.path)
+          }))
       });
+      const responseImages = await validateImageArtifacts(response.images, artifactsDir);
       record = {
         ...record,
         status: "completed",
         completedAt: new Date().toISOString(),
         responseId: response.responseId,
+        accountMemorySaved: response.accountMemorySaved,
+        images: responseImages,
+        artifactWarnings: response.artifactWarnings,
         output: response.text,
         usage: response.usage,
         error: undefined
@@ -124,7 +202,7 @@ export class ConsultService {
       // successful consult into an error.
       try {
         this.costSink?.({
-          provider: request.provider ?? this.provider.id,
+          provider: activeProvider.id,
           model,
           agent: request.agent,
           inputTokens: response.usage.inputTokens ?? 0,

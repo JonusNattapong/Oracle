@@ -1,0 +1,2091 @@
+- main [ref=f1e4]:
+  - generic [ref=f1e5]:
+    - generic [ref=f1e9]:
+      - link "Home" [ref=f1e11] [cursor=pointer]:
+        - /url: /docs
+        - img "Command Code" [ref=f1e12]
+      - generic [ref=f1e15]:
+        - link [ref=f1e17] [cursor=pointer]:
+          - /url: https://x.com/CommandCodeAI
+        - link [ref=f1e20] [cursor=pointer]:
+          - /url: https://commandcode.ai/discord
+        - link [ref=f1e23] [cursor=pointer]:
+          - /url: https://github.com/CommandCodeAI/command-code
+        - button "Toggle theme" [ref=f1e27] [cursor=pointer]
+    - generic [ref=f1e31]:
+      - main [ref=f1e32]:
+        - generic [ref=f1e33]:
+          - generic [ref=f1e36]:
+            - button "Copy Page" [ref=f1e37] [cursor=pointer]
+            - button [ref=f1e40] [cursor=pointer]
+          - article [ref=f1e44]:
+            - generic [ref=f1e45]:
+              - heading "Pricing & Limits" [level=1] [ref=f1e46]
+              - paragraph [ref=f1e47]:
+                - text: Plain pricing. No surprises. Credits that never expire. See full plans and side-by-side comparison on the
+                - link "pricing page" [ref=f1e48] [cursor=pointer]:
+                  - /url: https://commandcode.ai/pricing
+                - text: .
+              - generic [ref=f1e49]:
+                - link "DEAL deepseek-v4-pro 4× usage. Every dollar of credit goes 4× further on this model. permanent" [ref=f1e51] [cursor=pointer]:
+                  - /url: "#deepseek-v4-pro-4x-usage"
+                  - generic [ref=f1e52]: DEAL
+                  - generic [ref=f1e53]:
+                    - code [ref=f1e54]: deepseek-v4-pro
+                    - text: 4× usage. Every dollar of credit goes 4× further on this model.
+                  - generic [ref=f1e55]: permanent
+                - link "DEAL minimax-m3 2× usage. Every credit goes 2× further. permanent" [ref=f1e58] [cursor=pointer]:
+                  - /url: "#minimax-m3-2x-usage"
+                  - generic [ref=f1e59]: DEAL
+                  - generic [ref=f1e60]:
+                    - code [ref=f1e61]: minimax-m3
+                    - text: 2× usage. Every credit goes 2× further.
+                  - generic [ref=f1e62]: permanent
+                - link "DEAL mimo-v2.5 + mimo-v2.5-pro Up to 99% off. Every dollar of credit goes further on these models. permanent" [ref=f1e65] [cursor=pointer]:
+                  - /url: "#mimo-v2.5-pro-99-off"
+                  - generic [ref=f1e66]: DEAL
+                  - generic [ref=f1e67]:
+                    - code [ref=f1e68]: mimo-v2.5
+                    - text: +
+                    - code [ref=f1e69]: mimo-v2.5-pro
+                    - text: Up to 99% off. Every dollar of credit goes further on these models.
+                  - generic [ref=f1e70]: permanent
+                - link "DEAL laguna-s-2.1-free is free. Requests on this model cost no credits. while capacity lasts" [ref=f1e73] [cursor=pointer]:
+                  - /url: "#laguna-s-2.1-free"
+                  - generic [ref=f1e74]: DEAL
+                  - generic [ref=f1e75]:
+                    - code [ref=f1e76]: laguna-s-2.1-free
+                    - text: is free. Requests on this model cost no credits.
+                  - generic [ref=f1e77]: while capacity lasts
+                - link "DEAL ling-3.0-flash-free is free. Requests on this model cost no credits. through August 2, 2026" [ref=f1e80] [cursor=pointer]:
+                  - /url: "#ling-3.0-flash-free"
+                  - generic [ref=f1e81]: DEAL
+                  - generic [ref=f1e82]:
+                    - code [ref=f1e83]: ling-3.0-flash-free
+                    - text: is free. Requests on this model cost no credits.
+                  - generic [ref=f1e84]: through August 2, 2026
+              - heading [level=2] [ref=f1e86]:
+                - link "How it works." [ref=f1e88] [cursor=pointer]:
+                  - /url: "#how-it-works"
+              - list [ref=f1e89]:
+                - listitem [ref=f1e90]:
+                  - strong [ref=f1e91]: "Resets monthly:"
+                  - text: Your request budget refreshes at the start of every billing cycle.
+                - listitem [ref=f1e92]:
+                  - strong [ref=f1e93]: "Rolling 5-hour & weekly limits:"
+                  - text: Each plan also has shorter rolling windows so a single burst can't drain your whole month.
+                  - link "See usage limits" [ref=f1e94] [cursor=pointer]:
+                    - /url: "#usage-limits"
+                  - text: .
+                - listitem [ref=f1e95]:
+                  - strong [ref=f1e96]: "Top up automatically:"
+                  - text: Buy extra credits at model cost. They roll over. They never expire.
+                - listitem [ref=f1e97]:
+                  - strong [ref=f1e98]: "Your code stays yours:"
+                  - text: Command Code never trains on it. Never stores it.
+              - heading [level=2] [ref=f1e100]:
+                - link "Your plan, in one place." [ref=f1e102] [cursor=pointer]:
+                  - /url: "#your-plan-in-one-place"
+              - list [ref=f1e103]:
+                - listitem [ref=f1e104]:
+                  - strong [ref=f1e105]: "Pick a plan or top up credits:"
+                  - text: Head to
+                  - link "Studio > Billing" [ref=f1e106] [cursor=pointer]:
+                    - /url: https://commandcode.ai/billing
+                  - text: .
+                - listitem [ref=f1e107]:
+                  - strong [ref=f1e108]: "Watch every request, in real time:"
+                  - text: The
+                  - link "Usage" [ref=f1e109] [cursor=pointer]:
+                    - /url: https://commandcode.ai/usage
+                  - text: page in Studio tracks tokens and request history as it happens.
+                - listitem [ref=f1e110]:
+                  - strong [ref=f1e111]: "Cards. Invoices. Auto-reload:"
+                  - text: Manage them all from the billing portal at
+                  - link "Studio > Billing" [ref=f1e112] [cursor=pointer]:
+                    - /url: https://commandcode.ai/billing
+                  - text: .
+              - heading [level=2] [ref=f1e114]:
+                - link "Command Code Enterprise. Built for organizations." [ref=f1e116] [cursor=pointer]:
+                  - /url: "#command-code-enterprise-built-for-organizations"
+              - paragraph [ref=f1e117]: For teams that need their code and data to stay on their own infrastructure. Enterprise gives you the security, compliance, and control your organization requires - without compromise.
+              - paragraph [ref=f1e118]:
+                - text: Talk to our team at
+                - link "support@commandcode.ai" [ref=f1e119] [cursor=pointer]:
+                  - /url: mailto:support@commandcode.ai
+                - text: to get started.
+              - heading [level=2] [ref=f1e121]:
+                - link "Individual Plans" [ref=f1e123] [cursor=pointer]:
+                  - /url: "#individual-plans"
+              - table [ref=f1e126]:
+                - rowgroup [ref=f1e127]:
+                  - row [ref=f1e128]:
+                    - columnheader "Plan" [ref=f1e129]
+                    - columnheader "Price/mo" [ref=f1e130]
+                    - columnheader "Credits/mo" [ref=f1e131]
+                    - columnheader "Included LLM Usage" [ref=f1e132]
+                    - columnheader "Models" [ref=f1e133]
+                - rowgroup [ref=f1e134]:
+                  - row [ref=f1e135]:
+                    - cell "Go" [ref=f1e136]
+                    - cell "$1" [ref=f1e137]
+                    - cell "$10" [ref=f1e138]
+                    - cell [ref=f1e139]:
+                      - link "~15K requests" [ref=f1e140] [cursor=pointer]:
+                        - /url: "#usage-estimates"
+                    - cell "Open-source models only" [ref=f1e141]
+                  - row [ref=f1e142]:
+                    - cell "Pro" [ref=f1e143]
+                    - cell "$15" [ref=f1e144]
+                    - cell "$30" [ref=f1e145]
+                    - cell [ref=f1e146]:
+                      - link "~25K requests" [ref=f1e147] [cursor=pointer]:
+                        - /url: "#usage-estimates"
+                    - cell [ref=f1e148]:
+                      - button "Open-source + premium models" [ref=f1e149] [cursor=pointer]
+                  - row [ref=f1e152]:
+                    - cell "Provider" [ref=f1e153]
+                    - cell "$15" [ref=f1e154]
+                    - cell "Pay as you go" [ref=f1e155]
+                    - cell "Provider API access" [ref=f1e156]
+                    - cell "Open-source + premium models" [ref=f1e157]
+                  - row [ref=f1e158]:
+                    - cell "Max 10×" [ref=f1e159]
+                    - cell "$100" [ref=f1e160]
+                    - cell "$150" [ref=f1e161]
+                    - cell [ref=f1e162]:
+                      - link "~110K requests" [ref=f1e163] [cursor=pointer]:
+                        - /url: "#usage-estimates"
+                    - cell "Open-source + premium models" [ref=f1e164]
+                  - row [ref=f1e165]:
+                    - cell "Max 20×" [ref=f1e166]
+                    - cell "$200" [ref=f1e167]
+                    - cell "$300" [ref=f1e168]
+                    - cell [ref=f1e169]:
+                      - link "~200K requests" [ref=f1e170] [cursor=pointer]:
+                        - /url: "#usage-estimates"
+                    - cell "Open-source + premium models" [ref=f1e171]
+              - heading [level=2] [ref=f1e172]:
+                - link "Team Plans" [ref=f1e174] [cursor=pointer]:
+                  - /url: "#team-plans"
+              - table [ref=f1e177]:
+                - rowgroup [ref=f1e178]:
+                  - row [ref=f1e179]:
+                    - columnheader "Plan" [ref=f1e180]
+                    - columnheader "Price/mo" [ref=f1e181]
+                    - columnheader "Included LLM Usage" [ref=f1e182]
+                    - columnheader "Models" [ref=f1e183]
+                - rowgroup [ref=f1e184]:
+                  - row [ref=f1e185]:
+                    - cell "Team Pro" [ref=f1e186]
+                    - cell "$40" [ref=f1e187]
+                    - cell [ref=f1e188]:
+                      - link "~35K requests" [ref=f1e189] [cursor=pointer]:
+                        - /url: "#usage-estimates"
+                    - cell "Open-source + premium models" [ref=f1e190]
+                  - row [ref=f1e191]:
+                    - cell "Enterprise" [ref=f1e192]
+                    - cell "$5,000+" [ref=f1e193]
+                    - cell "Custom" [ref=f1e194]
+                    - cell "Custom pool" [ref=f1e195]
+              - paragraph [ref=f1e196]:
+                - strong [ref=f1e197]: How it works.
+              - list [ref=f1e198]:
+                - listitem [ref=f1e199]: Monthly subscription credits. Reset at the start of every cycle.
+                - listitem [ref=f1e200]: Top up at model cost. Credits roll over. Forever.
+                - listitem [ref=f1e201]:
+                  - text: Enterprise? Email
+                  - link "support@commandcode.ai" [ref=f1e202] [cursor=pointer]:
+                    - /url: mailto:support@commandcode.ai
+                  - text: for custom terms, SLAs, and dedicated support.
+              - heading [level=2] [ref=f1e204]:
+                - link "Usage limits" [ref=f1e206] [cursor=pointer]:
+                  - /url: "#usage-limits"
+              - paragraph [ref=f1e207]:
+                - text: On top of your monthly credits, every subscription plan has two
+                - strong [ref=f1e208]: rolling usage limits
+                - text: "- a 5-hour window and a weekly window. They smooth out bursts so a single busy session can't drain a whole month in an afternoon, while your full monthly pool stays available across the cycle."
+              - paragraph [ref=f1e209]:
+                - text: Each window is a share of your plan's
+                - strong [ref=f1e210]: monthly credit allocation
+                - text: ":"
+              - list [ref=f1e211]:
+                - listitem [ref=f1e212]:
+                  - strong [ref=f1e213]: 5-hour limit
+                  - text: "- 30% of your monthly credits"
+                - listitem [ref=f1e214]:
+                  - strong [ref=f1e215]: Weekly limit
+                  - text: "- 60% of your monthly credits"
+              - table [ref=f1e218]:
+                - rowgroup [ref=f1e219]:
+                  - row [ref=f1e220]:
+                    - columnheader "Plan" [ref=f1e221]
+                    - columnheader "Your cost" [ref=f1e222]
+                    - columnheader "Monthly credits" [ref=f1e223]
+                    - columnheader "5-hour limit" [ref=f1e224]
+                    - columnheader "Weekly limit" [ref=f1e225]
+                - rowgroup [ref=f1e226]:
+                  - row [ref=f1e227]:
+                    - cell "Go" [ref=f1e228]
+                    - cell "$1" [ref=f1e229]
+                    - cell "$10" [ref=f1e230]
+                    - cell "$3" [ref=f1e231]
+                    - cell "$6" [ref=f1e232]
+                  - row [ref=f1e233]:
+                    - cell "Pro" [ref=f1e234]
+                    - cell "$15" [ref=f1e235]
+                    - cell "$30" [ref=f1e236]
+                    - cell "$9" [ref=f1e237]
+                    - cell "$18" [ref=f1e238]
+                  - row [ref=f1e239]:
+                    - cell "Max 10×" [ref=f1e240]
+                    - cell "$100" [ref=f1e241]
+                    - cell "$150" [ref=f1e242]
+                    - cell "$45" [ref=f1e243]
+                    - cell "$90" [ref=f1e244]
+                  - row [ref=f1e245]:
+                    - cell "Max 20×" [ref=f1e246]
+                    - cell "$200" [ref=f1e247]
+                    - cell "$300" [ref=f1e248]
+                    - cell "$90" [ref=f1e249]
+                    - cell "$180" [ref=f1e250]
+                  - row [ref=f1e251]:
+                    - cell "Team Pro" [ref=f1e252]
+                    - cell "$40" [ref=f1e253]
+                    - cell "$40" [ref=f1e254]
+                    - cell "$12" [ref=f1e255]
+                    - cell "$24" [ref=f1e256]
+              - paragraph [ref=f1e257]:
+                - text: Limits are measured in
+                - strong [ref=f1e258]: credit value
+                - text: ", not request count - so how many requests you get depends on the models you run. Cheaper models like DeepSeek V4 Flash stretch much further than premium models like Claude Opus. The"
+                - link "usage estimates" [ref=f1e259] [cursor=pointer]:
+                  - /url: "#usage-estimates"
+                - text: below and the calculator help you gauge your own mix.
+              - paragraph [ref=f1e260]:
+                - text: These windows apply to your plan's
+                - strong [ref=f1e261]: included monthly credits
+                - text: . Usage with no subscription (free or balance-only) and custom
+                - strong [ref=f1e262]: Enterprise
+                - text: pools have no rolling window caps - they're gated only by your credit balance. On-demand credits are never throttled either, on any plan (
+                - link "details below" [ref=f1e263] [cursor=pointer]:
+                  - /url: "#usage-beyond-your-limit"
+                - text: ).
+              - heading "How the windows roll" [level=3] [ref=f1e264]
+              - paragraph [ref=f1e265]:
+                - text: Both windows roll
+                - strong [ref=f1e266]: from first use
+                - text: ", not on a fixed clock:"
+              - list [ref=f1e267]:
+                - listitem [ref=f1e268]:
+                  - text: A window opens on the
+                  - strong [ref=f1e269]: first request
+                  - text: you make after the previous one elapsed, then resets exactly one window-length later (5 hours or 7 days).
+                - listitem [ref=f1e270]: Usage never carries between windows - each new window starts at zero.
+                - listitem [ref=f1e271]:
+                  - strong [ref=f1e272]: Switching plans resets both windows
+                  - text: ", so you always start a new plan with a fresh allowance."
+              - heading "Usage beyond your limit" [level=3] [ref=f1e273]
+              - paragraph [ref=f1e274]:
+                - text: Rolling limits throttle only your
+                - strong [ref=f1e275]: included monthly credits
+                - text: ". On-demand credits are never throttled:"
+              - list [ref=f1e276]:
+                - listitem [ref=f1e277]:
+                  - strong [ref=f1e278]: "Top-up and pay-as-you-go credits are exempt:"
+                  - text: When you have on-demand credits available - or once your monthly pool is spent - requests skip the window check entirely. Adding credits with
+                  - code [ref=f1e279]: /extra
+                  - text: unblocks you immediately.
+                - listitem [ref=f1e280]:
+                  - text: While you're over a window limit, Command Code spends your on-demand credits
+                  - strong [ref=f1e281]: first
+                  - text: ", preserving your monthly allocation for when the window resets."
+              - paragraph [ref=f1e282]: "So you're never hard-stopped: keep working past a window on on-demand credits, or wait for it to reset to use your included credits again."
+              - heading "Tracking your limits" [level=3] [ref=f1e283]
+              - paragraph [ref=f1e284]:
+                - text: Run
+                - strong [ref=f1e285]:
+                  - code [ref=f1e286]: /usage
+                - text: in the CLI to see live
+                - strong [ref=f1e287]: 5-hour
+                - text: and
+                - strong [ref=f1e288]: weekly
+                - text: "meters - each shows how much of the window you've used and when it resets:"
+              - generic [ref=f1e292]:
+                - code [ref=f1e297]: Usage limits 5-hour ███░░░░░░░ 32% · resets in 3h 12m Weekly ████░░░░░░ 41% · resets in 2d 4h
+                - button "Copy" [ref=f1e298] [cursor=pointer]:
+                  - generic: Copied!
+              - paragraph [ref=f1e299]: "If you do hit a limit, the CLI tells you which window you reached and when it frees up:"
+              - generic [ref=f1e303]:
+                - code [ref=f1e308]: You've reached your 5-hour usage limit. Resets in 2h 41m (3:00 PM). Run /upgrade for a higher plan or /extra for on-demand credits.
+                - button "Copy" [ref=f1e309] [cursor=pointer]:
+                  - generic: Copied!
+              - heading [level=2] [ref=f1e311]:
+                - link "Usage estimates" [ref=f1e313] [cursor=pointer]:
+                  - /url: "#usage-estimates"
+              - paragraph [ref=f1e314]: The numbers above are estimates, not ceilings. Your actual usage depends on the models you pick, the length of your prompts, and how long your conversations run.
+              - list [ref=f1e315]:
+                - listitem [ref=f1e316]:
+                  - strong [ref=f1e317]: "A typical request:"
+                  - text: ~700–1K input tokens, ~125–200 output tokens, plus ~42K-56K cache reads on average. The calculator below has a cache slider to model your own session.
+                - listitem [ref=f1e318]:
+                  - strong [ref=f1e319]: "A range, not a single number:"
+                  - text: Cheaper models stretch further. On Go, DeepSeek V4 Flash runs ~60K requests with no cache - ~15K once the typical 52K cache reads are included. Our estimates are the
+                  - strong [ref=f1e320]: mix average
+                  - text: across each plan's typical models.
+                - listitem [ref=f1e321]:
+                  - strong [ref=f1e322]: "A balanced mix:"
+                  - text: Even split across models within each tier. Pro, Max 10×, and Max 20× assume ~35% open-source / ~65% premium.
+                - listitem [ref=f1e323]:
+                  - strong [ref=f1e324]: "Long conversations cost more:"
+                  - text: Every new turn re-reads the full context, so a long-running session burns through credits faster than a fresh one. Use
+                  - code [ref=f1e325]: /clear
+                  - text: or start a new session for unrelated tasks to keep things efficient.
+                - listitem [ref=f1e326]:
+                  - strong [ref=f1e327]: "Track the real number:"
+                  - text: The
+                  - link "Usage" [ref=f1e328] [cursor=pointer]:
+                    - /url: https://commandcode.ai/usage
+                  - text: page in Studio always reflects the actual price charged per request.
+              - generic [ref=f1e329]:
+                - generic [ref=f1e334]:
+                  - generic [ref=f1e335]:
+                    - generic [ref=f1e336]: Interactive
+                    - heading "Usage calculator" [level=3] [ref=f1e337]
+                  - button "Reset to defaults" [ref=f1e338] [cursor=pointer]
+                - generic [ref=f1e339]:
+                  - generic [ref=f1e340]:
+                    - text: On the Go plan, you pay
+                    - generic [ref=f1e341]: $1
+                    - text: /mo
+                  - generic [ref=f1e342]: →
+                  - generic [ref=f1e343]:
+                    - text: and get
+                    - generic [ref=f1e344]: $10
+                    - text: in model credits
+                  - generic [ref=f1e345]: →
+                  - generic [ref=f1e346]:
+                    - text: effectively
+                    - generic [ref=f1e347]: ~$40
+                    - text: with
+                    - link "deals" [ref=f1e348] [cursor=pointer]:
+                      - /url: "#deepseek-v4-pro-4x-usage"
+                - generic [ref=f1e349]:
+                  - generic [ref=f1e350]:
+                    - generic [ref=f1e351]:
+                      - generic [ref=f1e352]:
+                        - generic [ref=f1e353]: Plan
+                        - generic [ref=f1e354]: what you pay
+                      - generic [ref=f1e355]:
+                        - button "Go $1/mo" [pressed] [ref=f1e356] [cursor=pointer]:
+                          - generic [ref=f1e357]: Go
+                          - generic [ref=f1e358]: $1/mo
+                        - button "Pro $15/mo" [ref=f1e359] [cursor=pointer]:
+                          - generic [ref=f1e360]: Pro
+                          - generic [ref=f1e361]: $15/mo
+                        - button "Max 10× $100/mo" [ref=f1e362] [cursor=pointer]:
+                          - generic [ref=f1e363]: Max 10×
+                          - generic [ref=f1e364]: $100/mo
+                        - button "Max 20× $200/mo" [ref=f1e365] [cursor=pointer]:
+                          - generic [ref=f1e366]: Max 20×
+                          - generic [ref=f1e367]: $200/mo
+                    - generic [ref=f1e368]:
+                      - generic [ref=f1e369]:
+                        - generic [ref=f1e370]: Model
+                        - generic [ref=f1e371]: 26 on this plan
+                      - button "DeepSeek V4 Flash DeepSeek" [ref=f1e373] [cursor=pointer]:
+                        - generic [ref=f1e374]:
+                          - generic [ref=f1e375]: DeepSeek V4 Flash
+                          - generic [ref=f1e376]: DeepSeek
+                    - generic [ref=f1e379]:
+                      - generic [ref=f1e380]:
+                        - generic [ref=f1e381]:
+                          - generic [ref=f1e382]:
+                            - generic [ref=f1e383]: Input tokens
+                            - generic [ref=f1e384]: fresh prompt
+                          - button "800" [ref=f1e385] [cursor=pointer]
+                        - slider "Input tokens" [ref=f1e386]: "800"
+                      - generic [ref=f1e387]:
+                        - generic [ref=f1e388]:
+                          - generic [ref=f1e389]:
+                            - generic [ref=f1e390]: Output tokens
+                            - generic [ref=f1e391]: model reply
+                          - button "180" [ref=f1e392] [cursor=pointer]
+                        - slider "Output tokens" [ref=f1e393]: "200"
+                      - generic [ref=f1e394]:
+                        - generic [ref=f1e395]:
+                          - generic [ref=f1e396]:
+                            - generic [ref=f1e397]: Cache read tokens
+                            - generic [ref=f1e398]: re-read context
+                          - button "50K" [ref=f1e399] [cursor=pointer]
+                        - slider "Cache read tokens" [ref=f1e400]: "50000"
+                  - generic [ref=f1e401]:
+                    - generic [ref=f1e402]:
+                      - generic [ref=f1e407]:
+                        - text: Total
+                        - button "requests" [ref=f1e408] [cursor=pointer]
+                        - text: / 30 days
+                      - generic "33K" [ref=f1e409]:
+                        - generic [ref=f1e411]:
+                          - generic [ref=f1e412]: "0"
+                          - generic [ref=f1e413]: "1"
+                          - generic [ref=f1e414]: "2"
+                          - generic [ref=f1e415]: "3"
+                          - generic [ref=f1e416]: "4"
+                          - generic [ref=f1e417]: "5"
+                          - generic [ref=f1e418]: "6"
+                          - generic [ref=f1e419]: "7"
+                          - generic [ref=f1e420]: "8"
+                          - generic [ref=f1e421]: "9"
+                        - generic [ref=f1e423]:
+                          - generic [ref=f1e424]: "0"
+                          - generic [ref=f1e425]: "1"
+                          - generic [ref=f1e426]: "2"
+                          - generic [ref=f1e427]: "3"
+                          - generic [ref=f1e428]: "4"
+                          - generic [ref=f1e429]: "5"
+                          - generic [ref=f1e430]: "6"
+                          - generic [ref=f1e431]: "7"
+                          - generic [ref=f1e432]: "8"
+                          - generic [ref=f1e433]: "9"
+                        - generic [ref=f1e434]: K
+                      - generic [ref=f1e435]:
+                        - generic [ref=f1e436]: on DeepSeek V4 Flash
+                        - generic [ref=f1e437]: ($10 ÷ $0.0003 per request)
+                      - generic [ref=f1e438]:
+                        - button "Tokens / 30 days ±50%" [ref=f1e439] [cursor=pointer]
+                        - generic [ref=f1e440]: caching varies
+                      - generic [ref=f1e441]:
+                        - generic [ref=f1e442]:
+                          - generic [ref=f1e443]: Total
+                          - generic [ref=f1e444]: ≈1.7B
+                        - generic [ref=f1e445]:
+                          - generic [ref=f1e446]: Cache
+                          - generic [ref=f1e447]: 1.7B
+                        - generic [ref=f1e448]:
+                          - generic [ref=f1e449]: In
+                          - generic [ref=f1e450]: 26.5M
+                        - generic [ref=f1e451]:
+                          - generic [ref=f1e452]: Out
+                          - generic [ref=f1e453]: 6.0M
+                      - generic [ref=f1e454]:
+                        - generic [ref=f1e455]: "Plan mix average:"
+                        - generic "14K" [ref=f1e456]:
+                          - generic [ref=f1e458]:
+                            - generic [ref=f1e459]: "0"
+                            - generic [ref=f1e460]: "1"
+                            - generic [ref=f1e461]: "2"
+                            - generic [ref=f1e462]: "3"
+                            - generic [ref=f1e463]: "4"
+                            - generic [ref=f1e464]: "5"
+                            - generic [ref=f1e465]: "6"
+                            - generic [ref=f1e466]: "7"
+                            - generic [ref=f1e467]: "8"
+                            - generic [ref=f1e468]: "9"
+                          - generic [ref=f1e470]:
+                            - generic [ref=f1e471]: "0"
+                            - generic [ref=f1e472]: "1"
+                            - generic [ref=f1e473]: "2"
+                            - generic [ref=f1e474]: "3"
+                            - generic [ref=f1e475]: "4"
+                            - generic [ref=f1e476]: "5"
+                            - generic [ref=f1e477]: "6"
+                            - generic [ref=f1e478]: "7"
+                            - generic [ref=f1e479]: "8"
+                            - generic [ref=f1e480]: "9"
+                          - generic [ref=f1e481]: K
+                        - generic [ref=f1e482]: (across Go's typical model mix)
+                    - generic [ref=f1e488]:
+                      - generic [ref=f1e489]:
+                        - generic [ref=f1e490]: Cost / request
+                        - generic "$0.0003" [ref=f1e491]:
+                          - generic [ref=f1e492]: $
+                          - generic [ref=f1e494]:
+                            - generic [ref=f1e495]: "0"
+                            - generic [ref=f1e496]: "1"
+                            - generic [ref=f1e497]: "2"
+                            - generic [ref=f1e498]: "3"
+                            - generic [ref=f1e499]: "4"
+                            - generic [ref=f1e500]: "5"
+                            - generic [ref=f1e501]: "6"
+                            - generic [ref=f1e502]: "7"
+                            - generic [ref=f1e503]: "8"
+                            - generic [ref=f1e504]: "9"
+                          - generic [ref=f1e505]: .
+                          - generic [ref=f1e507]:
+                            - generic [ref=f1e508]: "0"
+                            - generic [ref=f1e509]: "1"
+                            - generic [ref=f1e510]: "2"
+                            - generic [ref=f1e511]: "3"
+                            - generic [ref=f1e512]: "4"
+                            - generic [ref=f1e513]: "5"
+                            - generic [ref=f1e514]: "6"
+                            - generic [ref=f1e515]: "7"
+                            - generic [ref=f1e516]: "8"
+                            - generic [ref=f1e517]: "9"
+                          - generic [ref=f1e519]:
+                            - generic [ref=f1e520]: "0"
+                            - generic [ref=f1e521]: "1"
+                            - generic [ref=f1e522]: "2"
+                            - generic [ref=f1e523]: "3"
+                            - generic [ref=f1e524]: "4"
+                            - generic [ref=f1e525]: "5"
+                            - generic [ref=f1e526]: "6"
+                            - generic [ref=f1e527]: "7"
+                            - generic [ref=f1e528]: "8"
+                            - generic [ref=f1e529]: "9"
+                          - generic [ref=f1e531]:
+                            - generic [ref=f1e532]: "0"
+                            - generic [ref=f1e533]: "1"
+                            - generic [ref=f1e534]: "2"
+                            - generic [ref=f1e535]: "3"
+                            - generic [ref=f1e536]: "4"
+                            - generic [ref=f1e537]: "5"
+                            - generic [ref=f1e538]: "6"
+                            - generic [ref=f1e539]: "7"
+                            - generic [ref=f1e540]: "8"
+                            - generic [ref=f1e541]: "9"
+                          - generic [ref=f1e543]:
+                            - generic [ref=f1e544]: "0"
+                            - generic [ref=f1e545]: "1"
+                            - generic [ref=f1e546]: "2"
+                            - generic [ref=f1e547]: "3"
+                            - generic [ref=f1e548]: "4"
+                            - generic [ref=f1e549]: "5"
+                            - generic [ref=f1e550]: "6"
+                            - generic [ref=f1e551]: "7"
+                            - generic [ref=f1e552]: "8"
+                            - generic [ref=f1e553]: "9"
+                        - generic [ref=f1e554]: DeepSeek V4 Flash
+                      - generic [ref=f1e555]:
+                        - generic [ref=f1e556]: Rate / 1M tokens
+                        - generic [ref=f1e557]:
+                          - generic [ref=f1e558]:
+                            - generic [ref=f1e559]: In
+                            - generic [ref=f1e560]: $0.140
+                          - generic [ref=f1e561]:
+                            - generic [ref=f1e562]: Out
+                            - generic [ref=f1e563]: $0.280
+                          - generic [ref=f1e564]:
+                            - generic [ref=f1e565]: Cache
+                            - generic [ref=f1e566]: $0.0028
+                - generic [ref=f1e567]:
+                  - generic [ref=f1e572]:
+                    - generic "~5 requests each" [ref=f1e573]:
+                      - generic [ref=f1e574]: Quick fixes
+                      - generic "6.6K" [ref=f1e575]:
+                        - generic [ref=f1e577]:
+                          - generic [ref=f1e578]: "0"
+                          - generic [ref=f1e579]: "1"
+                          - generic [ref=f1e580]: "2"
+                          - generic [ref=f1e581]: "3"
+                          - generic [ref=f1e582]: "4"
+                          - generic [ref=f1e583]: "5"
+                          - generic [ref=f1e584]: "6"
+                          - generic [ref=f1e585]: "7"
+                          - generic [ref=f1e586]: "8"
+                          - generic [ref=f1e587]: "9"
+                        - generic [ref=f1e588]: .
+                        - generic [ref=f1e590]:
+                          - generic [ref=f1e591]: "0"
+                          - generic [ref=f1e592]: "1"
+                          - generic [ref=f1e593]: "2"
+                          - generic [ref=f1e594]: "3"
+                          - generic [ref=f1e595]: "4"
+                          - generic [ref=f1e596]: "5"
+                          - generic [ref=f1e597]: "6"
+                          - generic [ref=f1e598]: "7"
+                          - generic [ref=f1e599]: "8"
+                          - generic [ref=f1e600]: "9"
+                        - generic [ref=f1e601]: K
+                      - generic [ref=f1e602]: one-shot edits
+                    - generic "~25 requests each" [ref=f1e603]:
+                      - generic [ref=f1e604]: Bug fixes
+                      - generic "1.3K" [ref=f1e605]:
+                        - generic [ref=f1e607]:
+                          - generic [ref=f1e608]: "0"
+                          - generic [ref=f1e609]: "1"
+                          - generic [ref=f1e610]: "2"
+                          - generic [ref=f1e611]: "3"
+                          - generic [ref=f1e612]: "4"
+                          - generic [ref=f1e613]: "5"
+                          - generic [ref=f1e614]: "6"
+                          - generic [ref=f1e615]: "7"
+                          - generic [ref=f1e616]: "8"
+                          - generic [ref=f1e617]: "9"
+                        - generic [ref=f1e618]: .
+                        - generic [ref=f1e620]:
+                          - generic [ref=f1e621]: "0"
+                          - generic [ref=f1e622]: "1"
+                          - generic [ref=f1e623]: "2"
+                          - generic [ref=f1e624]: "3"
+                          - generic [ref=f1e625]: "4"
+                          - generic [ref=f1e626]: "5"
+                          - generic [ref=f1e627]: "6"
+                          - generic [ref=f1e628]: "7"
+                          - generic [ref=f1e629]: "8"
+                          - generic [ref=f1e630]: "9"
+                        - generic [ref=f1e631]: K
+                      - generic [ref=f1e632]: patch + verify
+                    - generic "~75 requests each" [ref=f1e633]:
+                      - generic [ref=f1e634]: Small CLIs
+                      - generic "440" [ref=f1e635]:
+                        - generic [ref=f1e637]:
+                          - generic [ref=f1e638]: "0"
+                          - generic [ref=f1e639]: "1"
+                          - generic [ref=f1e640]: "2"
+                          - generic [ref=f1e641]: "3"
+                          - generic [ref=f1e642]: "4"
+                          - generic [ref=f1e643]: "5"
+                          - generic [ref=f1e644]: "6"
+                          - generic [ref=f1e645]: "7"
+                          - generic [ref=f1e646]: "8"
+                          - generic [ref=f1e647]: "9"
+                        - generic [ref=f1e649]:
+                          - generic [ref=f1e650]: "0"
+                          - generic [ref=f1e651]: "1"
+                          - generic [ref=f1e652]: "2"
+                          - generic [ref=f1e653]: "3"
+                          - generic [ref=f1e654]: "4"
+                          - generic [ref=f1e655]: "5"
+                          - generic [ref=f1e656]: "6"
+                          - generic [ref=f1e657]: "7"
+                          - generic [ref=f1e658]: "8"
+                          - generic [ref=f1e659]: "9"
+                        - generic [ref=f1e661]:
+                          - generic [ref=f1e662]: "0"
+                          - generic [ref=f1e663]: "1"
+                          - generic [ref=f1e664]: "2"
+                          - generic [ref=f1e665]: "3"
+                          - generic [ref=f1e666]: "4"
+                          - generic [ref=f1e667]: "5"
+                          - generic [ref=f1e668]: "6"
+                          - generic [ref=f1e669]: "7"
+                          - generic [ref=f1e670]: "8"
+                          - generic [ref=f1e671]: "9"
+                      - generic [ref=f1e672]: end-to-end builds
+                    - generic "~150 requests each" [ref=f1e673]:
+                      - generic [ref=f1e674]: Feature PRs
+                      - generic "220" [ref=f1e675]:
+                        - generic [ref=f1e677]:
+                          - generic [ref=f1e678]: "0"
+                          - generic [ref=f1e679]: "1"
+                          - generic [ref=f1e680]: "2"
+                          - generic [ref=f1e681]: "3"
+                          - generic [ref=f1e682]: "4"
+                          - generic [ref=f1e683]: "5"
+                          - generic [ref=f1e684]: "6"
+                          - generic [ref=f1e685]: "7"
+                          - generic [ref=f1e686]: "8"
+                          - generic [ref=f1e687]: "9"
+                        - generic [ref=f1e689]:
+                          - generic [ref=f1e690]: "0"
+                          - generic [ref=f1e691]: "1"
+                          - generic [ref=f1e692]: "2"
+                          - generic [ref=f1e693]: "3"
+                          - generic [ref=f1e694]: "4"
+                          - generic [ref=f1e695]: "5"
+                          - generic [ref=f1e696]: "6"
+                          - generic [ref=f1e697]: "7"
+                          - generic [ref=f1e698]: "8"
+                          - generic [ref=f1e699]: "9"
+                        - generic [ref=f1e701]:
+                          - generic [ref=f1e702]: "0"
+                          - generic [ref=f1e703]: "1"
+                          - generic [ref=f1e704]: "2"
+                          - generic [ref=f1e705]: "3"
+                          - generic [ref=f1e706]: "4"
+                          - generic [ref=f1e707]: "5"
+                          - generic [ref=f1e708]: "6"
+                          - generic [ref=f1e709]: "7"
+                          - generic [ref=f1e710]: "8"
+                          - generic [ref=f1e711]: "9"
+                      - generic [ref=f1e712]: multi-file change
+                    - generic "~400 requests each" [ref=f1e713]:
+                      - generic [ref=f1e714]: Side projects
+                      - generic "82" [ref=f1e715]:
+                        - generic [ref=f1e717]:
+                          - generic [ref=f1e718]: "0"
+                          - generic [ref=f1e719]: "1"
+                          - generic [ref=f1e720]: "2"
+                          - generic [ref=f1e721]: "3"
+                          - generic [ref=f1e722]: "4"
+                          - generic [ref=f1e723]: "5"
+                          - generic [ref=f1e724]: "6"
+                          - generic [ref=f1e725]: "7"
+                          - generic [ref=f1e726]: "8"
+                          - generic [ref=f1e727]: "9"
+                        - generic [ref=f1e729]:
+                          - generic [ref=f1e730]: "0"
+                          - generic [ref=f1e731]: "1"
+                          - generic [ref=f1e732]: "2"
+                          - generic [ref=f1e733]: "3"
+                          - generic [ref=f1e734]: "4"
+                          - generic [ref=f1e735]: "5"
+                          - generic [ref=f1e736]: "6"
+                          - generic [ref=f1e737]: "7"
+                          - generic [ref=f1e738]: "8"
+                          - generic [ref=f1e739]: "9"
+                      - generic [ref=f1e740]: weekend builds
+                  - generic [ref=f1e742]:
+                    - generic [ref=f1e743]: What you can build / month — rough estimates
+                    - generic [ref=f1e744]:
+                      - text: on DeepSeek V4 Flash with
+                      - generic "33K" [ref=f1e745]:
+                        - generic [ref=f1e747]:
+                          - generic [ref=f1e748]: "0"
+                          - generic [ref=f1e749]: "1"
+                          - generic [ref=f1e750]: "2"
+                          - generic [ref=f1e751]: "3"
+                          - generic [ref=f1e752]: "4"
+                          - generic [ref=f1e753]: "5"
+                          - generic [ref=f1e754]: "6"
+                          - generic [ref=f1e755]: "7"
+                          - generic [ref=f1e756]: "8"
+                          - generic [ref=f1e757]: "9"
+                        - generic [ref=f1e759]:
+                          - generic [ref=f1e760]: "0"
+                          - generic [ref=f1e761]: "1"
+                          - generic [ref=f1e762]: "2"
+                          - generic [ref=f1e763]: "3"
+                          - generic [ref=f1e764]: "4"
+                          - generic [ref=f1e765]: "5"
+                          - generic [ref=f1e766]: "6"
+                          - generic [ref=f1e767]: "7"
+                          - generic [ref=f1e768]: "8"
+                          - generic [ref=f1e769]: "9"
+                        - generic [ref=f1e770]: K
+                      - text: reqs / month
+              - paragraph [ref=f1e771]: Pick a model. Adjust the sliders. See how far your credits go. These are estimates based on typical patterns - your actual mileage may vary.
+              - heading [level=2] [ref=f1e773]:
+                - link "Models." [ref=f1e775] [cursor=pointer]:
+                  - /url: "#models"
+              - paragraph [ref=f1e776]: Command Code runs on the best models from the open-source community, Anthropic, OpenAI, Google, Sakana, and xAI. Each one chosen for what it does best.
+              - paragraph [ref=f1e777]:
+                - text: Checkout all our
+                - strong [ref=f1e778]:
+                  - link "available models" [ref=f1e779] [cursor=pointer]:
+                    - /url: /docs/reference/cli/models
+                - text: . Switch any time with
+                - code [ref=f1e780]: /model
+                - text: in interactive mode. Per-token rates for each model are listed below.
+              - heading [level=2] [ref=f1e782]:
+                - link "Model pricing. At cost." [ref=f1e784] [cursor=pointer]:
+                  - /url: "#model-pricing-at-cost"
+              - paragraph [ref=f1e785]: Plans include usage at model API rates. You pay for what you use, by model and by token. All prices below are per million tokens. Subscriptions include 2-10x more credits for the same cost as API pricing.
+              - generic [ref=f1e786]:
+                - generic [ref=f1e787]:
+                  - generic [ref=f1e788]: // Model pricing
+                  - generic [ref=f1e789]: per 1M tokens
+                - generic [ref=f1e790]:
+                  - generic [ref=f1e791]:
+                    - button "All 50" [pressed] [ref=f1e792] [cursor=pointer]
+                    - button "⚡ Deals 6" [ref=f1e793] [cursor=pointer]
+                    - button "Free 2" [ref=f1e794] [cursor=pointer]
+                  - generic [ref=f1e795]:
+                    - searchbox "Search models" [ref=f1e796]
+                    - 'button "Sort: Default" [ref=f1e797] [cursor=pointer]'
+                - generic [ref=f1e800]:
+                  - row "Model Context Input/M Output/M Cache Read Cache Write Caps" [ref=f1e801]:
+                    - generic [ref=f1e802]: Model
+                    - generic [ref=f1e803]: Context
+                    - generic [ref=f1e804]: Input/M
+                    - generic [ref=f1e805]: Output/M
+                    - generic [ref=f1e806]: Cache Read
+                    - generic [ref=f1e807]: Cache Write
+                    - generic [ref=f1e808]: Caps
+                  - generic [ref=f1e809]:
+                    - 'row "Laguna S 2.1 View Laguna S 2.1 deal details 256K Free Free Free — Capabilities: Text input, Reasoning" [ref=f1e810]':
+                      - generic [ref=f1e811]:
+                        - link "Laguna S 2.1" [ref=f1e812] [cursor=pointer]:
+                          - /url: "#laguna-s-2.1-free"
+                        - link "View Laguna S 2.1 deal details" [ref=f1e813] [cursor=pointer]:
+                          - /url: "#laguna-s-2.1-free"
+                          - text: FREE
+                      - generic [ref=f1e814]: 256K
+                      - generic [ref=f1e815]: Free
+                      - generic [ref=f1e816]: Free
+                      - generic [ref=f1e817]: Free
+                      - generic [ref=f1e818]: —
+                      - 'button "Capabilities: Text input, Reasoning" [ref=f1e820]'
+                    - generic [ref=f1e837]: ⚡ Free while capacity lasts
+                  - generic [ref=f1e838]:
+                    - 'row "Ling 3.0 Flash View Ling 3.0 Flash deal details 256K Free Free Free — Capabilities: Text input, Reasoning" [ref=f1e839]':
+                      - generic [ref=f1e840]:
+                        - link "Ling 3.0 Flash" [ref=f1e841] [cursor=pointer]:
+                          - /url: "#ling-3.0-flash-free"
+                        - link "View Ling 3.0 Flash deal details" [ref=f1e842] [cursor=pointer]:
+                          - /url: "#ling-3.0-flash-free"
+                          - text: FREE
+                      - generic [ref=f1e843]: 256K
+                      - generic [ref=f1e844]: Free
+                      - generic [ref=f1e845]: Free
+                      - generic [ref=f1e846]: Free
+                      - generic [ref=f1e847]: —
+                      - 'button "Capabilities: Text input, Reasoning" [ref=f1e849]'
+                    - generic [ref=f1e866]: ⚡ Free until August 2, 2026
+                  - 'row "Tencent Hy3 262K $0.14 $0.58 $0.035 — Capabilities: Text input, Reasoning" [ref=f1e868]':
+                    - generic [ref=f1e869]: Tencent Hy3
+                    - generic [ref=f1e871]: 262K
+                    - generic [ref=f1e872]: $0.14
+                    - generic [ref=f1e873]: $0.58
+                    - generic [ref=f1e874]: $0.035
+                    - generic [ref=f1e875]: —
+                    - 'button "Capabilities: Text input, Reasoning" [ref=f1e877]'
+                  - 'row "Kimi K3 1M $3.00 $15.00 $0.30 — Capabilities: Text input, Vision, Reasoning" [ref=f1e895]':
+                    - generic [ref=f1e896]: Kimi K3
+                    - generic [ref=f1e898]: 1M
+                    - generic [ref=f1e899]: $3.00
+                    - generic [ref=f1e900]: $15.00
+                    - generic [ref=f1e901]: $0.30
+                    - generic [ref=f1e902]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e904]':
+                      - generic [ref=f1e911]: "+1"
+                  - 'row "Kimi K2.7 Code 256K $0.95 $4.00 $0.19 — Capabilities: Text input, Vision, Reasoning" [ref=f1e913]':
+                    - generic [ref=f1e914]: Kimi K2.7 Code
+                    - generic [ref=f1e916]: 256K
+                    - generic [ref=f1e917]: $0.95
+                    - generic [ref=f1e918]: $4.00
+                    - generic [ref=f1e919]: $0.19
+                    - generic [ref=f1e920]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e922]':
+                      - generic [ref=f1e929]: "+1"
+                  - 'row "Kimi K2.7 Code HighSpeed 262K $1.90 $8.00 $0.38 — Capabilities: Text input, Vision, Reasoning" [ref=f1e931]':
+                    - generic [ref=f1e932]: Kimi K2.7 Code HighSpeed
+                    - generic [ref=f1e934]: 262K
+                    - generic [ref=f1e935]: $1.90
+                    - generic [ref=f1e936]: $8.00
+                    - generic [ref=f1e937]: $0.38
+                    - generic [ref=f1e938]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e940]':
+                      - generic [ref=f1e947]: "+1"
+                  - 'row "Kimi K2.6 256K $0.95 $4.00 $0.16 — Capabilities: Text input, Vision" [ref=f1e949]':
+                    - generic [ref=f1e950]: Kimi K2.6
+                    - generic [ref=f1e952]: 256K
+                    - generic [ref=f1e953]: $0.95
+                    - generic [ref=f1e954]: $4.00
+                    - generic [ref=f1e955]: $0.16
+                    - generic [ref=f1e956]: —
+                    - 'button "Capabilities: Text input, Vision" [ref=f1e958]'
+                  - 'row "Kimi K2.5 256K $0.60 $3.00 $0.10 — Capabilities: Text input, Vision" [ref=f1e966]':
+                    - generic [ref=f1e967]: Kimi K2.5
+                    - generic [ref=f1e969]: 256K
+                    - generic [ref=f1e970]: $0.60
+                    - generic [ref=f1e971]: $3.00
+                    - generic [ref=f1e972]: $0.10
+                    - generic [ref=f1e973]: —
+                    - 'button "Capabilities: Text input, Vision" [ref=f1e975]'
+                  - 'row "GLM-5.2 1M $1.40 $4.40 $0.26 — Capabilities: Text input, Reasoning" [ref=f1e983]':
+                    - generic [ref=f1e984]: GLM-5.2
+                    - generic [ref=f1e986]: 1M
+                    - generic [ref=f1e987]: $1.40
+                    - generic [ref=f1e988]: $4.40
+                    - generic [ref=f1e989]: $0.26
+                    - generic [ref=f1e990]: —
+                    - 'button "Capabilities: Text input, Reasoning" [ref=f1e992]'
+                  - 'row "GLM-5.2 Fast 1M $3.00 $10.25 $0.50 — Capabilities: Text input" [ref=f1e1010]':
+                    - generic [ref=f1e1011]: GLM-5.2 Fast
+                    - generic [ref=f1e1013]: 1M
+                    - generic [ref=f1e1014]: $3.00
+                    - generic [ref=f1e1015]: $10.25
+                    - generic [ref=f1e1016]: $0.50
+                    - generic [ref=f1e1017]: —
+                    - 'button "Capabilities: Text input" [ref=f1e1019]'
+                  - 'row "GLM-5.1 — $1.40 $4.40 $0.26 — Capabilities: Text input" [ref=f1e1024]':
+                    - generic [ref=f1e1025]: GLM-5.1
+                    - generic [ref=f1e1027]: —
+                    - generic [ref=f1e1028]: $1.40
+                    - generic [ref=f1e1029]: $4.40
+                    - generic [ref=f1e1030]: $0.26
+                    - generic [ref=f1e1031]: —
+                    - 'button "Capabilities: Text input" [ref=f1e1033]'
+                  - 'row "GLM-5 200K $1.00 $3.20 $0.20 — Capabilities: Text input" [ref=f1e1038]':
+                    - generic [ref=f1e1039]: GLM-5
+                    - generic [ref=f1e1041]: 200K
+                    - generic [ref=f1e1042]: $1.00
+                    - generic [ref=f1e1043]: $3.20
+                    - generic [ref=f1e1044]: $0.20
+                    - generic [ref=f1e1045]: —
+                    - 'button "Capabilities: Text input" [ref=f1e1047]'
+                  - generic [ref=f1e1051]:
+                    - 'row "MiniMax M3 View MiniMax M3 deal details 1M Capabilities: Text input, Vision, Reasoning" [ref=f1e1052]':
+                      - generic [ref=f1e1053]:
+                        - link "MiniMax M3" [ref=f1e1054] [cursor=pointer]:
+                          - /url: "#minimax-m3-2x-usage"
+                        - link "View MiniMax M3 deal details" [ref=f1e1055] [cursor=pointer]:
+                          - /url: "#minimax-m3-2x-usage"
+                          - text: "-50%"
+                      - generic [ref=f1e1056]: 1M
+                      - generic [ref=f1e1057]: ··
+                      - generic [ref=f1e1058]: ··
+                      - generic [ref=f1e1059]: ··
+                      - generic [ref=f1e1060]: ··
+                      - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1062]':
+                        - generic [ref=f1e1069]: "+1"
+                    - row "Standard ≤ 512K $0.60 $0.30 $2.40 $1.20 $0.12 $0.06 —" [ref=f1e1070]:
+                      - generic [ref=f1e1071]:
+                        - generic [ref=f1e1072]: ├─
+                        - generic [ref=f1e1073]: Standard
+                      - generic [ref=f1e1074]: ≤ 512K
+                      - generic [ref=f1e1075]:
+                        - generic [ref=f1e1076]: $0.60
+                        - generic [ref=f1e1077]: $0.30
+                      - generic [ref=f1e1078]:
+                        - generic [ref=f1e1079]: $2.40
+                        - generic [ref=f1e1080]: $1.20
+                      - generic [ref=f1e1081]:
+                        - generic [ref=f1e1082]: $0.12
+                        - generic [ref=f1e1083]: $0.06
+                      - generic [ref=f1e1084]: —
+                    - row "Long context > 512K $0.60 $0.30 $2.40 $1.20 $0.12 $0.06 —" [ref=f1e1086]:
+                      - generic [ref=f1e1087]:
+                        - generic [ref=f1e1088]: └─
+                        - generic [ref=f1e1089]: Long context
+                      - generic [ref=f1e1090]: "> 512K"
+                      - generic [ref=f1e1091]:
+                        - generic [ref=f1e1092]: $0.60
+                        - generic [ref=f1e1093]: $0.30
+                      - generic [ref=f1e1094]:
+                        - generic [ref=f1e1095]: $2.40
+                        - generic [ref=f1e1096]: $1.20
+                      - generic [ref=f1e1097]:
+                        - generic [ref=f1e1098]: $0.12
+                        - generic [ref=f1e1099]: $0.06
+                      - generic [ref=f1e1100]: —
+                    - generic [ref=f1e1102]: ⚡ 50% off
+                  - 'row "MiniMax M2.7 — $0.30 $1.20 $0.06 — Capabilities: Text input" [ref=f1e1104]':
+                    - generic [ref=f1e1105]: MiniMax M2.7
+                    - generic [ref=f1e1107]: —
+                    - generic [ref=f1e1108]: $0.30
+                    - generic [ref=f1e1109]: $1.20
+                    - generic [ref=f1e1110]: $0.06
+                    - generic [ref=f1e1111]: —
+                    - 'button "Capabilities: Text input" [ref=f1e1113]'
+                  - 'row "MiniMax M2.5 200K $0.30 $1.20 $0.03 — Capabilities: Text input" [ref=f1e1118]':
+                    - generic [ref=f1e1119]: MiniMax M2.5
+                    - generic [ref=f1e1121]: 200K
+                    - generic [ref=f1e1122]: $0.30
+                    - generic [ref=f1e1123]: $1.20
+                    - generic [ref=f1e1124]: $0.03
+                    - generic [ref=f1e1125]: —
+                    - 'button "Capabilities: Text input" [ref=f1e1127]'
+                  - generic [ref=f1e1131]:
+                    - 'row "DeepSeek V4 Pro View DeepSeek V4 Pro deal details 1M $1.74 $0.435 $3.48 $0.87 $0.0145 $0.003625 — Capabilities: Text input, Reasoning" [ref=f1e1132]':
+                      - generic [ref=f1e1133]:
+                        - link "DeepSeek V4 Pro" [ref=f1e1134] [cursor=pointer]:
+                          - /url: "#deepseek-v4-pro-4x-usage"
+                        - link "View DeepSeek V4 Pro deal details" [ref=f1e1135] [cursor=pointer]:
+                          - /url: "#deepseek-v4-pro-4x-usage"
+                          - text: "-75%"
+                      - generic [ref=f1e1136]: 1M
+                      - generic [ref=f1e1137]:
+                        - generic [ref=f1e1138]: $1.74
+                        - generic [ref=f1e1139]: $0.435
+                      - generic [ref=f1e1140]:
+                        - generic [ref=f1e1141]: $3.48
+                        - generic [ref=f1e1142]: $0.87
+                      - generic [ref=f1e1143]:
+                        - generic [ref=f1e1144]: $0.0145
+                        - generic [ref=f1e1145]: $0.003625
+                      - generic [ref=f1e1146]: —
+                      - 'button "Capabilities: Text input, Reasoning" [ref=f1e1148]'
+                    - generic [ref=f1e1165]: ⚡ 75% off
+                  - 'row "DeepSeek V4 Flash 1M $0.14 $0.28 $0.0028 — Capabilities: Text input, Reasoning" [ref=f1e1167]':
+                    - generic [ref=f1e1168]: DeepSeek V4 Flash
+                    - generic [ref=f1e1170]: 1M
+                    - generic [ref=f1e1171]: $0.14
+                    - generic [ref=f1e1172]: $0.28
+                    - generic [ref=f1e1173]: $0.0028
+                    - generic [ref=f1e1174]: —
+                    - 'button "Capabilities: Text input, Reasoning" [ref=f1e1176]'
+                  - 'row "Qwen 3.6 Max Preview — $1.30 $7.80 $0.26 $1.63 Capabilities: Text input, Reasoning" [ref=f1e1194]':
+                    - generic [ref=f1e1195]: Qwen 3.6 Max Preview
+                    - generic [ref=f1e1197]: —
+                    - generic [ref=f1e1198]: $1.30
+                    - generic [ref=f1e1199]: $7.80
+                    - generic [ref=f1e1200]: $0.26
+                    - generic [ref=f1e1201]: $1.63
+                    - 'button "Capabilities: Text input, Reasoning" [ref=f1e1203]'
+                  - 'row "Qwen 3.6 Plus — $0.50 $3.00 $0.10 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1221]':
+                    - generic [ref=f1e1222]: Qwen 3.6 Plus
+                    - generic [ref=f1e1224]: —
+                    - generic [ref=f1e1225]: $0.50
+                    - generic [ref=f1e1226]: $3.00
+                    - generic [ref=f1e1227]: $0.10
+                    - generic [ref=f1e1228]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1230]':
+                      - generic [ref=f1e1237]: "+1"
+                  - 'row "Qwen 3.7 Max 1M $2.50 $7.50 $0.50 $3.13 Capabilities: Text input, Reasoning" [ref=f1e1239]':
+                    - generic [ref=f1e1240]: Qwen 3.7 Max
+                    - generic [ref=f1e1242]: 1M
+                    - generic [ref=f1e1243]: $2.50
+                    - generic [ref=f1e1244]: $7.50
+                    - generic [ref=f1e1245]: $0.50
+                    - generic [ref=f1e1246]: $3.13
+                    - 'button "Capabilities: Text input, Reasoning" [ref=f1e1248]'
+                  - generic [ref=f1e1265]:
+                    - 'row "Qwen 3.7 Plus 1M Capabilities: Text input, Vision, Reasoning" [ref=f1e1266]':
+                      - generic [ref=f1e1267]: Qwen 3.7 Plus
+                      - generic [ref=f1e1269]: 1M
+                      - generic [ref=f1e1270]: ··
+                      - generic [ref=f1e1271]: ··
+                      - generic [ref=f1e1272]: ··
+                      - generic [ref=f1e1273]: ··
+                      - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1275]':
+                        - generic [ref=f1e1282]: "+1"
+                    - row "Standard ≤ 256K $0.40 $1.60 $0.08 $0.50" [ref=f1e1283]:
+                      - generic [ref=f1e1284]:
+                        - generic [ref=f1e1285]: ├─
+                        - generic [ref=f1e1286]: Standard
+                      - generic [ref=f1e1287]: ≤ 256K
+                      - generic [ref=f1e1288]: $0.40
+                      - generic [ref=f1e1289]: $1.60
+                      - generic [ref=f1e1290]: $0.08
+                      - generic [ref=f1e1291]: $0.50
+                    - row "Long context > 256K $1.20 $4.80 $0.24 $1.50" [ref=f1e1293]:
+                      - generic [ref=f1e1294]:
+                        - generic [ref=f1e1295]: └─
+                        - generic [ref=f1e1296]: Long context
+                      - generic [ref=f1e1297]: "> 256K"
+                      - generic [ref=f1e1298]: $1.20
+                      - generic [ref=f1e1299]: $4.80
+                      - generic [ref=f1e1300]: $0.24
+                      - generic [ref=f1e1301]: $1.50
+                  - 'row "Step 3.7 Flash 256K $0.20 $1.15 $0.04 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1304]':
+                    - generic [ref=f1e1305]: Step 3.7 Flash
+                    - generic [ref=f1e1307]: 256K
+                    - generic [ref=f1e1308]: $0.20
+                    - generic [ref=f1e1309]: $1.15
+                    - generic [ref=f1e1310]: $0.04
+                    - generic [ref=f1e1311]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1313]':
+                      - generic [ref=f1e1320]: "+1"
+                  - 'row "Step 3.5 Flash 1M $0.10 $0.30 $0.02 — Capabilities: Text input, Reasoning" [ref=f1e1322]':
+                    - generic [ref=f1e1323]: Step 3.5 Flash
+                    - generic [ref=f1e1325]: 1M
+                    - generic [ref=f1e1326]: $0.10
+                    - generic [ref=f1e1327]: $0.30
+                    - generic [ref=f1e1328]: $0.02
+                    - generic [ref=f1e1329]: —
+                    - 'button "Capabilities: Text input, Reasoning" [ref=f1e1331]'
+                  - generic [ref=f1e1348]:
+                    - 'row "MiMo V2.5 Pro View MiMo V2.5 Pro deal details 1M $2.00 $0.435 $6.00 $0.87 $0.40 $0.0036 — Capabilities: Text input" [ref=f1e1349]':
+                      - generic [ref=f1e1350]:
+                        - link "MiMo V2.5 Pro" [ref=f1e1351] [cursor=pointer]:
+                          - /url: "#mimo-v2.5-pro-99-off"
+                        - link "View MiMo V2.5 Pro deal details" [ref=f1e1352] [cursor=pointer]:
+                          - /url: "#mimo-v2.5-pro-99-off"
+                          - text: "-99%"
+                      - generic [ref=f1e1353]: 1M
+                      - generic [ref=f1e1354]:
+                        - generic [ref=f1e1355]: $2.00
+                        - generic [ref=f1e1356]: $0.435
+                      - generic [ref=f1e1357]:
+                        - generic [ref=f1e1358]: $6.00
+                        - generic [ref=f1e1359]: $0.87
+                      - generic [ref=f1e1360]:
+                        - generic [ref=f1e1361]: $0.40
+                        - generic [ref=f1e1362]: $0.0036
+                      - generic [ref=f1e1363]: —
+                      - 'button "Capabilities: Text input" [ref=f1e1365]'
+                    - generic [ref=f1e1369]: ⚡ 99% off
+                  - generic [ref=f1e1370]:
+                    - 'row "MiMo V2.5 View MiMo V2.5 deal details 1M $0.80 $0.14 $4.00 $0.28 $0.16 $0.0028 — Capabilities: Text input, Vision" [ref=f1e1371]':
+                      - generic [ref=f1e1372]:
+                        - link "MiMo V2.5" [ref=f1e1373] [cursor=pointer]:
+                          - /url: "#mimo-v2.5-98-off"
+                        - link "View MiMo V2.5 deal details" [ref=f1e1374] [cursor=pointer]:
+                          - /url: "#mimo-v2.5-98-off"
+                          - text: "-98%"
+                      - generic [ref=f1e1375]: 1M
+                      - generic [ref=f1e1376]:
+                        - generic [ref=f1e1377]: $0.80
+                        - generic [ref=f1e1378]: $0.14
+                      - generic [ref=f1e1379]:
+                        - generic [ref=f1e1380]: $4.00
+                        - generic [ref=f1e1381]: $0.28
+                      - generic [ref=f1e1382]:
+                        - generic [ref=f1e1383]: $0.16
+                        - generic [ref=f1e1384]: $0.0028
+                      - generic [ref=f1e1385]: —
+                      - 'button "Capabilities: Text input, Vision" [ref=f1e1387]'
+                    - generic [ref=f1e1394]: ⚡ 98% off
+                  - 'row "Nemotron 3 Ultra 1M $0.60 $2.40 $0.12 — Capabilities: Text input, Reasoning" [ref=f1e1396]':
+                    - generic [ref=f1e1397]: Nemotron 3 Ultra
+                    - generic [ref=f1e1399]: 1M
+                    - generic [ref=f1e1400]: $0.60
+                    - generic [ref=f1e1401]: $2.40
+                    - generic [ref=f1e1402]: $0.12
+                    - generic [ref=f1e1403]: —
+                    - 'button "Capabilities: Text input, Reasoning" [ref=f1e1405]'
+                  - 'row "Claude Fable 5 1M $10.00 $50.00 $1.00 $12.50 Capabilities: Text input, Vision, Reasoning" [ref=f1e1423]':
+                    - generic [ref=f1e1424]: Claude Fable 5
+                    - generic [ref=f1e1426]: 1M
+                    - generic [ref=f1e1427]: $10.00
+                    - generic [ref=f1e1428]: $50.00
+                    - generic [ref=f1e1429]: $1.00
+                    - generic [ref=f1e1430]: $12.50
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1432]':
+                      - generic [ref=f1e1439]: "+1"
+                  - 'row "Claude Opus 5 1M $5.00 $25.00 $0.50 $6.25 Capabilities: Text input, Vision, Reasoning" [ref=f1e1441]':
+                    - generic [ref=f1e1442]: Claude Opus 5
+                    - generic [ref=f1e1444]: 1M
+                    - generic [ref=f1e1445]: $5.00
+                    - generic [ref=f1e1446]: $25.00
+                    - generic [ref=f1e1447]: $0.50
+                    - generic [ref=f1e1448]: $6.25
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1450]':
+                      - generic [ref=f1e1457]: "+1"
+                  - 'row "Claude Opus 4.8 1M $5.00 $25.00 $0.50 $6.25 Capabilities: Text input, Vision, Reasoning" [ref=f1e1459]':
+                    - generic [ref=f1e1460]: Claude Opus 4.8
+                    - generic [ref=f1e1462]: 1M
+                    - generic [ref=f1e1463]: $5.00
+                    - generic [ref=f1e1464]: $25.00
+                    - generic [ref=f1e1465]: $0.50
+                    - generic [ref=f1e1466]: $6.25
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1468]':
+                      - generic [ref=f1e1475]: "+1"
+                  - 'row "Claude Opus 4.7 1M $5.00 $25.00 $0.50 $6.25 Capabilities: Text input, Vision, Reasoning" [ref=f1e1477]':
+                    - generic [ref=f1e1478]: Claude Opus 4.7
+                    - generic [ref=f1e1480]: 1M
+                    - generic [ref=f1e1481]: $5.00
+                    - generic [ref=f1e1482]: $25.00
+                    - generic [ref=f1e1483]: $0.50
+                    - generic [ref=f1e1484]: $6.25
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1486]':
+                      - generic [ref=f1e1493]: "+1"
+                  - 'row "Claude Opus 4.6 1M $5.00 $25.00 $0.50 $6.25 Capabilities: Text input, Vision, Reasoning" [ref=f1e1495]':
+                    - generic [ref=f1e1496]: Claude Opus 4.6
+                    - generic [ref=f1e1498]: 1M
+                    - generic [ref=f1e1499]: $5.00
+                    - generic [ref=f1e1500]: $25.00
+                    - generic [ref=f1e1501]: $0.50
+                    - generic [ref=f1e1502]: $6.25
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1504]':
+                      - generic [ref=f1e1511]: "+1"
+                  - generic [ref=f1e1512]:
+                    - 'row "Claude Sonnet 5 1M $2.00 $10.00 $0.20 $2.50 Capabilities: Text input, Vision, Reasoning" [ref=f1e1513]':
+                      - generic [ref=f1e1514]: Claude Sonnet 5
+                      - generic [ref=f1e1516]: 1M
+                      - generic [ref=f1e1517]: $2.00
+                      - generic [ref=f1e1518]: $10.00
+                      - generic [ref=f1e1519]: $0.20
+                      - generic [ref=f1e1520]: $2.50
+                      - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1522]':
+                        - generic [ref=f1e1529]: "+1"
+                    - generic [ref=f1e1530]: intro pricing · reverts to $3.00 in / $15.00 out on September 1, 2026
+                  - 'row "Claude Sonnet 4.6 1M $3.00 $15.00 $0.30 $3.75 Capabilities: Text input, Vision" [ref=f1e1532]':
+                    - generic [ref=f1e1533]: Claude Sonnet 4.6
+                    - generic [ref=f1e1535]: 1M
+                    - generic [ref=f1e1536]: $3.00
+                    - generic [ref=f1e1537]: $15.00
+                    - generic [ref=f1e1538]: $0.30
+                    - generic [ref=f1e1539]: $3.75
+                    - 'button "Capabilities: Text input, Vision" [ref=f1e1541]'
+                  - 'row "Claude Haiku 4.5 200K $1.00 $5.00 $0.10 $1.25 Capabilities: Text input, Vision" [ref=f1e1549]':
+                    - generic [ref=f1e1550]: Claude Haiku 4.5
+                    - generic [ref=f1e1552]: 200K
+                    - generic [ref=f1e1553]: $1.00
+                    - generic [ref=f1e1554]: $5.00
+                    - generic [ref=f1e1555]: $0.10
+                    - generic [ref=f1e1556]: $1.25
+                    - 'button "Capabilities: Text input, Vision" [ref=f1e1558]'
+                  - 'row "GPT-5.6 Sol 1.1M $5.00 $30.00 $0.50 $6.25 Capabilities: Text input, Vision, Reasoning" [ref=f1e1566]':
+                    - generic [ref=f1e1567]: GPT-5.6 Sol
+                    - generic [ref=f1e1569]: 1.1M
+                    - generic [ref=f1e1570]: $5.00
+                    - generic [ref=f1e1571]: $30.00
+                    - generic [ref=f1e1572]: $0.50
+                    - generic [ref=f1e1573]: $6.25
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1575]':
+                      - generic [ref=f1e1582]: "+1"
+                  - 'row "GPT-5.6 Terra 1.1M $2.50 $15.00 $0.25 $3.125 Capabilities: Text input, Vision, Reasoning" [ref=f1e1584]':
+                    - generic [ref=f1e1585]: GPT-5.6 Terra
+                    - generic [ref=f1e1587]: 1.1M
+                    - generic [ref=f1e1588]: $2.50
+                    - generic [ref=f1e1589]: $15.00
+                    - generic [ref=f1e1590]: $0.25
+                    - generic [ref=f1e1591]: $3.125
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1593]':
+                      - generic [ref=f1e1600]: "+1"
+                  - 'row "GPT-5.6 Luna 1.1M $1.00 $6.00 $0.10 $1.25 Capabilities: Text input, Vision, Reasoning" [ref=f1e1602]':
+                    - generic [ref=f1e1603]: GPT-5.6 Luna
+                    - generic [ref=f1e1605]: 1.1M
+                    - generic [ref=f1e1606]: $1.00
+                    - generic [ref=f1e1607]: $6.00
+                    - generic [ref=f1e1608]: $0.10
+                    - generic [ref=f1e1609]: $1.25
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1611]':
+                      - generic [ref=f1e1618]: "+1"
+                  - 'row "GPT-5.5 — $5.00 $30.00 $0.50 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1620]':
+                    - generic [ref=f1e1621]: GPT-5.5
+                    - generic [ref=f1e1623]: —
+                    - generic [ref=f1e1624]: $5.00
+                    - generic [ref=f1e1625]: $30.00
+                    - generic [ref=f1e1626]: $0.50
+                    - generic [ref=f1e1627]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1629]':
+                      - generic [ref=f1e1636]: "+1"
+                  - 'row "GPT-5.4 400K $2.50 $15.00 $0.25 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1638]':
+                    - generic [ref=f1e1639]: GPT-5.4
+                    - generic [ref=f1e1641]: 400K
+                    - generic [ref=f1e1642]: $2.50
+                    - generic [ref=f1e1643]: $15.00
+                    - generic [ref=f1e1644]: $0.25
+                    - generic [ref=f1e1645]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1647]':
+                      - generic [ref=f1e1654]: "+1"
+                  - 'row "GPT-5.4 Mini 400K $0.75 $4.50 $0.075 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1656]':
+                    - generic [ref=f1e1657]: GPT-5.4 Mini
+                    - generic [ref=f1e1659]: 400K
+                    - generic [ref=f1e1660]: $0.75
+                    - generic [ref=f1e1661]: $4.50
+                    - generic [ref=f1e1662]: $0.075
+                    - generic [ref=f1e1663]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1665]':
+                      - generic [ref=f1e1672]: "+1"
+                  - 'row "GPT-5.3 Codex 400K $2.00 $8.00 $0.50 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1674]':
+                    - generic [ref=f1e1675]: GPT-5.3 Codex
+                    - generic [ref=f1e1677]: 400K
+                    - generic [ref=f1e1678]: $2.00
+                    - generic [ref=f1e1679]: $8.00
+                    - generic [ref=f1e1680]: $0.50
+                    - generic [ref=f1e1681]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1683]':
+                      - generic [ref=f1e1690]: "+1"
+                  - 'row "Gemini 3.6 Flash 1M $1.50 $7.50 $0.15 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1692]':
+                    - generic [ref=f1e1693]: Gemini 3.6 Flash
+                    - generic [ref=f1e1695]: 1M
+                    - generic [ref=f1e1696]: $1.50
+                    - generic [ref=f1e1697]: $7.50
+                    - generic [ref=f1e1698]: $0.15
+                    - generic [ref=f1e1699]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1701]':
+                      - generic [ref=f1e1708]: "+1"
+                  - 'row "Gemini 3.5 Flash 1M $1.50 $9.00 $0.15 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1710]':
+                    - generic [ref=f1e1711]: Gemini 3.5 Flash
+                    - generic [ref=f1e1713]: 1M
+                    - generic [ref=f1e1714]: $1.50
+                    - generic [ref=f1e1715]: $9.00
+                    - generic [ref=f1e1716]: $0.15
+                    - generic [ref=f1e1717]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1719]':
+                      - generic [ref=f1e1726]: "+1"
+                  - 'row "Gemini 3.5 Flash Lite 1M $0.30 $2.50 $0.03 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1728]':
+                    - generic [ref=f1e1729]: Gemini 3.5 Flash Lite
+                    - generic [ref=f1e1731]: 1M
+                    - generic [ref=f1e1732]: $0.30
+                    - generic [ref=f1e1733]: $2.50
+                    - generic [ref=f1e1734]: $0.03
+                    - generic [ref=f1e1735]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1737]':
+                      - generic [ref=f1e1744]: "+1"
+                  - 'row "Gemini 3.1 Flash Lite 1M $0.25 $1.50 $0.03 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1746]':
+                    - generic [ref=f1e1747]: Gemini 3.1 Flash Lite
+                    - generic [ref=f1e1749]: 1M
+                    - generic [ref=f1e1750]: $0.25
+                    - generic [ref=f1e1751]: $1.50
+                    - generic [ref=f1e1752]: $0.03
+                    - generic [ref=f1e1753]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1755]':
+                      - generic [ref=f1e1762]: "+1"
+                  - 'row "Fugu Ultra 1M $5.00 $30.00 $0.50 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1764]':
+                    - generic [ref=f1e1765]: Fugu Ultra
+                    - generic [ref=f1e1767]: 1M
+                    - generic [ref=f1e1768]: $5.00
+                    - generic [ref=f1e1769]: $30.00
+                    - generic [ref=f1e1770]: $0.50
+                    - generic [ref=f1e1771]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1773]':
+                      - generic [ref=f1e1780]: "+1"
+                  - 'row "Muse Spark 1.1 1M $1.25 $4.25 $0.15 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1782]':
+                    - generic [ref=f1e1783]: Muse Spark 1.1
+                    - generic [ref=f1e1785]: 1M
+                    - generic [ref=f1e1786]: $1.25
+                    - generic [ref=f1e1787]: $4.25
+                    - generic [ref=f1e1788]: $0.15
+                    - generic [ref=f1e1789]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1791]':
+                      - generic [ref=f1e1798]: "+1"
+                  - generic [ref=f1e1799]:
+                    - 'row "Grok 4.5 500K $2.00 $6.00 $0.50 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1800]':
+                      - generic [ref=f1e1801]: Grok 4.5
+                      - generic [ref=f1e1803]: 500K
+                      - generic [ref=f1e1804]: $2.00
+                      - generic [ref=f1e1805]: $6.00
+                      - generic [ref=f1e1806]: $0.50
+                      - generic [ref=f1e1807]: —
+                      - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1809]':
+                        - generic [ref=f1e1816]: "+1"
+                    - generic [ref=f1e1817]: Available on every plan, including Go.
+                  - 'row "Inkling 256K $1.00 $4.05 $0.17 — Capabilities: Text input, Vision, Reasoning" [ref=f1e1819]':
+                    - generic [ref=f1e1820]: Inkling
+                    - generic [ref=f1e1822]: 256K
+                    - generic [ref=f1e1823]: $1.00
+                    - generic [ref=f1e1824]: $4.05
+                    - generic [ref=f1e1825]: $0.17
+                    - generic [ref=f1e1826]: —
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1828]':
+                      - generic [ref=f1e1835]: "+1"
+                  - 'row "Claude Sonnet 4.5 1M $3.00 $15.00 $0.30 $3.75 Capabilities: Text input, Vision, Reasoning" [ref=f1e1837]':
+                    - generic [ref=f1e1838]: Claude Sonnet 4.5
+                    - generic [ref=f1e1840]: 1M
+                    - generic [ref=f1e1841]: $3.00
+                    - generic [ref=f1e1842]: $15.00
+                    - generic [ref=f1e1843]: $0.30
+                    - generic [ref=f1e1844]: $3.75
+                    - 'button "Capabilities: Text input, Vision, Reasoning" [ref=f1e1846]':
+                      - generic [ref=f1e1853]: "+1"
+                  - generic [ref=f1e1854]:
+                    - generic [ref=f1e1855]: 50/50
+                    - text: Models · Prices per 1M tokens · USD
+                - generic [ref=f1e1856]:
+                  - generic [ref=f1e1857]: Text
+                  - generic [ref=f1e1861]: Vision
+                  - generic [ref=f1e1865]: Reasoning
+              - generic [ref=f1e1879]:
+                - generic [ref=f1e1883]: Note
+                - paragraph [ref=f1e1890]: Open-source models are routed across multiple upstream providers to maintain high availability. The values above are the mean per-provider price. Actual cost on a given request may vary slightly based on which upstream serves it.
+              - generic [ref=f1e1891]:
+                - generic [ref=f1e1895]: Note
+                - paragraph [ref=f1e1902]: "Claude Sonnet 5 rates shown are introductory pricing, in effect through August 31, 2026. From September 1, 2026, standard pricing applies: $3 input / $15 output / $0.30 cache read / $3.75 cache write per million tokens."
+              - heading [level=2] [ref=f1e1904]:
+                - link "Context windows. Managed for you." [ref=f1e1906] [cursor=pointer]:
+                  - /url: "#context-windows-managed-for-you"
+              - paragraph [ref=f1e1907]: A context window is the maximum span of tokens (text, images, and code) a model can hold in mind at once. Input prompt plus everything it generates back.
+              - paragraph [ref=f1e1908]: Every Command Code session has its own context. As you prompt, read files, and respond, that context fills up. Command Code compresses older messages automatically, so you can keep going without starting over.
+              - paragraph [ref=f1e1909]: Context window size depends on the model. Command Code supports model-specific context windows, with up to 1 million tokens supported on Claude Fable 5, Claude Sonnet 5, Claude Sonnet 4.6, Claude Opus 4.8, Claude Opus 4.7, and DeepSeek V4 Pro.
+              - heading [level=2] [ref=f1e1911]:
+                - link "FAQs" [ref=f1e1913] [cursor=pointer]:
+                  - /url: "#faqs"
+              - generic [ref=f1e1914]:
+                - group [ref=f1e1915]:
+                  - generic "How do I get started?" [ref=f1e1916] [cursor=pointer]:
+                    - paragraph [ref=f1e1920]:
+                      - generic [ref=f1e1921]: How do I get started?
+                      - button "Copy link to this FAQ" [ref=f1e1922]
+                - group [ref=f1e1931]:
+                  - generic "What happens when I run out of credits?" [ref=f1e1932] [cursor=pointer]:
+                    - paragraph [ref=f1e1936]:
+                      - generic [ref=f1e1937]: What happens when I run out of credits?
+                      - button "Copy link to this FAQ" [ref=f1e1938]
+                - group [ref=f1e1947]:
+                  - generic "How do I buy more credits?" [ref=f1e1948] [cursor=pointer]:
+                    - paragraph [ref=f1e1952]:
+                      - generic [ref=f1e1953]: How do I buy more credits?
+                      - button "Copy link to this FAQ" [ref=f1e1954]
+                - group [ref=f1e1963]:
+                  - generic "Where can I check my usage?" [ref=f1e1964] [cursor=pointer]:
+                    - paragraph [ref=f1e1968]:
+                      - generic [ref=f1e1969]: Where can I check my usage?
+                      - button "Copy link to this FAQ" [ref=f1e1970]
+                - group [ref=f1e1979]:
+                  - generic "What are the 5-hour and weekly limits?" [ref=f1e1980] [cursor=pointer]:
+                    - paragraph [ref=f1e1984]:
+                      - generic [ref=f1e1985]: What are the 5-hour and weekly limits?
+                      - button "Copy link to this FAQ" [ref=f1e1986]
+                - group [ref=f1e1995]:
+                  - generic "Do you train on my code?" [ref=f1e1996] [cursor=pointer]:
+                    - paragraph [ref=f1e2000]:
+                      - generic [ref=f1e2001]: Do you train on my code?
+                      - button "Copy link to this FAQ" [ref=f1e2002]
+                - group [ref=f1e2011]:
+                  - generic "Can I switch plans?" [ref=f1e2012] [cursor=pointer]:
+                    - paragraph [ref=f1e2016]:
+                      - generic [ref=f1e2017]: Can I switch plans?
+                      - button "Copy link to this FAQ" [ref=f1e2018]
+                - group [ref=f1e2027]:
+                  - generic "Can I cancel my subscription?" [ref=f1e2028] [cursor=pointer]:
+                    - paragraph [ref=f1e2032]:
+                      - generic [ref=f1e2033]: Can I cancel my subscription?
+                      - button "Copy link to this FAQ" [ref=f1e2034]
+                - group [ref=f1e2043]:
+                  - generic "How does team billing work?" [ref=f1e2044] [cursor=pointer]:
+                    - paragraph [ref=f1e2048]:
+                      - generic [ref=f1e2049]: How does team billing work?
+                      - button "Copy link to this FAQ" [ref=f1e2050]
+                - group [ref=f1e2059]:
+                  - generic "What is the right plan for me?" [ref=f1e2060] [cursor=pointer]:
+                    - paragraph [ref=f1e2064]:
+                      - generic [ref=f1e2065]: What is the right plan for me?
+                      - button "Copy link to this FAQ" [ref=f1e2066]
+                - group [ref=f1e2075]:
+                  - generic "What are my payment options?" [ref=f1e2076] [cursor=pointer]:
+                    - paragraph [ref=f1e2080]:
+                      - generic [ref=f1e2081]: What are my payment options?
+                      - button "Copy link to this FAQ" [ref=f1e2082]
+                - group [ref=f1e2091]:
+                  - generic "How does usage-based pricing work?" [ref=f1e2092] [cursor=pointer]:
+                    - paragraph [ref=f1e2096]:
+                      - generic [ref=f1e2097]: How does usage-based pricing work?
+                      - button "Copy link to this FAQ" [ref=f1e2098]
+                - group [ref=f1e2107]:
+                  - generic "How can I see and manage usage in my organization?" [ref=f1e2108] [cursor=pointer]:
+                    - paragraph [ref=f1e2112]:
+                      - generic [ref=f1e2113]: How can I see and manage usage in my organization?
+                      - button "Copy link to this FAQ" [ref=f1e2114]
+                - group [ref=f1e2123]:
+                  - generic "Can I buy Command Code from a reseller or third party?" [ref=f1e2124] [cursor=pointer]:
+                    - paragraph [ref=f1e2128]:
+                      - generic [ref=f1e2129]: Can I buy Command Code from a reseller or third party?
+                      - button "Copy link to this FAQ" [ref=f1e2130]
+                - group [ref=f1e2139]:
+                  - generic "Where are models hosted?" [ref=f1e2140] [cursor=pointer]:
+                    - paragraph [ref=f1e2144]:
+                      - generic [ref=f1e2145]: Where are models hosted?
+                      - button "Copy link to this FAQ" [ref=f1e2146]
+                - group [ref=f1e2155]:
+                  - generic "What about data and privacy for open-source models?" [ref=f1e2156] [cursor=pointer]:
+                    - paragraph [ref=f1e2160]:
+                      - generic [ref=f1e2161]: What about data and privacy for open-source models?
+                      - button "Copy link to this FAQ" [ref=f1e2162]
+                - group [ref=f1e2171]:
+                  - generic "Is Command Code open source?" [ref=f1e2172] [cursor=pointer]:
+                    - paragraph [ref=f1e2176]:
+                      - generic [ref=f1e2177]: Is Command Code open source?
+                      - button "Copy link to this FAQ" [ref=f1e2178]
+                - group [ref=f1e2187]:
+                  - generic "Can I opt out of telemetry?" [ref=f1e2188] [cursor=pointer]:
+                    - paragraph [ref=f1e2192]:
+                      - generic [ref=f1e2193]: Can I opt out of telemetry?
+                      - button "Copy link to this FAQ" [ref=f1e2194]
+                - group [ref=f1e2203]:
+                  - generic "Do you support zero data retention (ZDR)?" [ref=f1e2204] [cursor=pointer]:
+                    - paragraph [ref=f1e2208]:
+                      - generic [ref=f1e2209]: Do you support zero data retention (ZDR)?
+                      - button "Copy link to this FAQ" [ref=f1e2210]
+                - group [ref=f1e2219]:
+                  - generic "Where can I ask more questions?" [ref=f1e2220] [cursor=pointer]:
+                    - paragraph [ref=f1e2224]:
+                      - generic [ref=f1e2225]: Where can I ask more questions?
+                      - button "Copy link to this FAQ" [ref=f1e2226]
+              - heading [level=2] [ref=f1e2236]:
+                - link "Deals." [ref=f1e2238] [cursor=pointer]:
+                  - /url: "#deals"
+              - paragraph [ref=f1e2239]: Command Code deals. Apply automatically. No codes. No toggles. Discounts work on every plan and even extra pay-as-you-go credits.
+              - generic [ref=f1e2240]:
+                - article [ref=f1e2242]:
+                  - generic [ref=f1e2243]:
+                    - link "Permalink to DeepSeek V4 Pro deal" [ref=f1e2244] [cursor=pointer]:
+                      - /url: "#deepseek-v4-pro-4x-usage"
+                      - generic [ref=f1e2245]: DEAL
+                      - generic [ref=f1e2246]: deepseek-v4-pro-4x-usage
+                    - generic [ref=f1e2250]: DeepSeek V4 Pro
+                  - generic [ref=f1e2252]:
+                    - generic [ref=f1e2253]:
+                      - generic [ref=f1e2254]: Every $1 of credit on this model
+                      - generic [ref=f1e2255]:
+                        - generic "4 times usage" [ref=f1e2256]: 4×
+                        - generic [ref=f1e2257]: usage
+                        - generic [ref=f1e2258]: ↑
+                        - generic [ref=f1e2259]: from 1×
+                      - generic [ref=f1e2260]:
+                        - generic [ref=f1e2261]: 75% off list
+                        - text: ·
+                        - generic [ref=f1e2262]:
+                          - text: auto-applied when you pick
+                          - code [ref=f1e2263]: deepseek-v4-pro
+                    - button "Enlarge DeepSeek V4 Pro deal artwork" [ref=f1e2264] [cursor=pointer]:
+                      - generic: Enlarge
+                  - generic [ref=f1e2266]:
+                    - generic [ref=f1e2267]:
+                      - term [ref=f1e2268]: Model
+                      - definition [ref=f1e2271]: DeepSeek V4 Pro
+                    - generic [ref=f1e2272]:
+                      - term [ref=f1e2273]: Discount
+                      - definition [ref=f1e2278]: 75%
+                    - generic [ref=f1e2279]:
+                      - term [ref=f1e2280]: Term
+                      - definition [ref=f1e2283]: No expiry
+                  - generic [ref=f1e2285]:
+                    - heading "Details" [level=3] [ref=f1e2286]
+                    - generic [ref=f1e2287]:
+                      - paragraph [ref=f1e2288]:
+                        - strong [ref=f1e2289]: DeepSeek V4 Pro is permanently 75% off.
+                      - paragraph [ref=f1e2290]:
+                        - text: Because the model's per-token cost is one-quarter of list price,
+                        - strong [ref=f1e2291]: every dollar of credit you spend on DeepSeek V4 Pro is worth 4× the requests it normally would be
+                        - text: ". Practical implications:"
+                      - list [ref=f1e2292]:
+                        - listitem [ref=f1e2293]:
+                          - strong [ref=f1e2294]: On any subscription
+                          - text: "(Go, Pro, Max, Ultra, Team Pro): credits routed to DeepSeek V4 Pro stretch 4× further. A $1 Go plan with $10 credits effectively has up to $40 of DeepSeek V4 Pro usage if you stay on this model."
+                        - listitem [ref=f1e2295]:
+                          - strong [ref=f1e2296]: On top-up credits
+                          - text: ": extra credits you purchase from"
+                          - link "Studio > Billing" [ref=f1e2297] [cursor=pointer]:
+                            - /url: https://commandcode.ai/billing
+                          - text: get the same treatment. Buying $20 of credits and using DeepSeek V4 Pro is equivalent to $80 of usage.
+                        - listitem [ref=f1e2298]:
+                          - strong [ref=f1e2299]: No code, no toggle
+                          - text: ": pick"
+                          - code [ref=f1e2300]: deepseek-v4-pro
+                          - text: from
+                          - code [ref=f1e2301]: /model
+                          - text: in the CLI and the discounted rate applies automatically. The
+                          - link "Usage" [ref=f1e2302] [cursor=pointer]:
+                            - /url: https://commandcode.ai/docs/studio/usage
+                          - text: page reflects the discounted price per request in real time.
+                      - paragraph [ref=f1e2303]: This is a permanent discount — DeepSeek has permanently reduced their model prices.
+                - article [ref=f1e2306]:
+                  - generic [ref=f1e2307]:
+                    - link "Permalink to MiniMax M3 deal" [ref=f1e2308] [cursor=pointer]:
+                      - /url: "#minimax-m3-2x-usage"
+                      - generic [ref=f1e2309]: DEAL
+                      - generic [ref=f1e2310]: minimax-m3-2x-usage
+                    - generic [ref=f1e2314]: MiniMax M3
+                  - generic [ref=f1e2316]:
+                    - generic [ref=f1e2317]:
+                      - generic [ref=f1e2318]: Every $1 of credit on this model
+                      - generic [ref=f1e2319]:
+                        - generic "2 times usage" [ref=f1e2320]: 2×
+                        - generic [ref=f1e2321]: usage
+                        - generic [ref=f1e2322]: ↑
+                        - generic [ref=f1e2323]: from 1×
+                      - generic [ref=f1e2324]:
+                        - generic [ref=f1e2325]: 50% off list
+                        - text: ·
+                        - generic [ref=f1e2326]:
+                          - text: auto-applied when you pick
+                          - code [ref=f1e2327]: minimax-m3
+                    - button "Enlarge MiniMax M3 deal artwork" [ref=f1e2328] [cursor=pointer]:
+                      - generic: Enlarge
+                  - generic [ref=f1e2330]:
+                    - generic [ref=f1e2331]:
+                      - term [ref=f1e2332]: Model
+                      - definition [ref=f1e2335]: MiniMax M3
+                    - generic [ref=f1e2336]:
+                      - term [ref=f1e2337]: Discount
+                      - definition [ref=f1e2342]: 50%
+                    - generic [ref=f1e2343]:
+                      - term [ref=f1e2344]: Term
+                      - definition [ref=f1e2347]: No expiry
+                  - generic [ref=f1e2349]:
+                    - heading "Details" [level=3] [ref=f1e2350]
+                    - generic [ref=f1e2351]:
+                      - paragraph [ref=f1e2352]:
+                        - strong [ref=f1e2353]: MiniMax M3 is permanently 50% off.
+                      - paragraph [ref=f1e2354]:
+                        - text: Because MiniMax M3's per-token cost is half of list price,
+                        - strong [ref=f1e2355]: every dollar of credit you spend on MiniMax M3 is worth 2× the requests it normally would be
+                        - text: ". Practical implications:"
+                      - list [ref=f1e2356]:
+                        - listitem [ref=f1e2357]:
+                          - strong [ref=f1e2358]: On any subscription
+                          - text: "(Go, Pro, Max, Ultra, Team Pro): credits routed to MiniMax M3 stretch 2× further. A $1 Go plan with $10 credits effectively has up to $20 of MiniMax M3 usage if you stay on this model."
+                        - listitem [ref=f1e2359]:
+                          - strong [ref=f1e2360]: On top-up credits
+                          - text: ": extra credits you purchase from"
+                          - link "Studio > Billing" [ref=f1e2361] [cursor=pointer]:
+                            - /url: https://commandcode.ai/billing
+                          - text: get the same treatment. Buying $20 of credits and using MiniMax M3 is equivalent to $40 of usage.
+                        - listitem [ref=f1e2362]:
+                          - strong [ref=f1e2363]: No code, no toggle
+                          - text: ": pick"
+                          - code [ref=f1e2364]: MiniMax M3
+                          - text: from
+                          - code [ref=f1e2365]: /model
+                          - text: in the CLI and the discounted rate applies automatically. The
+                          - link "Usage" [ref=f1e2366] [cursor=pointer]:
+                            - /url: https://commandcode.ai/docs/studio/usage
+                          - text: page reflects the discounted price per request in real time.
+                      - table [ref=f1e2367]:
+                        - rowgroup [ref=f1e2368]:
+                          - row [ref=f1e2369]:
+                            - columnheader "Per 1M tokens (context ≤512K)" [ref=f1e2370]
+                            - columnheader "Was" [ref=f1e2371]
+                            - columnheader "Now" [ref=f1e2372]
+                            - columnheader "Off" [ref=f1e2373]
+                        - rowgroup [ref=f1e2374]:
+                          - row [ref=f1e2375]:
+                            - cell "Input" [ref=f1e2376]
+                            - cell "$0.60" [ref=f1e2377]
+                            - cell [ref=f1e2378]:
+                              - strong [ref=f1e2379]: $0.30
+                            - cell "50%" [ref=f1e2380]
+                          - row [ref=f1e2381]:
+                            - cell "Output" [ref=f1e2382]
+                            - cell "$2.40" [ref=f1e2383]
+                            - cell [ref=f1e2384]:
+                              - strong [ref=f1e2385]: $1.20
+                            - cell "50%" [ref=f1e2386]
+                          - row [ref=f1e2387]:
+                            - cell "Cache read" [ref=f1e2388]
+                            - cell "$0.12" [ref=f1e2389]
+                            - cell [ref=f1e2390]:
+                              - strong [ref=f1e2391]: $0.06
+                            - cell "50%" [ref=f1e2392]
+                      - table [ref=f1e2393]:
+                        - rowgroup [ref=f1e2394]:
+                          - row [ref=f1e2395]:
+                            - columnheader "Per 1M tokens (context >512K)" [ref=f1e2396]
+                            - columnheader "Was" [ref=f1e2397]
+                            - columnheader "Now" [ref=f1e2398]
+                            - columnheader "Off" [ref=f1e2399]
+                        - rowgroup [ref=f1e2400]:
+                          - row [ref=f1e2401]:
+                            - cell "Input" [ref=f1e2402]
+                            - cell "$0.60" [ref=f1e2403]
+                            - cell [ref=f1e2404]:
+                              - strong [ref=f1e2405]: $0.30
+                            - cell "50%" [ref=f1e2406]
+                          - row [ref=f1e2407]:
+                            - cell "Output" [ref=f1e2408]
+                            - cell "$2.40" [ref=f1e2409]
+                            - cell [ref=f1e2410]:
+                              - strong [ref=f1e2411]: $1.20
+                            - cell "50%" [ref=f1e2412]
+                          - row [ref=f1e2413]:
+                            - cell "Cache read" [ref=f1e2414]
+                            - cell "$0.12" [ref=f1e2415]
+                            - cell [ref=f1e2416]:
+                              - strong [ref=f1e2417]: $0.06
+                            - cell "50%" [ref=f1e2418]
+                - article [ref=f1e2421]:
+                  - generic [ref=f1e2422]:
+                    - link "Permalink to MiMo V2.5 Pro deal" [ref=f1e2423] [cursor=pointer]:
+                      - /url: "#mimo-v2.5-pro-99-off"
+                      - generic [ref=f1e2424]: DEAL
+                      - generic [ref=f1e2425]: mimo-v2.5-pro-99-off
+                    - generic [ref=f1e2429]: MiMo V2.5 Pro
+                  - generic [ref=f1e2431]:
+                    - generic [ref=f1e2432]:
+                      - generic [ref=f1e2433]: Permanent price cut
+                      - generic [ref=f1e2434]:
+                        - generic "up to 99 percent off" [ref=f1e2435]: 99%
+                        - generic [ref=f1e2436]: "off"
+                      - generic [ref=f1e2438]:
+                        - text: auto-applied when you pick
+                        - code [ref=f1e2439]: mimo-v2.5-pro
+                    - button "Enlarge MiMo V2.5 Pro deal artwork" [ref=f1e2440] [cursor=pointer]:
+                      - generic: Enlarge
+                  - generic [ref=f1e2442]:
+                    - generic [ref=f1e2443]:
+                      - term [ref=f1e2444]: Model
+                      - definition [ref=f1e2447]: MiMo V2.5 Pro
+                    - generic [ref=f1e2448]:
+                      - term [ref=f1e2449]: Discount
+                      - definition [ref=f1e2454]: 99%
+                    - generic [ref=f1e2455]:
+                      - term [ref=f1e2456]: Term
+                      - definition [ref=f1e2459]: No expiry
+                  - generic [ref=f1e2461]:
+                    - heading "Details" [level=3] [ref=f1e2462]
+                    - generic [ref=f1e2463]:
+                      - paragraph [ref=f1e2464]:
+                        - strong [ref=f1e2465]: MiMo V2.5 Pro is permanently up to 99% off.
+                      - paragraph [ref=f1e2466]:
+                        - text: Command Code has permanently slashed MiMo V2.5 pricing in collab with Xiaomi. Unified across all context lengths. Because the model's per-token cost is a fraction of the previous price,
+                        - strong [ref=f1e2467]: every dollar of credit you spend on MiMo V2.5 Pro goes dramatically further
+                        - text: .
+                      - paragraph [ref=f1e2468]: "Practical implications:"
+                      - list [ref=f1e2469]:
+                        - listitem [ref=f1e2470]:
+                          - strong [ref=f1e2471]:
+                            - text: "On"
+                            - link "$1 Go plan" [ref=f1e2472] [cursor=pointer]:
+                              - /url: https://commandcode.ai/pricing
+                            - text: ($10 credits)
+                          - text: ": your $10 in credits effectively delivers up to"
+                          - strong [ref=f1e2473]: ~$50 of MiMo V2.5 Pro usage
+                          - text: .
+                        - listitem [ref=f1e2474]:
+                          - strong [ref=f1e2475]:
+                            - text: "On"
+                            - link "$15 Pro plan" [ref=f1e2476] [cursor=pointer]:
+                              - /url: https://commandcode.ai/pricing
+                            - text: ($30 credits)
+                          - text: ": $30 in credits effectively delivers up to"
+                          - strong [ref=f1e2477]: ~$150 of MiMo V2.5 Pro usage
+                          - text: .
+                        - listitem [ref=f1e2478]:
+                          - strong [ref=f1e2479]: On top-up credits
+                          - text: ": extra credits you purchase from"
+                          - link "Studio > Billing" [ref=f1e2480] [cursor=pointer]:
+                            - /url: https://commandcode.ai/billing
+                          - text: get the same treatment. $20 of credits on MiMo V2.5 Pro is equivalent to ~$100 of usage.
+                        - listitem [ref=f1e2481]:
+                          - strong [ref=f1e2482]: On every plan + pay-as-you-go
+                          - text: ": Go, Pro, Max, Ultra, Team Pro, and even standalone top-up credits all benefit from the same discount automatically."
+                        - listitem [ref=f1e2483]:
+                          - strong [ref=f1e2484]: No code, no toggle
+                          - text: ": pick"
+                          - code [ref=f1e2485]: mimo-v2.5-pro
+                          - text: from
+                          - code [ref=f1e2486]: /model
+                          - text: in the CLI and the discounted rate applies automatically. The
+                          - link "Usage" [ref=f1e2487] [cursor=pointer]:
+                            - /url: https://commandcode.ai/docs/studio/usage
+                          - text: page reflects the discounted price per request in real time.
+                      - table [ref=f1e2488]:
+                        - rowgroup [ref=f1e2489]:
+                          - row [ref=f1e2490]:
+                            - columnheader "Per 1M tokens" [ref=f1e2491]
+                            - columnheader "Was" [ref=f1e2492]
+                            - columnheader "Now" [ref=f1e2493]
+                            - columnheader "Off" [ref=f1e2494]
+                            - columnheader "Multiplier" [ref=f1e2495]
+                        - rowgroup [ref=f1e2496]:
+                          - row [ref=f1e2497]:
+                            - cell "Output" [ref=f1e2498]
+                            - cell "$6.00" [ref=f1e2499]
+                            - cell [ref=f1e2500]:
+                              - strong [ref=f1e2501]: $0.87
+                            - cell "86%" [ref=f1e2502]
+                            - cell "7x" [ref=f1e2503]
+                          - row [ref=f1e2504]:
+                            - cell "Input" [ref=f1e2505]
+                            - cell "$2.00" [ref=f1e2506]
+                            - cell [ref=f1e2507]:
+                              - strong [ref=f1e2508]: $0.435
+                            - cell "78%" [ref=f1e2509]
+                            - cell "4.6x" [ref=f1e2510]
+                          - row [ref=f1e2511]:
+                            - cell "Cache read" [ref=f1e2512]
+                            - cell "$0.40" [ref=f1e2513]
+                            - cell [ref=f1e2514]:
+                              - strong [ref=f1e2515]: $0.0036
+                            - cell "99%" [ref=f1e2516]
+                            - cell "111x" [ref=f1e2517]
+                      - paragraph [ref=f1e2518]: This is a permanent price cut. Xiaomi has permanently reduced their API pricing with unified rates across all context lengths.
+                - article [ref=f1e2521]:
+                  - generic [ref=f1e2522]:
+                    - link "Permalink to MiMo V2.5 deal" [ref=f1e2523] [cursor=pointer]:
+                      - /url: "#mimo-v2.5-98-off"
+                      - generic [ref=f1e2524]: DEAL
+                      - generic [ref=f1e2525]: mimo-v2.5-98-off
+                    - generic [ref=f1e2529]: MiMo V2.5
+                  - generic [ref=f1e2531]:
+                    - generic [ref=f1e2532]:
+                      - generic [ref=f1e2533]: Permanent price cut
+                      - generic [ref=f1e2534]:
+                        - generic "up to 98 percent off" [ref=f1e2535]: 98%
+                        - generic [ref=f1e2536]: "off"
+                      - generic [ref=f1e2538]:
+                        - text: auto-applied when you pick
+                        - code [ref=f1e2539]: mimo-v2.5
+                    - button "Enlarge MiMo V2.5 deal artwork" [ref=f1e2540] [cursor=pointer]:
+                      - generic: Enlarge
+                  - generic [ref=f1e2542]:
+                    - generic [ref=f1e2543]:
+                      - term [ref=f1e2544]: Model
+                      - definition [ref=f1e2547]: MiMo V2.5
+                    - generic [ref=f1e2548]:
+                      - term [ref=f1e2549]: Discount
+                      - definition [ref=f1e2554]: 98%
+                    - generic [ref=f1e2555]:
+                      - term [ref=f1e2556]: Term
+                      - definition [ref=f1e2559]: No expiry
+                  - generic [ref=f1e2561]:
+                    - heading "Details" [level=3] [ref=f1e2562]
+                    - generic [ref=f1e2563]:
+                      - paragraph [ref=f1e2564]:
+                        - strong [ref=f1e2565]: MiMo V2.5 is permanently up to 98% off.
+                      - paragraph [ref=f1e2566]:
+                        - text: Command Code has permanently slashed MiMo V2.5 pricing in collab with Xiaomi. Unified across all context lengths. Because the model's per-token cost is a fraction of the previous price,
+                        - strong [ref=f1e2567]: every dollar of credit you spend on MiMo V2.5 goes dramatically further
+                        - text: .
+                      - paragraph [ref=f1e2568]: "Practical implications:"
+                      - list [ref=f1e2569]:
+                        - listitem [ref=f1e2570]:
+                          - strong [ref=f1e2571]:
+                            - text: "On"
+                            - link "$1 Go plan" [ref=f1e2572] [cursor=pointer]:
+                              - /url: https://commandcode.ai/pricing
+                            - text: ($10 credits)
+                          - text: ": your $10 in credits effectively delivers up to"
+                          - strong [ref=f1e2573]: ~$100 of MiMo V2.5 usage
+                          - text: .
+                        - listitem [ref=f1e2574]:
+                          - strong [ref=f1e2575]:
+                            - text: "On"
+                            - link "$15 Pro plan" [ref=f1e2576] [cursor=pointer]:
+                              - /url: https://commandcode.ai/pricing
+                            - text: ($30 credits)
+                          - text: ": $30 in credits effectively delivers up to"
+                          - strong [ref=f1e2577]: ~$300 of MiMo V2.5 usage
+                          - text: .
+                        - listitem [ref=f1e2578]:
+                          - strong [ref=f1e2579]: On top-up credits
+                          - text: ": extra credits you purchase from"
+                          - link "Studio > Billing" [ref=f1e2580] [cursor=pointer]:
+                            - /url: https://commandcode.ai/billing
+                          - text: get the same treatment. $20 of credits on MiMo V2.5 is equivalent to ~$200 of usage.
+                        - listitem [ref=f1e2581]:
+                          - strong [ref=f1e2582]: On every plan + pay-as-you-go
+                          - text: ": Go, Pro, Max, Ultra, Team Pro, and even standalone top-up credits all benefit from the same discount automatically."
+                        - listitem [ref=f1e2583]:
+                          - strong [ref=f1e2584]: No code, no toggle
+                          - text: ": pick"
+                          - code [ref=f1e2585]: mimo-v2.5
+                          - text: from
+                          - code [ref=f1e2586]: /model
+                          - text: in the CLI and the discounted rate applies automatically. The
+                          - link "Usage" [ref=f1e2587] [cursor=pointer]:
+                            - /url: https://commandcode.ai/docs/studio/usage
+                          - text: page reflects the discounted price per request in real time.
+                      - table [ref=f1e2588]:
+                        - rowgroup [ref=f1e2589]:
+                          - row [ref=f1e2590]:
+                            - columnheader "Per 1M tokens" [ref=f1e2591]
+                            - columnheader "Was" [ref=f1e2592]
+                            - columnheader "Now" [ref=f1e2593]
+                            - columnheader "Off" [ref=f1e2594]
+                            - columnheader "Multiplier" [ref=f1e2595]
+                        - rowgroup [ref=f1e2596]:
+                          - row [ref=f1e2597]:
+                            - cell "Output" [ref=f1e2598]
+                            - cell "$4.00" [ref=f1e2599]
+                            - cell [ref=f1e2600]:
+                              - strong [ref=f1e2601]: $0.28
+                            - cell "93%" [ref=f1e2602]
+                            - cell "14x" [ref=f1e2603]
+                          - row [ref=f1e2604]:
+                            - cell "Input" [ref=f1e2605]
+                            - cell "$0.80" [ref=f1e2606]
+                            - cell [ref=f1e2607]:
+                              - strong [ref=f1e2608]: $0.14
+                            - cell "83%" [ref=f1e2609]
+                            - cell "5.7x" [ref=f1e2610]
+                          - row [ref=f1e2611]:
+                            - cell "Cache read" [ref=f1e2612]
+                            - cell "$0.16" [ref=f1e2613]
+                            - cell [ref=f1e2614]:
+                              - strong [ref=f1e2615]: $0.0028
+                            - cell "98%" [ref=f1e2616]
+                            - cell "57x" [ref=f1e2617]
+                      - paragraph [ref=f1e2618]: This is a permanent price cut. Xiaomi has permanently reduced their API pricing with unified rates across all context lengths.
+                - article [ref=f1e2621]:
+                  - generic [ref=f1e2622]:
+                    - link "Permalink to Laguna S 2.1 deal" [ref=f1e2623] [cursor=pointer]:
+                      - /url: "#laguna-s-2.1-free"
+                      - generic [ref=f1e2624]: DEAL
+                      - generic [ref=f1e2625]: laguna-s-2.1-free
+                    - generic [ref=f1e2629]: Laguna S 2.1
+                  - generic [ref=f1e2632]:
+                    - generic [ref=f1e2633]: Free while capacity lasts
+                    - generic [ref=f1e2634]:
+                      - generic "up to 100 percent off" [ref=f1e2635]: 100%
+                      - generic [ref=f1e2636]: "off"
+                    - generic [ref=f1e2638]:
+                      - text: auto-applied when you pick
+                      - code [ref=f1e2639]: laguna-s-2.1-free
+                  - generic [ref=f1e2640]:
+                    - generic [ref=f1e2641]:
+                      - term [ref=f1e2642]: Model
+                      - definition [ref=f1e2645]: Laguna S 2.1
+                    - generic [ref=f1e2646]:
+                      - term [ref=f1e2647]: Discount
+                      - definition [ref=f1e2652]: 100%
+                    - generic [ref=f1e2653]:
+                      - term [ref=f1e2654]: Term
+                      - definition [ref=f1e2657]: while capacity lasts
+                  - generic [ref=f1e2659]:
+                    - heading "Details" [level=3] [ref=f1e2660]
+                    - generic [ref=f1e2661]:
+                      - paragraph [ref=f1e2662]:
+                        - strong [ref=f1e2663]: Laguna S 2.1 is free while capacity lasts.
+                      - paragraph [ref=f1e2664]: Laguna S 2.1 is Poolside's open-weight model for agentic coding and long-horizon work.
+                      - list [ref=f1e2665]:
+                        - listitem [ref=f1e2666]:
+                          - strong [ref=f1e2667]: "Requests cost no credits:"
+                          - text: Input, output, and cache reads are all
+                          - code [ref=f1e2668]: $0.00
+                          - text: per million tokens.
+                        - listitem [ref=f1e2669]:
+                          - strong [ref=f1e2670]: Available to all customers
+                          - text: ": Go, Pro, Max, Ultra, and Team Pro. Need to have $1 of credits in your account to start a session."
+                      - table [ref=f1e2671]:
+                        - rowgroup [ref=f1e2672]:
+                          - row [ref=f1e2673]:
+                            - columnheader "Per 1M tokens" [ref=f1e2674]
+                            - columnheader "Price" [ref=f1e2675]
+                        - rowgroup [ref=f1e2676]:
+                          - row [ref=f1e2677]:
+                            - cell "Input" [ref=f1e2678]
+                            - cell [ref=f1e2679]:
+                              - strong [ref=f1e2680]: $0.00
+                          - row [ref=f1e2681]:
+                            - cell "Output" [ref=f1e2682]
+                            - cell [ref=f1e2683]:
+                              - strong [ref=f1e2684]: $0.00
+                          - row [ref=f1e2685]:
+                            - cell "Cache read" [ref=f1e2686]
+                            - cell [ref=f1e2687]:
+                              - strong [ref=f1e2688]: $0.00
+                - article [ref=f1e2691]:
+                  - generic [ref=f1e2692]:
+                    - link "Permalink to Ling 3.0 Flash deal" [ref=f1e2693] [cursor=pointer]:
+                      - /url: "#ling-3.0-flash-free"
+                      - generic [ref=f1e2694]: DEAL
+                      - generic [ref=f1e2695]: ling-3.0-flash-free
+                    - generic [ref=f1e2699]: Ling 3.0 Flash
+                  - generic [ref=f1e2702]:
+                    - generic [ref=f1e2703]: Free through August 2, 2026
+                    - generic [ref=f1e2704]:
+                      - generic "up to 100 percent off" [ref=f1e2705]: 100%
+                      - generic [ref=f1e2706]: "off"
+                    - generic [ref=f1e2708]:
+                      - text: auto-applied when you pick
+                      - code [ref=f1e2709]: ling-3.0-flash-free
+                  - generic [ref=f1e2710]:
+                    - generic [ref=f1e2711]:
+                      - term [ref=f1e2712]: Model
+                      - definition [ref=f1e2715]: Ling 3.0 Flash
+                    - generic [ref=f1e2716]:
+                      - term [ref=f1e2717]: Discount
+                      - definition [ref=f1e2722]: 100%
+                    - generic [ref=f1e2723]:
+                      - term [ref=f1e2724]: Ends
+                      - definition [ref=f1e2727]: August 2, 2026
+                  - generic [ref=f1e2729]:
+                    - heading "Details" [level=3] [ref=f1e2730]
+                    - generic [ref=f1e2731]:
+                      - paragraph [ref=f1e2732]:
+                        - strong [ref=f1e2733]: Ling 3.0 Flash is free through August 2, 2026.
+                      - paragraph [ref=f1e2734]: Ling 3.0 Flash is inclusionAI's fast, lightweight-MoE open-weight model for everyday coding and agentic work.
+                      - list [ref=f1e2735]:
+                        - listitem [ref=f1e2736]:
+                          - strong [ref=f1e2737]: "Requests cost no credits:"
+                          - text: Input, output, and cache reads are all
+                          - code [ref=f1e2738]: $0.00
+                          - text: per million tokens.
+                        - listitem [ref=f1e2739]:
+                          - strong [ref=f1e2740]: Available to all customers
+                          - text: ": Go, Pro, Max, Ultra, and Team Pro. Need to have $1 of credits in your account to start a session."
+                      - table [ref=f1e2741]:
+                        - rowgroup [ref=f1e2742]:
+                          - row [ref=f1e2743]:
+                            - columnheader "Per 1M tokens" [ref=f1e2744]
+                            - columnheader "Price" [ref=f1e2745]
+                        - rowgroup [ref=f1e2746]:
+                          - row [ref=f1e2747]:
+                            - cell "Input" [ref=f1e2748]
+                            - cell [ref=f1e2749]:
+                              - strong [ref=f1e2750]: $0.00
+                          - row [ref=f1e2751]:
+                            - cell "Output" [ref=f1e2752]
+                            - cell [ref=f1e2753]:
+                              - strong [ref=f1e2754]: $0.00
+                          - row [ref=f1e2755]:
+                            - cell "Cache read" [ref=f1e2756]
+                            - cell [ref=f1e2757]:
+                              - strong [ref=f1e2758]: $0.00
+                      - paragraph [ref=f1e2759]:
+                        - text: Ling is free through
+                        - strong [ref=f1e2760]: August 2, 2026
+                        - text: (Pacific); the model goes offline early the next morning — switch models with
+                        - code [ref=f1e2761]: /model
+                        - text: to keep going after that.
+              - paragraph [ref=f1e2762]:
+                - strong [ref=f1e2763]: How deals work.
+              - list [ref=f1e2764]:
+                - listitem [ref=f1e2765]:
+                  - strong [ref=f1e2766]: "Automatic:"
+                  - text: Pick the discounted model from
+                  - code [ref=f1e2767]: /model
+                  - text: in the CLI or in Studio. The rate drops for the length of the deal.
+                - listitem [ref=f1e2768]:
+                  - strong [ref=f1e2769]: "On every plan:"
+                  - text: Go, Pro, Max 10×, Max 20×. Credits routed to the discounted model stretch further on every tier.
+                - listitem [ref=f1e2770]:
+                  - strong [ref=f1e2771]: "Discounted upstream only:"
+                  - text: The deal rate applies only when the discounted upstream serves the request.
+                - listitem [ref=f1e2772]:
+                  - strong [ref=f1e2773]: "On top-up credits:"
+                  - text: Extra credits you buy from
+                  - link "Studio > Billing" [ref=f1e2774] [cursor=pointer]:
+                    - /url: https://commandcode.ai/billing
+                  - text: get the same discount when spent on the discounted model.
+                - listitem [ref=f1e2775]:
+                  - strong [ref=f1e2776]: "Real-time billing:"
+                  - text: The
+                  - link "Usage" [ref=f1e2777] [cursor=pointer]:
+                    - /url: https://commandcode.ai/usage
+                  - text: page reflects the discounted price per request as it happens.
+                - listitem [ref=f1e2778]:
+                  - strong [ref=f1e2779]: "Auto-expires:"
+                  - text: When a deal ends, the model returns to its full list price across the docs, the calculator, and Studio. Nothing for you to do.
+        - navigation [ref=f1e2780]:
+          - generic [ref=f1e2781]:
+            - img "Table of Contents" [ref=f1e2782]
+            - text: On This Page
+          - list [ref=f1e2784]:
+            - listitem [ref=f1e2785]:
+              - link "How it works." [ref=f1e2786] [cursor=pointer]:
+                - /url: "#how-it-works"
+            - listitem [ref=f1e2787]:
+              - link "Your plan, in one place." [ref=f1e2788] [cursor=pointer]:
+                - /url: "#your-plan-in-one-place"
+            - listitem [ref=f1e2789]:
+              - link "Command Code Enterprise. Built for organizations." [ref=f1e2790] [cursor=pointer]:
+                - /url: "#command-code-enterprise-built-for-organizations"
+            - listitem [ref=f1e2791]:
+              - link "Individual Plans" [ref=f1e2792] [cursor=pointer]:
+                - /url: "#individual-plans"
+            - listitem [ref=f1e2793]:
+              - link "Team Plans" [ref=f1e2794] [cursor=pointer]:
+                - /url: "#team-plans"
+            - listitem [ref=f1e2795]:
+              - link "Usage limits" [ref=f1e2796] [cursor=pointer]:
+                - /url: "#usage-limits"
+            - listitem [ref=f1e2797]:
+              - link "Usage estimates" [ref=f1e2798] [cursor=pointer]:
+                - /url: "#usage-estimates"
+            - listitem [ref=f1e2799]:
+              - link "Models." [ref=f1e2800] [cursor=pointer]:
+                - /url: "#models"
+            - listitem [ref=f1e2801]:
+              - link "Model pricing. At cost." [ref=f1e2802] [cursor=pointer]:
+                - /url: "#model-pricing-at-cost"
+            - listitem [ref=f1e2803]:
+              - link "Context windows. Managed for you." [ref=f1e2804] [cursor=pointer]:
+                - /url: "#context-windows-managed-for-you"
+            - listitem [ref=f1e2805]:
+              - link "FAQs" [ref=f1e2806] [cursor=pointer]:
+                - /url: "#faqs"
+            - listitem [ref=f1e2807]:
+              - link "Deals." [ref=f1e2808] [cursor=pointer]:
+                - /url: "#deals"
+      - generic [ref=f1e2809]:
+        - generic [ref=f1e2811]:
+          - 'link "NEXT: Usage Limits" [ref=f1e2813] [cursor=pointer]':
+            - /url: /docs/resources/usage-limits
+            - text: Usage Limits
+            - generic [ref=f1e2814]: // NEXT
+          - 'link "PREV: Common Workflows" [ref=f1e2818] [cursor=pointer]':
+            - /url: /docs/workflows
+            - generic [ref=f1e2821]: // PREV
+            - text: Common Workflows
+        - generic [ref=f1e2823]:
+          - generic [ref=f1e2824]:
+            - heading "Join our Discord" [level=3] [ref=f1e2827]
+            - paragraph [ref=f1e2828]: Chat with us and become part of the Command Code community.
+            - link "Join Discord" [ref=f1e2829] [cursor=pointer]:
+              - /url: https://commandcode.ai/discord
+          - generic [ref=f1e2832]:
+            - heading "Need help?" [level=3] [ref=f1e2840]
+            - paragraph [ref=f1e2841]:
+              - text: Open an
+              - link "issue on GitHub" [ref=f1e2842] [cursor=pointer]:
+                - /url: https://github.com/CommandCodeAI/command-code/issues
+              - text: ", ask on"
+              - link "Discord" [ref=f1e2843] [cursor=pointer]:
+                - /url: https://commandcode.ai/discord
+              - text: ", or reach out on"
+              - link "𝕏" [ref=f1e2844] [cursor=pointer]:
+                - /url: https://x.com/MrAhmadAwais
+              - text: .
+            - link "Get help" [ref=f1e2845] [cursor=pointer]:
+              - /url: https://commandcode.ai/contact
+        - generic [ref=f1e2848]:
+          - generic [ref=f1e2849]: "2261 Market St #5698, San Francisco, CA 94114."
+          - generic [ref=f1e2851]:
+            - link "Follow us on X" [ref=f1e2852] [cursor=pointer]:
+              - /url: https://x.com/CommandCodeAI
+            - link "Follow on LinkedIn" [ref=f1e2856] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/commandcodeai/
+            - link "Join our Discord server" [ref=f1e2860] [cursor=pointer]:
+              - /url: https://commandcode.ai/discord
+            - link "Follow us on GitHub" [ref=f1e2864] [cursor=pointer]:
+              - /url: https://github.com/CommandCodeAI/command-code

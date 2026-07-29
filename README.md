@@ -9,6 +9,7 @@ When you fire up Claude Code, it has no memory of yesterday's work. If you start
 
 - **Persistent memory** — everything the agent learns is saved and ranked by relevance; future sessions find it instantly
 - **Consultation engine** — ask a question with full project context (code + memory + docs + web) and get a grounded answer with citations
+- **Multiple execution backends** — Codex CLI and API-backed models, plus an opt-in experimental ChatGPT Browser Mode using an isolated Chrome profile
 - **Autonomous action** — an agent sandbox that can read/write files and run commands, confined to your workspace, fully audited
 - **Inter-agent coordination** — agent sessions on one or many machines can message each other, hand off work, and wake each other through a project-scoped Remote Swarm
 - **Task planning & verification** — a lead breaks work into assigned tasks with checklists; agents can't report "done" until their declared verification steps are actually checked off, and the lead is auto-notified when work is ready to review
@@ -92,6 +93,31 @@ cd Oracle
 npm install && npm run build
 node dist/cli.js doctor
 ```
+
+Experimental Browser Mode can use a manually logged-in ChatGPT session without
+an API key:
+
+```bash
+oracle browser setup         # initial setup
+oracle browser login         # manual OAuth recovery window if sign-in is blocked
+oracle browser status --live # verify live account session cookies & DOM controls
+oracle ask "review this" -f "src/**/*.ts" --backend chatgpt-browser
+oracle ask "follow up" --conversation architecture-1 --backend chatgpt-browser
+oracle ask "review this" --remember "I prefer concise reviews" --backend chatgpt-browser
+oracle ask "describe this" -f "docs/assets/arch_flow.png" --backend chatgpt-browser
+```
+
+Includes self-healing page reloads (`Page.reload`) on UI stalls, transient CDP execution-context retries, strict no-partial-response safeguards, and multi-turn native thread continuation.
+The explicit `--remember` option writes a high-level fact or preference to the
+signed-in ChatGPT account's Saved Memory; it is account-global and should never
+contain secrets, code, or large templates.
+PNG/JPEG/WebP files selected with `-f` are uploaded to ChatGPT. Assistant images
+are validated, stored inside the Oracle session, returned as MCP image content,
+and exposed as path/MIME/size metadata through MCP and Runtime results.
+
+It must first be enabled in `.oracle/config.json`; see
+[ChatGPT Browser Mode](docs/browser-mode.md) for configuration, limitations,
+and account-policy considerations.
 
 Start the local control plane:
 

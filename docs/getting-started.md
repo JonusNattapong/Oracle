@@ -29,7 +29,7 @@ npm install
 npm run build
 ```
 
-## Configure a provider
+## Configure an execution backend
 
 ```bash
 # Codex CLI (default)
@@ -41,6 +41,20 @@ export ANTHROPIC_API_KEY=sk-ant-...
 # OR OpenAI
 export OPENAI_API_KEY=sk-...
 ```
+
+The legacy name `provider` still works, but new configuration and commands use
+`backend`.
+
+### Optional: ChatGPT Browser Mode
+
+```bash
+oracle browser setup
+# Log into ChatGPT in the visible Chrome window.
+```
+
+Then enable `experimental.browserMode` and select `chatgpt-browser` in
+`.oracle/config.json`. See [browser-mode.md](browser-mode.md) for the complete
+configuration and limitations.
 
 ## Verify
 

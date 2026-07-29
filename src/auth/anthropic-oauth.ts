@@ -101,6 +101,11 @@ export class AnthropicOAuthClient {
     return (entry?.planTier as PlanTier | undefined) ?? decodePlanTier(token);
   }
 
+  /** Read the stored session entry without refreshing. */
+  async readSessionEntry() {
+    return this.store.read("anthropic");
+  }
+
   async startDeviceFlow(): Promise<DeviceFlowSession> {
     const res = await post("/oauth/device/code", {
       client_id: this.clientId,

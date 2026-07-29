@@ -3,6 +3,7 @@ import http, {
   type Server,
   type ServerResponse
 } from "node:http";
+import path from "node:path";
 import { WebSocket, WebSocketServer } from "ws";
 import { renderControlCenterDashboard } from "../control/dashboard.js";
 import type { ControlCenterService } from "../control/service.js";
@@ -21,12 +22,26 @@ import {
   RemoteSwarmService,
   type SwarmIdentity
 } from "./swarmService.js";
+import { loadProjectConfig } from "../config/project.js";
+import {
+  createExecutionBackend,
+  parseBackendName,
+  type BackendName,
+  type CreateExecutionBackendOptions
+} from "../providers/factory.js";
+import type { ExecutionBackend } from "../backends/backend.js";
 
 export interface LocalApiServerOptions {
   host: string;
   port: number;
   token: string;
   version: string;
+  homeDir: string;
+  workspaceRoot: string;
+  backendFactory?: (
+    name: BackendName,
+    options?: CreateExecutionBackendOptions
+  ) => ExecutionBackend;
   scheduler: SchedulerService;
   control: ControlCenterService;
   events: RuntimeEventBus;
@@ -196,6 +211,79 @@ export class LocalApiServer {
         const after = this.integer(url.searchParams.get("after"), 0);
         const limit = this.integer(url.searchParams.get("limit"), 100);
         this.json(response, 200, { events: this.options.events.history(after, limit) });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/consult") {
+        const body = await this.body(request);
+        const question = this.requiredString(body.question ?? body.prompt, "question");
+        const config = await loadProjectConfig(this.options.workspaceRoot);
+        const rawBackend = this.optionalString(body.backend ?? body.provider, "backend")
+          ?? config.backend
+          ?? config.provider
+          ?? "codex";
+        const backendName = parseBackendName(rawBackend);
+        const files = this.optionalStringArray(body.files, "files");
+        const model = this.optionalString(body.model, "model") ?? config.model;
+        const systemPrompt = this.optionalString(body.systemPrompt, "systemPrompt");
+        const conversationId = this.optionalString(body.conversationId, "conversationId");
+        const previousResponseId = this.optionalString(body.previousResponseId, "previousResponseId");
+        const accountMemory = this.optionalString(body.accountMemory, "accountMemory");
+        const cwd = this.resolveWorkspacePath(
+          this.optionalString(body.cwd, "cwd") ?? this.options.workspaceRoot
+        );
+
+        const { ConsultService } = await import("../core/consult.js");
+        const { FileSessionStore } = await import("../session/store.js");
+        const configuredProfile = config.browser?.profileDir;
+        const backendOptions: CreateExecutionBackendOptions = {
+          homeDir: this.options.homeDir,
+          experimentalBrowserMode: config.experimental?.browserMode,
+          browser: {
+            ...config.browser,
+            profileDir: configuredProfile
+              ? path.resolve(this.options.homeDir, configuredProfile)
+              : path.join(this.options.homeDir, "chrome-profile")
+          }
+        };
+        const backend = (this.options.backendFactory ?? createExecutionBackend)(
+          backendName,
+          backendOptions
+        );
+        const sessions = new FileSessionStore(this.options.homeDir);
+        const service = new ConsultService(backend, sessions);
+
+        const result = await service.consult({
+          prompt: question,
+          files,
+          model,
+          provider: backendName,
+          conversationId,
+          previousResponseId,
+          accountMemory,
+          cwd,
+          systemPrompt,
+          maxFileSizeBytes: config.maxFileSizeBytes,
+          maxInputBytes: config.maxInputBytes,
+          allowEmptyFiles: !files?.length
+        });
+
+        this.json(response, 200, result);
+        return;
+      }
+
+      const consultSessionMatch = url.pathname.match(
+        /^\/v1\/consult\/([a-z0-9-]+)$/i
+      );
+      if (request.method === "GET" && consultSessionMatch) {
+        const { FileSessionStore } = await import("../session/store.js");
+        const store = new FileSessionStore(this.options.homeDir);
+        const session = await store.read(consultSessionMatch[1]);
+        if (!session) {
+          this.json(response, 404, { error: "Consult session not found" });
+          return;
+        }
+        this.json(response, 200, session);
         return;
       }
 
@@ -713,6 +801,16 @@ export class LocalApiServer {
       throw new Error(`${field} must be a positive integer.`);
     }
     return Number(value);
+  }
+
+  private resolveWorkspacePath(value: string): string {
+    const root = path.resolve(this.options.workspaceRoot);
+    const resolved = path.resolve(root, value);
+    const relative = path.relative(root, resolved);
+    if (relative.startsWith("..") || path.isAbsolute(relative)) {
+      throw new Error("cwd must stay within the daemon workspace root.");
+    }
+    return resolved;
   }
 
   private optionalPositiveInteger(value: unknown, field: string): number | undefined {
