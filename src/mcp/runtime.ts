@@ -8,6 +8,7 @@ import {
   createAgentBackend,
   parseBackendName
 } from "../providers/factory.js";
+import { resolveProviderRoute } from "../providers/router.js";
 import { AgentService } from "../agent/service.js";
 import { SkillRegistry } from "../skills/registry.js";
 import { OracleRegistry } from "../oracles/registry.js";
@@ -29,6 +30,20 @@ export async function createOracleMcpServer(
 ): Promise<McpServer> {
   const workspaceRoot = path.resolve(workspace);
   const config = await loadProjectConfig(workspaceRoot);
+  const requestedModel =
+    config.provider === "browser" ? config.browser.model : config.model;
+  const route = resolveProviderRoute({
+    model: requestedModel,
+    selection: config.provider,
+    selectionSource: "project-config",
+    config,
+  });
+  const resolvedConfig = {
+    ...config,
+    backend: route.provider,
+    provider: route.provider,
+    model: route.model,
+  };
   const homeDir = process.env.ORACLE_HOME_DIR ?? path.join(os.homedir(), ".oracle");
   const skills = new SkillRegistry(homeDir, path.join(workspaceRoot, ".oracle", "skills"));
   await skills.load();
@@ -79,22 +94,29 @@ export async function createOracleMcpServer(
     console.error("[oracle-mcp] background memory maintenance started (1h interval, graph prune 2h, reflection 4h)");
   }
 
-  const backendName = config.backend ?? config.provider ?? "codex";
-  const configuredProfile = config.browser?.profileDir;
+  const configuredProfile = config.browser.profileDir;
   const backendOptions = {
     homeDir,
     experimentalBrowserMode: config.experimental?.browserMode,
     browser: {
       ...config.browser,
+      browserTimeout: config.browser.timeout,
+      browserInputTimeout: config.browser.inputTimeout,
+      maxConcurrentTabs: String(config.browser.maxConcurrentTabs),
       profileDir: configuredProfile
         ? path.resolve(homeDir, configuredProfile)
-        : path.join(homeDir, "chrome-profile")
-    }
+        : path.join(homeDir, "chrome-profile"),
+      remoteHost: process.env.ORACLE_REMOTE_HOST ?? config.browser.remoteHost,
+      remoteToken: process.env.ORACLE_REMOTE_TOKEN
+    },
+    azure: config.azure,
+    openrouter: config.openrouter
   };
+
   let agent: AgentService | undefined;
   let agentUnavailableReason: string | undefined;
   try {
-    agent = new AgentService(createAgentBackend(backendName));
+    agent = new AgentService(createAgentBackend(route.provider));
   } catch (error) {
     agentUnavailableReason = error instanceof Error ? error.message : String(error);
   }
@@ -106,15 +128,15 @@ export async function createOracleMcpServer(
   registerOracleTools({
     server,
     service: new ConsultService(
-      createExecutionBackend(backendName, backendOptions),
+      createExecutionBackend(route.provider, backendOptions),
       undefined,
       undefined,
       undefined,
       (requested) => createExecutionBackend(parseBackendName(requested), backendOptions)
     ),
-    config,
+    config: resolvedConfig,
     workspaceRoot,
-    providerId: backendName,
+    providerId: route.provider,
     skills,
     oracles,
     memory,

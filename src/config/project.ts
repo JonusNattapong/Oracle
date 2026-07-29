@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { OracleError } from "../errors.js";
-import type { BackendName, ProviderName } from "../providers/factory.js";
+import type { BackendName, ProviderName, ProviderSelection } from "../providers/factory.js";
 
 export interface McpServerConfig {
   name: string;
@@ -17,8 +17,7 @@ export interface McpServerConfig {
 
 export interface ProjectConfig {
   backend: BackendName;
-  /** @deprecated Use `backend` instead. */
-  provider?: BackendName;
+  provider: ProviderSelection;
   model: string;
   include: string[];
   exclude: string[];
@@ -28,18 +27,162 @@ export interface ProjectConfig {
   experimental?: {
     browserMode?: boolean;
   };
-  browser?: {
+  browser: {
     profileDir?: string;
     timeoutMs?: number;
+    model: string;
+    manualLogin: boolean;
+    attachRunning: boolean;
+    remoteChrome?: string;
+    remoteHost?: string;
+    chatgptUrl?: string;
+    modelStrategy: "select" | "current" | "ignore";
+    tab?: string;
+    thinkingTime?: "light" | "standard" | "extended" | "heavy";
+    research?: "deep";
+    followUps: string[];
+    archive: "auto" | "always" | "never";
+    attachments: "auto" | "never" | "always";
+    bundleFiles: boolean;
+    bundleFormat: "auto" | "text" | "zip";
+    port?: string;
+    timeout: string;
+    inputTimeout: string;
+    attachmentTimeout: string;
+    recheckDelay?: string;
+    recheckTimeout?: string;
+    heartbeat?: string;
+    reuseWait?: string;
+    profileLockTimeout?: string;
+    maxConcurrentTabs: number;
+    hideWindow: boolean;
+    autoReattachDelay: string;
+    autoReattachInterval: string;
+    autoReattachTimeout: string;
+  };
+  worker: {
+    pollInterval: string;
+    heartbeat: string;
+    staleAfter: string;
+    retryDelay: string;
+    maxAttempts: number;
+  };
+  azure: {
+    endpoint?: string;
+    deployment?: string;
+    apiVersion?: string;
+  };
+  openrouter: {
+    baseURL: string;
+    siteUrl?: string;
+    appName?: string;
+  };
+  routing: {
+    defaultProvider: ProviderName;
+    preferAzure: boolean;
+  };
+  serve: {
+    host: string;
+    port: number;
+    manualLogin: boolean;
+    profileDir?: string;
   };
 }
 
-const backendEnum = z.enum(["codex", "openai", "anthropic", "opencode", "gemini", "chatgpt-browser"]);
+const browserSchema = z
+  .object({
+    profileDir: z.string().trim().min(1).optional(),
+    timeoutMs: z.number().int().min(1_000).max(900_000).optional(),
+    model: z.string().trim().min(1).optional(),
+    manualLogin: z.boolean().optional(),
+    attachRunning: z.boolean().optional(),
+    remoteChrome: z.string().trim().min(1).optional(),
+    remoteHost: z.string().trim().min(1).optional(),
+    chatgptUrl: z.string().url().optional(),
+    modelStrategy: z.enum(["select", "current", "ignore"]).optional(),
+    tab: z.string().trim().min(1).optional(),
+    thinkingTime: z.enum(["light", "standard", "extended", "heavy"]).optional(),
+    research: z.literal("deep").optional(),
+    followUps: z.array(z.string().trim().min(1)).optional(),
+    archive: z.enum(["auto", "always", "never"]).optional(),
+    attachments: z.enum(["auto", "never", "always"]).optional(),
+    bundleFiles: z.boolean().optional(),
+    bundleFormat: z.enum(["auto", "text", "zip"]).optional(),
+    port: z.string().trim().min(1).optional(),
+    timeout: z.string().trim().min(1).optional(),
+    inputTimeout: z.string().trim().min(1).optional(),
+    attachmentTimeout: z.string().trim().min(1).optional(),
+    recheckDelay: z.string().trim().min(1).optional(),
+    recheckTimeout: z.string().trim().min(1).optional(),
+    heartbeat: z.string().trim().min(1).optional(),
+    reuseWait: z.string().trim().min(1).optional(),
+    profileLockTimeout: z.string().trim().min(1).optional(),
+    maxConcurrentTabs: z.number().int().positive().optional(),
+    hideWindow: z.boolean().optional(),
+    autoReattachDelay: z.string().trim().min(1).optional(),
+    autoReattachInterval: z.string().trim().min(1).optional(),
+    autoReattachTimeout: z.string().trim().min(1).optional(),
+  })
+  .strict();
+
+const workerSchema = z
+  .object({
+    pollInterval: z.string().trim().min(1).optional(),
+    heartbeat: z.string().trim().min(1).optional(),
+    staleAfter: z.string().trim().min(1).optional(),
+    retryDelay: z.string().trim().min(1).optional(),
+    maxAttempts: z.number().int().positive().optional(),
+  })
+  .strict();
+
+const azureSchema = z
+  .object({
+    endpoint: z.string().url().optional(),
+    deployment: z.string().trim().min(1).optional(),
+    apiVersion: z.string().trim().min(1).optional(),
+  })
+  .strict();
+
+const openrouterSchema = z
+  .object({
+    baseURL: z.string().url().optional(),
+    siteUrl: z.string().url().optional(),
+    appName: z.string().trim().min(1).optional(),
+  })
+  .strict();
+
+const providerValues = [
+  "codex",
+  "openai",
+  "anthropic",
+  "opencode",
+  "gemini",
+  "browser",
+  "chatgpt-browser",
+  "azure",
+  "openrouter",
+] as const;
+
+const routingSchema = z
+  .object({
+    defaultProvider: z.enum(providerValues).optional(),
+    preferAzure: z.boolean().optional(),
+  })
+  .strict();
+
+const serveSchema = z
+  .object({
+    host: z.string().trim().min(1).optional(),
+    port: z.number().int().min(1).max(65_535).optional(),
+    manualLogin: z.boolean().optional(),
+    profileDir: z.string().trim().min(1).optional(),
+  })
+  .strict();
 
 const schema = z
   .object({
-    backend: backendEnum.optional(),
-    provider: backendEnum.optional(),
+    backend: z.enum(providerValues).optional(),
+    provider: z.enum([...providerValues, "auto"]).optional(),
     model: z.string().trim().min(1).optional(),
     include: z.array(z.string().trim().min(1)).min(1).optional(),
     exclude: z.array(z.string().trim().min(1)).optional(),
@@ -57,18 +200,15 @@ const schema = z
       )
       .optional(),
     experimental: z
-      .object({
-        browserMode: z.boolean().optional()
-      })
+      .object({ browserMode: z.boolean().optional() })
       .strict()
       .optional(),
-    browser: z
-      .object({
-        profileDir: z.string().trim().min(1).optional(),
-        timeoutMs: z.number().int().min(1_000).max(900_000).optional()
-      })
-      .strict()
-      .optional()
+    browser: browserSchema.optional(),
+    worker: workerSchema.optional(),
+    azure: azureSchema.optional(),
+    openrouter: openrouterSchema.optional(),
+    routing: routingSchema.optional(),
+    serve: serveSchema.optional(),
   })
   .strict();
 
@@ -85,7 +225,46 @@ export const DEFAULT_PROJECT_CONFIG: Readonly<ProjectConfig> = Object.freeze({
   ]) as unknown as string[],
   maxFileSizeBytes: 1_000_000,
   maxInputBytes: 5_000_000,
-  experimental: Object.freeze({ browserMode: false })
+  experimental: Object.freeze({ browserMode: false }),
+  browser: Object.freeze({
+    model: "gpt-5.6-sol",
+    manualLogin: false,
+    attachRunning: false,
+    modelStrategy: "select",
+    followUps: Object.freeze([]) as unknown as string[],
+    archive: "auto",
+    attachments: "auto",
+    bundleFiles: false,
+    bundleFormat: "auto",
+    timeout: "30m",
+    inputTimeout: "2m",
+    attachmentTimeout: "45s",
+    maxConcurrentTabs: 3,
+    hideWindow: false,
+    autoReattachDelay: "30s",
+    autoReattachInterval: "2m",
+    autoReattachTimeout: "2m",
+  }),
+  worker: Object.freeze({
+    pollInterval: "5s",
+    heartbeat: "15s",
+    staleAfter: "5m",
+    retryDelay: "30s",
+    maxAttempts: 3,
+  }),
+  azure: Object.freeze({}),
+  openrouter: Object.freeze({
+    baseURL: "https://openrouter.ai/api/v1",
+  }),
+  routing: Object.freeze({
+    defaultProvider: "codex",
+    preferAzure: false,
+  }),
+  serve: Object.freeze({
+    host: "127.0.0.1",
+    port: 9473,
+    manualLogin: true,
+  }),
 });
 
 function copyDefaults(): ProjectConfig {
@@ -94,9 +273,15 @@ function copyDefaults(): ProjectConfig {
     include: [...DEFAULT_PROJECT_CONFIG.include],
     exclude: [...DEFAULT_PROJECT_CONFIG.exclude],
     experimental: { ...DEFAULT_PROJECT_CONFIG.experimental },
-    browser: DEFAULT_PROJECT_CONFIG.browser
-      ? { ...DEFAULT_PROJECT_CONFIG.browser }
-      : undefined
+    browser: {
+      ...DEFAULT_PROJECT_CONFIG.browser,
+      followUps: [...DEFAULT_PROJECT_CONFIG.browser.followUps],
+    },
+    worker: { ...DEFAULT_PROJECT_CONFIG.worker },
+    azure: { ...DEFAULT_PROJECT_CONFIG.azure },
+    openrouter: { ...DEFAULT_PROJECT_CONFIG.openrouter },
+    routing: { ...DEFAULT_PROJECT_CONFIG.routing },
+    serve: { ...DEFAULT_PROJECT_CONFIG.serve },
   };
 }
 
@@ -105,15 +290,28 @@ export async function loadProjectConfig(root: string): Promise<ProjectConfig> {
   try {
     const raw = JSON.parse(await fs.readFile(configPath, "utf8")) as unknown;
     const parsed = schema.parse(raw);
-    const backend = parsed.backend ?? parsed.provider ?? DEFAULT_PROJECT_CONFIG.backend;
-    if (!parsed.backend && parsed.provider) {
+    const defaults = copyDefaults();
+    const backend = parsed.backend
+      ?? (parsed.provider !== "auto" ? parsed.provider : undefined)
+      ?? defaults.backend;
+    if (!parsed.backend && parsed.provider && parsed.provider !== "auto") {
       console.warn("Warning: 'provider' in .oracle/config.json is deprecated. Please rename to 'backend'.");
     }
     return {
-      ...copyDefaults(),
+      ...defaults,
       ...parsed,
       backend,
-      provider: backend
+      provider: parsed.provider ?? backend,
+      browser: {
+        ...defaults.browser,
+        ...parsed.browser,
+        followUps: parsed.browser?.followUps ?? defaults.browser.followUps,
+      },
+      worker: { ...defaults.worker, ...parsed.worker },
+      azure: { ...defaults.azure, ...parsed.azure },
+      openrouter: { ...defaults.openrouter, ...parsed.openrouter },
+      routing: { ...defaults.routing, ...parsed.routing },
+      serve: { ...defaults.serve, ...parsed.serve },
     };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return copyDefaults();

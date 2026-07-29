@@ -16,7 +16,7 @@ interface CommandResult {
 export type CommandRunner = (
   command: string,
   args: string[],
-  options: { input?: string; cwd?: string }
+  options: { input?: string; cwd?: string; env?: NodeJS.ProcessEnv }
 ) => Promise<CommandResult>;
 
 interface CommandEnvironment {
@@ -59,6 +59,7 @@ export const runCommand: CommandRunner = (command, args, options) =>
     });
     const child = spawn(invocation.command, invocation.args, {
       cwd: options.cwd,
+      env: options.env ? { ...process.env, ...options.env } : process.env,
       shell: false,
       stdio: ["pipe", "pipe", "pipe"]
     });
