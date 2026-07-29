@@ -69,6 +69,14 @@ export function resolveBrowserRuntimeInvocation(
 
 export class BrowserProvider implements Provider {
   readonly id = "browser";
+  readonly capabilities = {
+    consult: true,
+    toolUse: false,
+    images: false,
+    continuation: true,
+    structuredUsage: false,
+    supportedPlatforms: ["darwin", "linux", "win32"] as const
+  };
   private readonly options: BrowserProviderOptions;
   private readonly runner: CommandRunner;
 
@@ -170,5 +178,16 @@ export class BrowserProvider implements Provider {
     } finally {
       await fs.rm(temporaryDirectory, { recursive: true, force: true });
     }
+  }
+
+  async healthCheck() {
+    const endpoint =
+      this.options.remoteHost ??
+      process.env.ORACLE_REMOTE_HOST ??
+      this.options.remoteChrome;
+    return [
+      { name: "browser runtime", ok: true, detail: `${BROWSER_RUNTIME_PACKAGE} (resolved through npx on first use)` },
+      { name: "browser route", ok: true, detail: endpoint ? `configured endpoint ${endpoint}` : "local Chrome/Chromium" }
+    ];
   }
 }

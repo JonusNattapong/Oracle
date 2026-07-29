@@ -1,0 +1,1034 @@
+- generic [ref=f12e3]:
+  - generic [ref=f12e6]:
+    - generic [ref=f12e7]: "New: give your AI agents live LLM pricing & benchmarks with the Price Per Token MCP."
+    - link "Get the MCP" [ref=f12e8] [cursor=pointer]:
+      - /url: /mcp
+  - banner [ref=f12e10]:
+    - generic [ref=f12e12]:
+      - link "Price Per Token Price Per Token" [ref=f12e13] [cursor=pointer]:
+        - /url: /
+        - img "Price Per Token" [ref=f12e14]
+        - generic [ref=f12e15]: Price Per Token
+      - navigation [ref=f12e16]:
+        - button [ref=f12e18] [cursor=pointer]:
+          - button "Pricing" [ref=f12e19]
+        - button [ref=f12e22] [cursor=pointer]:
+          - button "Rankings" [ref=f12e23]
+        - button [ref=f12e26] [cursor=pointer]:
+          - button "Tools" [ref=f12e27]
+        - button [ref=f12e30] [cursor=pointer]:
+          - button "Explore" [ref=f12e31]
+        - link "Benchmarks" [ref=f12e33] [cursor=pointer]:
+          - /url: /leaderboards/benchmark
+        - link "Discussion" [ref=f12e34] [cursor=pointer]:
+          - /url: /discussion
+        - link "Newsletter" [ref=f12e35] [cursor=pointer]:
+          - /url: https://newsletter.pricepertoken.com
+        - link "Advertise" [ref=f12e36] [cursor=pointer]:
+          - /url: /sponsor
+      - generic [ref=f12e37]:
+        - generic [ref=f12e38]: "|"
+        - generic [ref=f12e39]: "Follow:"
+        - link "Follow us on X" [ref=f12e40] [cursor=pointer]:
+          - /url: https://x.com/pricepertoken
+        - link "Follow us on Bluesky" [ref=f12e43] [cursor=pointer]:
+          - /url: https://bsky.app/profile/pricepertoken.bsky.social
+        - link "Follow us on Threads" [ref=f12e46] [cursor=pointer]:
+          - /url: https://www.threads.com/@pricepertoken
+  - generic:
+    - alert: Claude Sonnet 4 API Pricing 2026 - Costs, Performance & Providers
+  - generic [ref=f12e50]:
+    - main [ref=f12e51]:
+      - generic [ref=f12e52]:
+        - link [ref=f12e55] [cursor=pointer]:
+          - /url: /pricing-page/provider/anthropic
+          - img "Anthropic" [ref=f12e56]
+        - heading "Claude Sonnet 4 API Pricing 2026" [level=1] [ref=f12e57]
+        - paragraph [ref=f12e58]: Compare pricing, benchmarks, and providers for Claude Sonnet 4. Find the best value for your use case.
+      - link "The Grid | Spot Priced LLM API The Grid | Spot Priced LLM API Sponsored Change 3 lines of code and let providers compete for your requests in real time. Get started for free" [ref=f12e60] [cursor=pointer]:
+        - /url: https://app.thegrid.ai/consumption?promo_code=PPT132&utm_source=pricepertoken&utm_medium=sponsor&utm_campaign=ppt1&utm_content=hero
+        - generic [ref=f12e61]:
+          - img "The Grid | Spot Priced LLM API" [ref=f12e62]
+          - generic [ref=f12e63]:
+            - generic [ref=f12e64]:
+              - generic [ref=f12e65]: The Grid | Spot Priced LLM API
+              - generic [ref=f12e66]: Sponsored
+            - paragraph [ref=f12e67]: Change 3 lines of code and let providers compete for your requests in real time.
+          - generic [ref=f12e68]: Get started for free
+      - generic [ref=f12e73]:
+        - generic [ref=f12e74]: 8 Ways to Use Fewer Tokens
+        - generic [ref=f12e78]:
+          - textbox "enter@your.email" [ref=f12e80]
+          - button "Download Now" [disabled] [ref=f12e81]
+      - generic [ref=f12e82]: "Last updated: July 21, 2026 at 03:27 PM"
+      - navigation [ref=f12e84]:
+        - generic [ref=f12e86]:
+          - button "Overview" [ref=f12e87] [cursor=pointer]
+          - button "Pricing" [ref=f12e88] [cursor=pointer]
+          - button "Providers" [ref=f12e89] [cursor=pointer]
+          - button "Community Rankings" [ref=f12e90] [cursor=pointer]
+          - button "Benchmarks" [ref=f12e91] [cursor=pointer]
+          - button "Try It" [ref=f12e92] [cursor=pointer]
+          - button "Compare" [ref=f12e93] [cursor=pointer]
+      - generic [ref=f12e94]:
+        - heading "Overview" [level=2] [ref=f12e95]
+        - generic [ref=f12e96]:
+          - paragraph [ref=f12e97]:
+            - text: Claude Sonnet 4 was released on
+            - strong [ref=f12e98]: May 22, 2025
+            - text: . Pricing starts at
+            - strong [ref=f12e99]: $3.00 per million input tokens
+            - text: and
+            - strong [ref=f12e100]: $15.00 per million output tokens
+            - text: . The model supports a context window of up to
+            - strong [ref=f12e101]: 200K tokens
+            - text: . API access is available through Anthropic.
+          - generic [ref=f12e102]:
+            - generic [ref=f12e103]:
+              - generic [ref=f12e104]: Context Window
+              - generic [ref=f12e105]: 200K
+              - generic [ref=f12e106]: tokens
+            - generic [ref=f12e107]:
+              - generic [ref=f12e108]: Pricing
+              - generic [ref=f12e109]:
+                - generic [ref=f12e110]:
+                  - generic [ref=f12e111]: Input
+                  - generic [ref=f12e112]: $3.00
+                - generic [ref=f12e113]:
+                  - generic [ref=f12e114]: Output
+                  - generic [ref=f12e115]: $15.00
+                - generic [ref=f12e116]:
+                  - generic [ref=f12e117]: Cached
+                  - generic [ref=f12e118]: $0.300
+              - generic [ref=f12e119]: per 1M tokens
+            - generic [ref=f12e120]:
+              - generic [ref=f12e121]: Speed
+              - generic [ref=f12e122]:
+                - generic [ref=f12e123]:
+                  - generic [ref=f12e124]: Output
+                  - generic [ref=f12e125]: "-"
+                - generic [ref=f12e126]:
+                  - generic [ref=f12e127]: TTFT
+                  - generic [ref=f12e128]: "-"
+              - generic [ref=f12e129]: median latency
+            - generic [ref=f12e130]:
+              - generic [ref=f12e131]: Capabilities
+              - generic [ref=f12e132]:
+                - generic [ref=f12e133]: Vision
+                - generic [ref=f12e134]: Reasoning
+                - generic [ref=f12e135]: Tools
+                - generic [ref=f12e136]: Caching
+        - paragraph [ref=f12e137]: Claude Sonnet 4 is priced at $3.00 per million input tokens and $15.00 per million output tokens. It has a context window of 200,000 tokens. It is available from 3 providers, with Amazon Bedrock the cheapest at $3.00 per million input tokens. On benchmarks, Claude Sonnet 4 scores Intelligence 25.5 (70th percentile), Math 38.0 (40th percentile), MMLU Pro 83.7 (85th percentile), GPQA 68.3 (56th percentile).
+      - generic [ref=f12e138]:
+        - heading "Pricing Comparison" [level=2] [ref=f12e139]
+        - paragraph [ref=f12e140]: Compare Claude Sonnet 4 with 10 similar models by price.
+        - generic [ref=f12e141]:
+          - generic [ref=f12e143]:
+            - generic [ref=f12e144]:
+              - heading "Current Pricing (per 1M tokens)" [level=2] [ref=f12e145]
+              - paragraph [ref=f12e146]: 11 models
+            - button "Columns" [ref=f12e148] [cursor=pointer]
+          - generic [ref=f12e151]:
+            - generic [ref=f12e152]: Sponsored
+            - img "The Grid | Spot Priced LLM API" [ref=f12e153]
+            - generic [ref=f12e154]: The Grid | Spot Priced LLM API — Why pay list price when providers will bid for your API usage? Up to 80% off.
+            - link "View spot prices" [ref=f12e155] [cursor=pointer]:
+              - /url: https://app.thegrid.ai/consumption?promo_code=PPT132&utm_source=pricepertoken&utm_medium=sponsor&utm_campaign=ppt1&utm_content=table
+          - table [ref=f12e157]:
+            - rowgroup [ref=f12e158]:
+              - row [ref=f12e159]:
+                - columnheader [ref=f12e160]
+                - columnheader [ref=f12e165]
+                - columnheader [ref=f12e170]
+                - columnheader [ref=f12e175]
+                - columnheader [ref=f12e180]
+                - columnheader [ref=f12e185]
+                - columnheader [ref=f12e190]
+                - columnheader [ref=f12e195]
+                - columnheader [ref=f12e200]
+            - rowgroup [ref=f12e205]:
+              - row [ref=f12e206] [cursor=pointer]:
+                - cell [ref=f12e207]:
+                  - generic [ref=f12e209]:
+                    - img "Anthropic" [ref=f12e211]
+                    - link "Anthropic" [ref=f12e212]:
+                      - /url: /pricing-page/provider/anthropic
+                - cell [ref=f12e214]:
+                  - link "Claude Sonnet 4" [ref=f12e217]:
+                    - /url: /pricing-page/model/anthropic-claude-sonnet-4
+                - cell "$3.000" [ref=f12e218]
+                - cell "$15.000" [ref=f12e221]
+                - cell "44.9" [ref=f12e224]
+                - cell "83.7" [ref=f12e226]
+                - cell "68.3" [ref=f12e228]
+                - cell "200,000" [ref=f12e230]
+                - cell [ref=f12e232]:
+                  - generic [ref=f12e234]:
+                    - link "Try" [ref=f12e235]:
+                      - /url: /playground?model=anthropic-claude-sonnet-4
+                    - button "Vote" [ref=f12e238]
+              - row [ref=f12e241] [cursor=pointer]:
+                - cell [ref=f12e242]:
+                  - generic [ref=f12e244]:
+                    - img "OpenAI" [ref=f12e246]
+                    - link "OpenAI" [ref=f12e247]:
+                      - /url: /pricing-page/provider/openai
+                - cell [ref=f12e249]:
+                  - link "GPT-4o" [ref=f12e252]:
+                    - /url: /pricing-page/model/openai-gpt-4o
+                - cell "$2.500" [ref=f12e253]
+                - cell "$10.000" [ref=f12e256]
+                - cell "—" [ref=f12e259]
+                - cell "—" [ref=f12e261]
+                - cell "—" [ref=f12e263]
+                - cell "128,000" [ref=f12e265]
+                - cell [ref=f12e267]:
+                  - generic [ref=f12e269]:
+                    - link "Try" [ref=f12e270]:
+                      - /url: /playground?model=openai-gpt-4o
+                    - button "Vote" [ref=f12e273]
+              - row [ref=f12e276] [cursor=pointer]:
+                - cell [ref=f12e277]:
+                  - generic [ref=f12e279]:
+                    - img "Moonshotai" [ref=f12e281]
+                    - link "Moonshotai" [ref=f12e282]:
+                      - /url: /pricing-page/provider/moonshotai
+                - cell [ref=f12e284]:
+                  - link "Kimi K3" [ref=f12e287]:
+                    - /url: /pricing-page/model/moonshotai-kimi-k3
+                - cell "$3.000" [ref=f12e288]
+                - cell "$15.000" [ref=f12e291]
+                - cell "—" [ref=f12e294]
+                - cell "—" [ref=f12e296]
+                - cell "93.5" [ref=f12e298]
+                - cell "1,048,576" [ref=f12e300]
+                - cell [ref=f12e302]:
+                  - generic [ref=f12e304]:
+                    - link "Try" [ref=f12e305]:
+                      - /url: /playground?model=moonshotai-kimi-k3
+                    - button "Vote" [ref=f12e308]
+              - row [ref=f12e311] [cursor=pointer]:
+                - cell [ref=f12e312]:
+                  - generic [ref=f12e314]:
+                    - img "Anthropic" [ref=f12e316]
+                    - link "Anthropic" [ref=f12e317]:
+                      - /url: /pricing-page/provider/anthropic
+                - cell [ref=f12e319]:
+                  - link "Claude 3 Sonnet" [ref=f12e322]:
+                    - /url: /pricing-page/model/anthropic-claude-3-sonnet
+                - cell "$3.000" [ref=f12e323]
+                - cell "$15.000" [ref=f12e326]
+                - cell "17.5" [ref=f12e329]
+                - cell "57.9" [ref=f12e331]
+                - cell "40.0" [ref=f12e333]
+                - cell "-" [ref=f12e335]
+                - cell [ref=f12e337]:
+                  - generic [ref=f12e339]:
+                    - link "Try" [ref=f12e340]:
+                      - /url: /playground?model=anthropic-claude-3-sonnet
+                    - button "Vote" [ref=f12e343]
+              - row [ref=f12e346] [cursor=pointer]:
+                - cell [ref=f12e347]:
+                  - generic [ref=f12e349]:
+                    - img "xAI" [ref=f12e351]
+                    - link "xAI" [ref=f12e352]:
+                      - /url: /pricing-page/provider/xai
+                - cell [ref=f12e354]:
+                  - link "Grok 3 Beta" [ref=f12e357]:
+                    - /url: /pricing-page/model/xai-grok-3-beta
+                - cell "$3.000" [ref=f12e358]
+                - cell "$15.000" [ref=f12e361]
+                - cell "—" [ref=f12e364]
+                - cell "—" [ref=f12e366]
+                - cell "—" [ref=f12e368]
+                - cell "131,072" [ref=f12e370]
+                - cell [ref=f12e372]:
+                  - generic [ref=f12e374]:
+                    - link "Try" [ref=f12e375]:
+                      - /url: /playground?model=xai-grok-3-beta
+                    - button "Vote" [ref=f12e378]
+              - row [ref=f12e381] [cursor=pointer]:
+                - cell [ref=f12e382]:
+                  - generic [ref=f12e384]:
+                    - img "Aion Labs" [ref=f12e386]
+                    - link "Aion Labs" [ref=f12e387]:
+                      - /url: /pricing-page/provider/aion-labs
+                - cell [ref=f12e389]:
+                  - link "Aion 3.0" [ref=f12e392]:
+                    - /url: /pricing-page/model/aion-labs-aion-3.0
+                - cell "$3.000" [ref=f12e393]
+                - cell "$6.000" [ref=f12e396]
+                - cell "—" [ref=f12e399]
+                - cell "—" [ref=f12e401]
+                - cell "—" [ref=f12e403]
+                - cell "131,072" [ref=f12e405]
+                - cell [ref=f12e407]:
+                  - generic [ref=f12e409]:
+                    - link "Try" [ref=f12e410]:
+                      - /url: /playground?model=aion-labs-aion-3.0
+                    - button "Vote" [ref=f12e413]
+              - row [ref=f12e416] [cursor=pointer]:
+                - cell [ref=f12e417]:
+                  - generic [ref=f12e419]:
+                    - img "Anthropic" [ref=f12e421]
+                    - link "Anthropic" [ref=f12e422]:
+                      - /url: /pricing-page/provider/anthropic
+                - cell [ref=f12e424]:
+                  - link "Claude Sonnet 4.6" [ref=f12e427]:
+                    - /url: /pricing-page/model/anthropic-claude-sonnet-4.6
+                - cell "$3.000" [ref=f12e428]
+                - cell "$15.000" [ref=f12e431]
+                - cell "—" [ref=f12e434]
+                - cell "—" [ref=f12e436]
+                - cell "79.7" [ref=f12e438]
+                - cell "1,000,000" [ref=f12e440]
+                - cell [ref=f12e442]:
+                  - generic [ref=f12e444]:
+                    - link "Try" [ref=f12e445]:
+                      - /url: /playground?model=anthropic-claude-sonnet-4.6
+                    - button "Vote" [ref=f12e448]
+              - row [ref=f12e451] [cursor=pointer]:
+                - cell [ref=f12e452]:
+                  - generic [ref=f12e454]:
+                    - img "Perplexity" [ref=f12e456]
+                    - link "Perplexity" [ref=f12e457]:
+                      - /url: /pricing-page/provider/perplexity
+                - cell [ref=f12e459]:
+                  - link "Sonar Pro Search" [ref=f12e462]:
+                    - /url: /pricing-page/model/perplexity-sonar-pro-search
+                - cell "$3.000" [ref=f12e463]
+                - cell "$15.000" [ref=f12e466]
+                - cell "—" [ref=f12e469]
+                - cell "—" [ref=f12e471]
+                - cell "—" [ref=f12e473]
+                - cell "200,000" [ref=f12e475]
+                - cell [ref=f12e477]:
+                  - generic [ref=f12e479]:
+                    - link "Try" [ref=f12e480]:
+                      - /url: /playground?model=perplexity-sonar-pro-search
+                    - button "Vote" [ref=f12e483]
+              - row [ref=f12e486] [cursor=pointer]:
+                - cell [ref=f12e487]:
+                  - generic [ref=f12e489]:
+                    - img "Anthropic" [ref=f12e491]
+                    - link "Anthropic" [ref=f12e492]:
+                      - /url: /pricing-page/provider/anthropic
+                - cell [ref=f12e494]:
+                  - link "Claude Sonnet 4.5" [ref=f12e497]:
+                    - /url: /pricing-page/model/anthropic-claude-sonnet-4.5
+                - cell "$3.000" [ref=f12e498]
+                - cell "$15.000" [ref=f12e501]
+                - cell "59.0" [ref=f12e504]
+                - cell "86.0" [ref=f12e506]
+                - cell "72.7" [ref=f12e508]
+                - cell "1,000,000" [ref=f12e510]
+                - cell [ref=f12e512]:
+                  - generic [ref=f12e514]:
+                    - link "Try" [ref=f12e515]:
+                      - /url: /playground?model=anthropic-claude-sonnet-4.5
+                    - button "Vote" [ref=f12e518]
+              - row [ref=f12e521] [cursor=pointer]:
+                - cell [ref=f12e522]:
+                  - generic [ref=f12e524]:
+                    - img "xAI" [ref=f12e526]
+                    - link "xAI" [ref=f12e527]:
+                      - /url: /pricing-page/provider/xai
+                - cell [ref=f12e529]:
+                  - link "Grok 4" [ref=f12e532]:
+                    - /url: /pricing-page/model/xai-grok-4
+                - cell "$3.000" [ref=f12e533]
+                - cell "$15.000" [ref=f12e536]
+                - cell "81.9" [ref=f12e539]
+                - cell "86.6" [ref=f12e541]
+                - cell "87.7" [ref=f12e543]
+                - cell "256,000" [ref=f12e545]
+                - cell [ref=f12e547]:
+                  - generic [ref=f12e549]:
+                    - link "Try" [ref=f12e550]:
+                      - /url: /playground?model=xai-grok-4
+                    - button "Vote" [ref=f12e553]
+              - row [ref=f12e556] [cursor=pointer]:
+                - cell [ref=f12e557]:
+                  - generic [ref=f12e559]:
+                    - img "xAI" [ref=f12e561]
+                    - link "xAI" [ref=f12e562]:
+                      - /url: /pricing-page/provider/xai
+                - cell [ref=f12e564]:
+                  - link "Grok 3" [ref=f12e567]:
+                    - /url: /pricing-page/model/xai-grok-3
+                - cell "$3.000" [ref=f12e568]
+                - cell "$15.000" [ref=f12e571]
+                - cell "—" [ref=f12e574]
+                - cell "—" [ref=f12e576]
+                - cell "—" [ref=f12e578]
+                - cell "131,072" [ref=f12e580]
+                - cell [ref=f12e582]:
+                  - generic [ref=f12e584]:
+                    - link "Try" [ref=f12e585]:
+                      - /url: /playground?model=xai-grok-3
+                    - button "Vote" [ref=f12e588]
+          - paragraph [ref=f12e592]: "* Some models use tiered pricing based on prompt length. Displayed prices are for prompts ≤ 200k tokens."
+      - generic [ref=f12e593]:
+        - heading "Compare Providers" [level=2] [ref=f12e594]
+        - paragraph [ref=f12e595]: Claude Sonnet 4 is available from multiple providers with different pricing and availability.
+        - generic [ref=f12e597]:
+          - generic [ref=f12e598]:
+            - generic [ref=f12e599]:
+              - generic [ref=f12e600]: "3"
+              - generic [ref=f12e601]: Providers
+            - generic [ref=f12e602]:
+              - generic [ref=f12e603]: $3.000
+              - generic [ref=f12e604]: Cheapest Input/M
+            - generic [ref=f12e605]:
+              - generic [ref=f12e606]: $15.000
+              - generic [ref=f12e607]: Cheapest Output/M
+            - generic [ref=f12e608]:
+              - generic [ref=f12e609]: Amazon Bedrock
+              - generic [ref=f12e610]: Best Price
+          - generic [ref=f12e611]:
+            - generic [ref=f12e613]:
+              - generic [ref=f12e614]:
+                - heading "Provider Pricing" [level=2] [ref=f12e615]
+                - paragraph [ref=f12e616]: 3 models
+              - button "Columns" [ref=f12e618] [cursor=pointer]
+            - generic [ref=f12e621]:
+              - generic [ref=f12e622]: Sponsored
+              - img "The Grid | Spot Priced LLM API" [ref=f12e623]
+              - generic [ref=f12e624]: The Grid | Spot Priced LLM API — Why pay list price when providers will bid for your API usage? Up to 80% off.
+              - link "View spot prices" [ref=f12e625] [cursor=pointer]:
+                - /url: https://app.thegrid.ai/consumption?promo_code=PPT132&utm_source=pricepertoken&utm_medium=sponsor&utm_campaign=ppt1&utm_content=table
+            - table [ref=f12e627]:
+              - rowgroup [ref=f12e628]:
+                - row [ref=f12e629]:
+                  - columnheader [ref=f12e630]
+                  - columnheader [ref=f12e635]
+                  - columnheader [ref=f12e640]
+                  - columnheader [ref=f12e645]
+                  - columnheader [ref=f12e650]
+                  - columnheader [ref=f12e655]
+              - rowgroup [ref=f12e660]:
+                - row [ref=f12e661]:
+                  - cell "Amazon Bedrock Amazon Bedrock Best Price" [ref=f12e662]:
+                    - generic [ref=f12e664]:
+                      - img "Amazon Bedrock" [ref=f12e666]
+                      - generic [ref=f12e667]:
+                        - link "Amazon Bedrock" [ref=f12e668] [cursor=pointer]:
+                          - /url: /endpoints/bedrock
+                        - generic [ref=f12e669]: Best Price
+                  - cell "$3.000" [ref=f12e670]
+                  - cell "$15.000" [ref=f12e673]
+                  - cell "-" [ref=f12e676]
+                  - cell "-" [ref=f12e678]
+                  - cell "-" [ref=f12e680]
+                - row [ref=f12e682]:
+                  - cell "Google Google Best Price" [ref=f12e683]:
+                    - generic [ref=f12e685]:
+                      - img "Google" [ref=f12e687]
+                      - generic [ref=f12e688]:
+                        - link "Google" [ref=f12e689] [cursor=pointer]:
+                          - /url: /endpoints/google-ai-studio
+                        - generic [ref=f12e690]: Best Price
+                  - cell "$3.000" [ref=f12e691]
+                  - cell "$15.000" [ref=f12e694]
+                  - cell "$0.300" [ref=f12e697]
+                  - cell "$3.750" [ref=f12e699]
+                  - cell "-" [ref=f12e701]
+                - row [ref=f12e703]:
+                  - cell "OpenRouter OpenRouter Best Price" [ref=f12e704]:
+                    - generic [ref=f12e706]:
+                      - img "OpenRouter" [ref=f12e708]
+                      - generic [ref=f12e709]:
+                        - generic [ref=f12e710]: OpenRouter
+                        - generic [ref=f12e711]: Best Price
+                  - cell "$3.000" [ref=f12e712]
+                  - cell "$15.000" [ref=f12e715]
+                  - cell "$0.300" [ref=f12e718]
+                  - cell "$3.750" [ref=f12e720]
+                  - cell "-" [ref=f12e722]
+          - generic [ref=f12e724]: Provider pricing data sourced from OpenRouter and Helicone
+      - generic [ref=f12e725]:
+        - heading "Community Rankings" [level=2] [ref=f12e726]
+        - paragraph [ref=f12e727]: How does Claude Sonnet 4 perform? Vote based on your experience.
+        - generic [ref=f12e728]:
+          - generic [ref=f12e730]:
+            - generic [ref=f12e731]:
+              - heading "Community Ratings" [level=2] [ref=f12e732]
+              - paragraph [ref=f12e733]: 11 models
+            - button "Columns" [ref=f12e735] [cursor=pointer]
+          - generic [ref=f12e738]:
+            - generic [ref=f12e739]: Sponsored
+            - img "The Grid | Spot Priced LLM API" [ref=f12e740]
+            - generic [ref=f12e741]: The Grid | Spot Priced LLM API — Why pay list price when providers will bid for your API usage? Up to 80% off.
+            - link "View spot prices" [ref=f12e742] [cursor=pointer]:
+              - /url: https://app.thegrid.ai/consumption?promo_code=PPT132&utm_source=pricepertoken&utm_medium=sponsor&utm_campaign=ppt1&utm_content=table
+          - table [ref=f12e744]:
+            - rowgroup [ref=f12e745]:
+              - row [ref=f12e746]:
+                - columnheader [ref=f12e747]
+                - columnheader [ref=f12e752]
+                - columnheader [ref=f12e757]
+                - columnheader [ref=f12e762]
+                - columnheader [ref=f12e767]
+                - columnheader [ref=f12e772]
+            - rowgroup [ref=f12e777]:
+              - row [ref=f12e778] [cursor=pointer]:
+                - cell "Coding" [ref=f12e779]
+                - cell [ref=f12e781]:
+                  - generic [ref=f12e783]:
+                    - button "Good" [ref=f12e784]
+                    - button "Bad" [ref=f12e788]
+                - cell "0" [ref=f12e792]
+                - cell "0" [ref=f12e794]
+                - cell "0" [ref=f12e796]
+                - cell "—" [ref=f12e798]
+              - row [ref=f12e800] [cursor=pointer]:
+                - cell "Writing" [ref=f12e801]
+                - cell [ref=f12e803]:
+                  - generic [ref=f12e805]:
+                    - button "Good" [ref=f12e806]
+                    - button "Bad" [ref=f12e810]
+                - cell "0" [ref=f12e814]
+                - cell "0" [ref=f12e816]
+                - cell "0" [ref=f12e818]
+                - cell "—" [ref=f12e820]
+              - row [ref=f12e822] [cursor=pointer]:
+                - cell "RAG" [ref=f12e823]
+                - cell [ref=f12e825]:
+                  - generic [ref=f12e827]:
+                    - button "Good" [ref=f12e828]
+                    - button "Bad" [ref=f12e832]
+                - cell "0" [ref=f12e836]
+                - cell "0" [ref=f12e838]
+                - cell "0" [ref=f12e840]
+                - cell "—" [ref=f12e842]
+              - row [ref=f12e844] [cursor=pointer]:
+                - cell "Cursor" [ref=f12e845]
+                - cell [ref=f12e847]:
+                  - generic [ref=f12e849]:
+                    - button "Good" [ref=f12e850]
+                    - button "Bad" [ref=f12e854]
+                - cell "0" [ref=f12e858]
+                - cell "0" [ref=f12e860]
+                - cell "0" [ref=f12e862]
+                - cell "—" [ref=f12e864]
+              - row [ref=f12e866] [cursor=pointer]:
+                - cell "Windsurf" [ref=f12e867]
+                - cell [ref=f12e869]:
+                  - generic [ref=f12e871]:
+                    - button "Good" [ref=f12e872]
+                    - button "Bad" [ref=f12e876]
+                - cell "0" [ref=f12e880]
+                - cell "0" [ref=f12e882]
+                - cell "0" [ref=f12e884]
+                - cell "—" [ref=f12e886]
+              - row [ref=f12e888] [cursor=pointer]:
+                - cell "OpenClaw" [ref=f12e889]
+                - cell [ref=f12e891]:
+                  - generic [ref=f12e893]:
+                    - button "Good" [ref=f12e894]
+                    - button "Bad" [ref=f12e898]
+                - cell "0" [ref=f12e902]
+                - cell "0" [ref=f12e904]
+                - cell "0" [ref=f12e906]
+                - cell "—" [ref=f12e908]
+              - row [ref=f12e910] [cursor=pointer]:
+                - cell "Cline" [ref=f12e911]
+                - cell [ref=f12e913]:
+                  - generic [ref=f12e915]:
+                    - button "Good" [ref=f12e916]
+                    - button "Bad" [ref=f12e920]
+                - cell "0" [ref=f12e924]
+                - cell "0" [ref=f12e926]
+                - cell "0" [ref=f12e928]
+                - cell "—" [ref=f12e930]
+              - row [ref=f12e932] [cursor=pointer]:
+                - cell "Aider" [ref=f12e933]
+                - cell [ref=f12e935]:
+                  - generic [ref=f12e937]:
+                    - button "Good" [ref=f12e938]
+                    - button "Bad" [ref=f12e942]
+                - cell "0" [ref=f12e946]
+                - cell "0" [ref=f12e948]
+                - cell "0" [ref=f12e950]
+                - cell "—" [ref=f12e952]
+              - row [ref=f12e954] [cursor=pointer]:
+                - cell "GitHub Copilot" [ref=f12e955]
+                - cell [ref=f12e957]:
+                  - generic [ref=f12e959]:
+                    - button "Good" [ref=f12e960]
+                    - button "Bad" [ref=f12e964]
+                - cell "0" [ref=f12e968]
+                - cell "0" [ref=f12e970]
+                - cell "0" [ref=f12e972]
+                - cell "—" [ref=f12e974]
+              - row [ref=f12e976] [cursor=pointer]:
+                - cell "Bolt" [ref=f12e977]
+                - cell [ref=f12e979]:
+                  - generic [ref=f12e981]:
+                    - button "Good" [ref=f12e982]
+                    - button "Bad" [ref=f12e986]
+                - cell "0" [ref=f12e990]
+                - cell "0" [ref=f12e992]
+                - cell "0" [ref=f12e994]
+                - cell "—" [ref=f12e996]
+              - row [ref=f12e998] [cursor=pointer]:
+                - cell "Continue.dev" [ref=f12e999]
+                - cell [ref=f12e1001]:
+                  - generic [ref=f12e1003]:
+                    - button "Good" [ref=f12e1004]
+                    - button "Bad" [ref=f12e1008]
+                - cell "0" [ref=f12e1012]
+                - cell "0" [ref=f12e1014]
+                - cell "0" [ref=f12e1016]
+                - cell "—" [ref=f12e1018]
+          - paragraph [ref=f12e1022]: Rate how well this model performs for each tool. Click a row to see the full leaderboard.
+      - generic [ref=f12e1023]:
+        - heading "Cost vs. Quality" [level=2] [ref=f12e1024]
+        - paragraph [ref=f12e1025]: Compare Claude Sonnet 4's benchmark performance against all models.
+        - generic [ref=f12e1028]:
+          - generic [ref=f12e1029]:
+            - generic [ref=f12e1030]:
+              - generic [ref=f12e1031]: "X-axis:"
+              - combobox [ref=f12e1032]:
+                - option "Mmlu Pro" [selected]
+                - option "Gpqa"
+                - option "Math Hard"
+                - option "Livecodebench"
+                - option "Aime"
+                - option "Aider"
+                - option "Ifeval"
+                - option "Bbh"
+                - option "Context Length"
+                - option "Tokens per Second"
+                - option "Time to First Token"
+            - generic [ref=f12e1033]:
+              - generic [ref=f12e1034]: "Y-axis:"
+              - generic [ref=f12e1035]:
+                - button "Input Price" [ref=f12e1036] [cursor=pointer]
+                - button "Output Price" [ref=f12e1037] [cursor=pointer]
+          - generic [ref=f12e1042]:
+            - generic [ref=f12e1043]: Claude Sonnet 4
+            - generic [ref=f12e1046]: Claude Sonnet 4 (Thinking)
+            - generic [ref=f12e1049]: Other models
+        - generic [ref=f12e1053]:
+          - heading "Detailed Benchmark Scores" [level=3] [ref=f12e1055]
+          - generic [ref=f12e1056]:
+            - table [ref=f12e1058]:
+              - rowgroup [ref=f12e1059]:
+                - row [ref=f12e1060]:
+                  - columnheader "Benchmark" [ref=f12e1061]
+                  - columnheader "Standard" [ref=f12e1062]
+                  - columnheader [ref=f12e1063]
+              - rowgroup [ref=f12e1066]:
+                - row [ref=f12e1067]:
+                  - cell "Intelligence" [ref=f12e1068]
+                  - cell "25.5 (70th)" [ref=f12e1069]
+                  - cell "28.9 (69th)" [ref=f12e1070]
+                - row [ref=f12e1071]:
+                  - cell "Coding" [ref=f12e1072]
+                  - cell "-" [ref=f12e1073]
+                  - cell "37.6 (50th)" [ref=f12e1074]
+                - row [ref=f12e1075]:
+                  - cell "Math" [ref=f12e1076]
+                  - cell "38.0 (40th)" [ref=f12e1077]
+                  - cell "74.3 (46th)" [ref=f12e1078]
+                - row [ref=f12e1079]:
+                  - cell "MMLU Pro" [ref=f12e1080]
+                  - cell "83.7 (85th)" [ref=f12e1081]
+                  - cell "84.2 (66th)" [ref=f12e1082]
+                - row [ref=f12e1083]:
+                  - cell "GPQA" [ref=f12e1084]
+                  - cell "68.3 (56th)" [ref=f12e1085]
+                  - cell "77.7 (58th)" [ref=f12e1086]
+                - row [ref=f12e1087]:
+                  - cell "LiveCodeBench" [ref=f12e1088]
+                  - cell "44.9 (52nd)" [ref=f12e1089]
+                  - cell "65.5 (45th)" [ref=f12e1090]
+                - row [ref=f12e1091]:
+                  - cell "AIME" [ref=f12e1092]
+                  - cell "40.7 (59th)" [ref=f12e1093]
+                  - cell "77.3 (61st)" [ref=f12e1094]
+                - row [ref=f12e1095]:
+                  - cell "Aider" [ref=f12e1096]
+                  - cell "61.3 (55th)" [ref=f12e1097]
+                  - cell "-" [ref=f12e1098]
+            - generic [ref=f12e1099]: Benchmark data from Artificial Analysis and HuggingFace Open LLM Leaderboard
+      - generic [ref=f12e1100]:
+        - heading "Try Claude Sonnet 4" [level=2] [ref=f12e1101]
+        - generic [ref=f12e1102]:
+          - generic [ref=f12e1103]:
+            - heading "Use our Calculator" [level=3] [ref=f12e1105]
+            - generic [ref=f12e1106]:
+              - paragraph [ref=f12e1107]: Estimate your costs based on expected token usage.
+              - link "Open Cost Calculator" [ref=f12e1108] [cursor=pointer]:
+                - /url: /pricing-calculator/model/anthropic-claude-sonnet-4
+          - generic [ref=f12e1109]:
+            - heading "Try in Playground" [level=3] [ref=f12e1111]
+            - generic [ref=f12e1112]:
+              - paragraph [ref=f12e1113]: Test Claude Sonnet 4 directly in your browser.
+              - link "Open Playground" [ref=f12e1114] [cursor=pointer]:
+                - /url: /playground?model=anthropic-claude-sonnet-4
+      - generic [ref=f12e1116]:
+        - heading "Compare Claude Sonnet 4" [level=2] [ref=f12e1118]
+        - generic [ref=f12e1120]:
+          - generic [ref=f12e1121]:
+            - heading "Similar Price Range" [level=3] [ref=f12e1122]
+            - generic [ref=f12e1123]:
+              - link "vs GPT-5.3 Codex" [ref=f12e1124] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-sonnet-4-vs-openai-gpt-5.3-codex
+              - link "vs GPT-5.2-Codex" [ref=f12e1126] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-sonnet-4-vs-openai-gpt-5.2-codex
+              - link "vs Gemini 3 Pro Preview" [ref=f12e1128] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-sonnet-4-vs-google-gemini-3-pro-preview
+              - link "vs Grok 4" [ref=f12e1130] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-sonnet-4-vs-xai-grok-4
+          - generic [ref=f12e1132]:
+            - heading "Same Provider" [level=3] [ref=f12e1133]
+            - generic [ref=f12e1134]:
+              - link "vs Claude Opus 4.6" [ref=f12e1135] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-opus-4.6-vs-anthropic-claude-sonnet-4
+              - link "vs Claude Opus 4.5" [ref=f12e1137] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-opus-4.5-vs-anthropic-claude-sonnet-4
+              - link "vs Claude Sonnet 4.6" [ref=f12e1139] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-sonnet-4-vs-anthropic-claude-sonnet-4.6
+          - generic [ref=f12e1141]:
+            - heading "Popular Competitors" [level=3] [ref=f12e1142]
+            - generic [ref=f12e1143]:
+              - link "vs GPT-5.2 Pro" [ref=f12e1144] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-sonnet-4-vs-openai-gpt-5.2-pro
+              - link "vs MiniMax M2.7" [ref=f12e1146] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-sonnet-4-vs-minimax-minimax-m2.7
+              - link "vs MiMo v2 Pro" [ref=f12e1148] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-sonnet-4-vs-xiaomi-mimo-v2-pro
+              - link "vs GLM-5 Turbo" [ref=f12e1150] [cursor=pointer]:
+                - /url: /compare/anthropic-claude-sonnet-4-vs-z-ai-glm-5-turbo
+          - generic [ref=f12e1152]:
+            - heading "Compare by Brand" [level=3] [ref=f12e1153]
+            - generic [ref=f12e1154]:
+              - link "Claude vs ChatGPT" [ref=f12e1155] [cursor=pointer]:
+                - /url: /compare/claude-vs-chatgpt
+              - link "Claude vs Gemini" [ref=f12e1157] [cursor=pointer]:
+                - /url: /compare/claude-vs-gemini
+              - link "Claude vs Grok" [ref=f12e1159] [cursor=pointer]:
+                - /url: /compare/claude-vs-grok
+              - link "Claude vs DeepSeek" [ref=f12e1161] [cursor=pointer]:
+                - /url: /compare/claude-vs-deepseek
+              - link "Claude vs Llama" [ref=f12e1163] [cursor=pointer]:
+                - /url: /compare/claude-vs-llama
+              - link "Claude vs Mistral" [ref=f12e1165] [cursor=pointer]:
+                - /url: /compare/claude-vs-mistral
+              - link "Claude vs Qwen" [ref=f12e1167] [cursor=pointer]:
+                - /url: /compare/claude-vs-qwen
+          - link "See all model comparisons" [ref=f12e1170] [cursor=pointer]:
+            - /url: /compare
+      - generic [ref=f12e1173]:
+        - heading "Frequently Asked Questions" [level=2] [ref=f12e1175]
+        - generic [ref=f12e1177]:
+          - button "How much does Claude Sonnet 4 cost per 1,000 tokens?" [ref=f12e1179] [cursor=pointer]
+          - button "What providers offer Claude Sonnet 4?" [ref=f12e1183] [cursor=pointer]
+          - button "What is the cheapest way to use Claude Sonnet 4?" [ref=f12e1187] [cursor=pointer]
+          - button "How does Claude Sonnet 4 perform on benchmarks?" [ref=f12e1191] [cursor=pointer]
+          - button "How does Claude Sonnet 4 compare to similar models?" [ref=f12e1195] [cursor=pointer]
+      - generic [ref=f12e1199]:
+        - heading "All Anthropic Models" [level=2] [ref=f12e1201]
+        - generic [ref=f12e1202]:
+          - paragraph [ref=f12e1203]: See pricing for all Anthropic models.
+          - link "View all Anthropic models →" [ref=f12e1204] [cursor=pointer]:
+            - /url: /pricing-page/provider/anthropic
+    - generic [ref=f12e1206]:
+      - paragraph [ref=f12e1208]:
+        - text: Built by
+        - link "@aellman" [ref=f12e1209] [cursor=pointer]:
+          - /url: https://twitter.com/aellman
+      - iframe [ref=f12e1213]:
+        - generic [ref=f13e2]:
+          - generic [ref=f13e5]:
+            - generic [ref=f13e6]: Price Per Token Newsletter
+            - generic [ref=f13e7]: Latest updates on LLM API prices and capabilities
+          - generic [ref=f13e9]:
+            - textbox "Enter your email" [ref=f13e12]
+            - button "Subscribe" [ref=f13e13]
+      - link "Archive" [ref=f12e1215] [cursor=pointer]:
+        - /url: https://newsletter.pricepertoken.com/
+      - generic [ref=f12e1217]:
+        - generic [ref=f12e1218]:
+          - heading "Tools" [level=4] [ref=f12e1219]
+          - list [ref=f12e1220]:
+            - listitem [ref=f12e1221]:
+              - link "Pricing Calculator" [ref=f12e1222] [cursor=pointer]:
+                - /url: /pricing-calculator
+            - listitem [ref=f12e1223]:
+              - link "Model Comparisons" [ref=f12e1224] [cursor=pointer]:
+                - /url: /compare
+            - listitem [ref=f12e1225]:
+              - link "Token Counter" [ref=f12e1226] [cursor=pointer]:
+                - /url: /token-counter
+            - listitem [ref=f12e1227]:
+              - link "LLM Playground" [ref=f12e1228] [cursor=pointer]:
+                - /url: /playground
+            - listitem [ref=f12e1229]:
+              - link "AI Coding Tracker" [ref=f12e1230] [cursor=pointer]:
+                - /url: /coding-tracker
+            - listitem [ref=f12e1231]:
+              - link "MCP Server" [ref=f12e1232] [cursor=pointer]:
+                - /url: /mcp
+            - listitem [ref=f12e1233]:
+              - link "Subscription Calculator" [ref=f12e1234] [cursor=pointer]:
+                - /url: /subscription-calculator
+        - generic [ref=f12e1235]:
+          - heading "Directories" [level=4] [ref=f12e1236]
+          - list [ref=f12e1237]:
+            - listitem [ref=f12e1238]:
+              - link "All Directories" [ref=f12e1239] [cursor=pointer]:
+                - /url: /directory
+            - listitem [ref=f12e1240]:
+              - link "AI Coding Assistants" [ref=f12e1241] [cursor=pointer]:
+                - /url: /coding-assistants
+            - listitem [ref=f12e1242]:
+              - link "AI Agent Frameworks" [ref=f12e1243] [cursor=pointer]:
+                - /url: /directory/ai-agent-frameworks
+            - listitem [ref=f12e1244]:
+              - link "LLM Observability Tools" [ref=f12e1245] [cursor=pointer]:
+                - /url: /directory/llm-observability
+            - listitem [ref=f12e1246]:
+              - link "Local LLM Runners" [ref=f12e1247] [cursor=pointer]:
+                - /url: /directory/local-llm-runners
+            - listitem [ref=f12e1248]:
+              - link "OpenClaw Deployment" [ref=f12e1249] [cursor=pointer]:
+                - /url: /directory/openclaw
+            - listitem [ref=f12e1250]:
+              - link "MCP Servers" [ref=f12e1251] [cursor=pointer]:
+                - /url: /mcp-servers
+            - listitem [ref=f12e1252]:
+              - link "AI Jobs" [ref=f12e1253] [cursor=pointer]:
+                - /url: /jobs
+        - generic [ref=f12e1254]:
+          - heading "Models & Pricing" [level=4] [ref=f12e1255]
+          - list [ref=f12e1256]:
+            - listitem [ref=f12e1257]:
+              - link "LLM Prices" [ref=f12e1258] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f12e1259]:
+              - link "Embedding Models" [ref=f12e1260] [cursor=pointer]:
+                - /url: /embedding
+            - listitem [ref=f12e1261]:
+              - link "Image Models" [ref=f12e1262] [cursor=pointer]:
+                - /url: /image
+            - listitem [ref=f12e1263]:
+              - link "AI Subscriptions" [ref=f12e1264] [cursor=pointer]:
+                - /url: /subscriptions
+            - listitem [ref=f12e1265]:
+              - link "Fine-Tuning Pricing" [ref=f12e1266] [cursor=pointer]:
+                - /url: /fine-tuning
+            - listitem [ref=f12e1267]:
+              - link "Cheapest LLM API" [ref=f12e1268] [cursor=pointer]:
+                - /url: /cheapest
+            - listitem [ref=f12e1269]:
+              - link "GPU Pricing" [ref=f12e1270] [cursor=pointer]:
+                - /url: /gpu-pricing
+            - listitem [ref=f12e1271]:
+              - link "Price History" [ref=f12e1272] [cursor=pointer]:
+                - /url: /pricing-history
+            - listitem [ref=f12e1273]:
+              - link "Trends" [ref=f12e1274] [cursor=pointer]:
+                - /url: /trends
+        - generic [ref=f12e1275]:
+          - heading "Endpoints" [level=4] [ref=f12e1276]
+          - list [ref=f12e1277]:
+            - listitem [ref=f12e1278]:
+              - link "Together AI" [ref=f12e1279] [cursor=pointer]:
+                - /url: /endpoints/together
+            - listitem [ref=f12e1280]:
+              - link "AWS Bedrock" [ref=f12e1281] [cursor=pointer]:
+                - /url: /endpoints/bedrock
+            - listitem [ref=f12e1282]:
+              - link "Groq" [ref=f12e1283] [cursor=pointer]:
+                - /url: /endpoints/groq
+            - listitem [ref=f12e1284]:
+              - link "Fireworks AI" [ref=f12e1285] [cursor=pointer]:
+                - /url: /endpoints/fireworks
+            - listitem [ref=f12e1286]:
+              - link "Cerebras" [ref=f12e1287] [cursor=pointer]:
+                - /url: /endpoints/cerebras
+            - listitem [ref=f12e1288]:
+              - link "OpenRouter" [ref=f12e1289] [cursor=pointer]:
+                - /url: /endpoints/openrouter
+            - listitem [ref=f12e1290]:
+              - link "Azure OpenAI" [ref=f12e1291] [cursor=pointer]:
+                - /url: /endpoints/azure
+            - listitem [ref=f12e1292]:
+              - link "Google AI Studio" [ref=f12e1293] [cursor=pointer]:
+                - /url: /endpoints/google-ai-studio
+            - listitem [ref=f12e1294]:
+              - link "Nebius AI" [ref=f12e1295] [cursor=pointer]:
+                - /url: /endpoints/nebius
+            - listitem [ref=f12e1296]:
+              - link "Cloudflare Workers AI" [ref=f12e1297] [cursor=pointer]:
+                - /url: /endpoints/cloudflare
+            - listitem [ref=f12e1298]:
+              - link "DeepInfra" [ref=f12e1299] [cursor=pointer]:
+                - /url: /endpoints/deepinfra
+            - listitem [ref=f12e1300]:
+              - link "SambaNova" [ref=f12e1301] [cursor=pointer]:
+                - /url: /endpoints/sambanova
+            - listitem [ref=f12e1302]:
+              - link "Novita" [ref=f12e1303] [cursor=pointer]:
+                - /url: /endpoints/novita
+            - listitem [ref=f12e1304]:
+              - link "SiliconFlow" [ref=f12e1305] [cursor=pointer]:
+                - /url: /endpoints/siliconflow
+            - listitem [ref=f12e1306]:
+              - link "Parasail" [ref=f12e1307] [cursor=pointer]:
+                - /url: /endpoints/parasail
+            - listitem [ref=f12e1308]:
+              - link "GMICloud" [ref=f12e1309] [cursor=pointer]:
+                - /url: /endpoints/gmicloud
+            - listitem [ref=f12e1310]:
+              - link "BaseTen" [ref=f12e1311] [cursor=pointer]:
+                - /url: /endpoints/baseten
+            - listitem [ref=f12e1312]:
+              - link "Gonka" [ref=f12e1313] [cursor=pointer]:
+                - /url: /endpoints/gonka
+            - listitem [ref=f12e1314]:
+              - link "Compare Providers" [ref=f12e1315] [cursor=pointer]:
+                - /url: /endpoints/compare
+            - listitem [ref=f12e1316]:
+              - link "Free Models" [ref=f12e1317] [cursor=pointer]:
+                - /url: /endpoints/openrouter/free
+        - generic [ref=f12e1318]:
+          - heading "Rankings" [level=4] [ref=f12e1319]
+          - list [ref=f12e1320]:
+            - listitem [ref=f12e1321]:
+              - link "All Rankings" [ref=f12e1322] [cursor=pointer]:
+                - /url: /leaderboards
+            - listitem [ref=f12e1323]:
+              - link "All Benchmarks" [ref=f12e1324] [cursor=pointer]:
+                - /url: /leaderboards/benchmark
+            - listitem [ref=f12e1325]:
+              - link "Best LLM for Coding" [ref=f12e1326] [cursor=pointer]:
+                - /url: /leaderboards/coding
+            - listitem [ref=f12e1327]:
+              - link "Best LLM for Math" [ref=f12e1328] [cursor=pointer]:
+                - /url: /leaderboards/math
+            - listitem [ref=f12e1329]:
+              - link "Best LLM for Writing" [ref=f12e1330] [cursor=pointer]:
+                - /url: /leaderboards/writing
+            - listitem [ref=f12e1331]:
+              - link "Best LLM for RAG" [ref=f12e1332] [cursor=pointer]:
+                - /url: /leaderboards/rag
+            - listitem [ref=f12e1333]:
+              - link "Best Local LLM" [ref=f12e1334] [cursor=pointer]:
+                - /url: /leaderboards/local-models
+            - listitem [ref=f12e1335]:
+              - link "Best LLM for OpenClaw" [ref=f12e1336] [cursor=pointer]:
+                - /url: /leaderboards/openclaw
+            - listitem [ref=f12e1337]:
+              - link "Best LLM for Cursor" [ref=f12e1338] [cursor=pointer]:
+                - /url: /leaderboards/cursor
+            - listitem [ref=f12e1339]:
+              - link "Best LLM for Windsurf" [ref=f12e1340] [cursor=pointer]:
+                - /url: /leaderboards/windsurf
+            - listitem [ref=f12e1341]:
+              - link "Best LLM for Cline" [ref=f12e1342] [cursor=pointer]:
+                - /url: /leaderboards/cline
+            - listitem [ref=f12e1343]:
+              - link "Best LLM for Aider" [ref=f12e1344] [cursor=pointer]:
+                - /url: /leaderboards/aider
+            - listitem [ref=f12e1345]:
+              - link "Best LLM for GitHub Copilot" [ref=f12e1346] [cursor=pointer]:
+                - /url: /leaderboards/github-copilot
+            - listitem [ref=f12e1347]:
+              - link "Best LLM for Bolt" [ref=f12e1348] [cursor=pointer]:
+                - /url: /leaderboards/bolt
+            - listitem [ref=f12e1349]:
+              - link "Best LLM for Continue.dev" [ref=f12e1350] [cursor=pointer]:
+                - /url: /leaderboards/continue-dev
+            - listitem [ref=f12e1351]:
+              - link "MMLU-Pro" [ref=f12e1352] [cursor=pointer]:
+                - /url: /leaderboards/benchmark/mmlu-pro
+            - listitem [ref=f12e1353]:
+              - link "GPQA" [ref=f12e1354] [cursor=pointer]:
+                - /url: /leaderboards/benchmark/gpqa
+            - listitem [ref=f12e1355]:
+              - link "LiveCodeBench" [ref=f12e1356] [cursor=pointer]:
+                - /url: /leaderboards/benchmark/livecodebench
+            - listitem [ref=f12e1357]:
+              - link "Aider" [ref=f12e1358] [cursor=pointer]:
+                - /url: /leaderboards/benchmark/aider
+            - listitem [ref=f12e1359]:
+              - link "AIME" [ref=f12e1360] [cursor=pointer]:
+                - /url: /leaderboards/benchmark/aime
+            - listitem [ref=f12e1361]:
+              - link "MATH (Hard)" [ref=f12e1362] [cursor=pointer]:
+                - /url: /leaderboards/benchmark/math-hard
+            - listitem [ref=f12e1363]:
+              - link "Big-Bench Hard" [ref=f12e1364] [cursor=pointer]:
+                - /url: /leaderboards/benchmark/bbh
+        - generic [ref=f12e1365]:
+          - heading "News" [level=4] [ref=f12e1366]
+          - list [ref=f12e1367]:
+            - listitem [ref=f12e1368]:
+              - link "All News" [ref=f12e1369] [cursor=pointer]:
+                - /url: /news
+            - listitem [ref=f12e1370]:
+              - link "Model Releases" [ref=f12e1371] [cursor=pointer]:
+                - /url: /news/model-releases
+            - listitem [ref=f12e1372]:
+              - link "AI Coding" [ref=f12e1373] [cursor=pointer]:
+                - /url: /news/coding
+            - listitem [ref=f12e1374]:
+              - link "Open Source" [ref=f12e1375] [cursor=pointer]:
+                - /url: /news/open-source
+            - listitem [ref=f12e1376]:
+              - link "Benchmarks" [ref=f12e1377] [cursor=pointer]:
+                - /url: /news/benchmarks
+            - listitem [ref=f12e1378]:
+              - link "Hardware" [ref=f12e1379] [cursor=pointer]:
+                - /url: /news/hardware
+            - listitem [ref=f12e1380]:
+              - link "Chips" [ref=f12e1381] [cursor=pointer]:
+                - /url: /news/chips
+            - listitem [ref=f12e1382]:
+              - link "Regulation" [ref=f12e1383] [cursor=pointer]:
+                - /url: /news/regulation
+            - listitem [ref=f12e1384]:
+              - link "Funding" [ref=f12e1385] [cursor=pointer]:
+                - /url: /news/funding
+            - listitem [ref=f12e1386]:
+              - link "Image Generation" [ref=f12e1387] [cursor=pointer]:
+                - /url: /news/image
+            - listitem [ref=f12e1388]:
+              - link "Video Generation" [ref=f12e1389] [cursor=pointer]:
+                - /url: /news/video
+            - listitem [ref=f12e1390]:
+              - link "MCP" [ref=f12e1391] [cursor=pointer]:
+                - /url: /news/mcp
+      - generic [ref=f12e1392]:
+        - generic [ref=f12e1393]:
+          - generic [ref=f12e1394]: "Follow us:"
+          - generic [ref=f12e1395]:
+            - link "Follow us on X" [ref=f12e1396] [cursor=pointer]:
+              - /url: https://x.com/pricepertoken
+            - link "Follow us on Bluesky" [ref=f12e1399] [cursor=pointer]:
+              - /url: https://bsky.app/profile/pricepertoken.bsky.social
+            - link "Follow us on Threads" [ref=f12e1402] [cursor=pointer]:
+              - /url: https://www.threads.com/@pricepertoken
+        - generic [ref=f12e1405]:
+          - link "Advertise" [ref=f12e1406] [cursor=pointer]:
+            - /url: /sponsor
+          - generic [ref=f12e1407]: "|"
+          - link "Terms of Service" [ref=f12e1408] [cursor=pointer]:
+            - /url: /terms-of-service
+          - generic [ref=f12e1409]: "|"
+          - link "Privacy Policy" [ref=f12e1410] [cursor=pointer]:
+            - /url: /privacy-policy
+        - paragraph [ref=f12e1411]: 2026 68 Ventures, LLC. All rights reserved.
+  - generic [ref=f12e1412]:
+    - generic [ref=f12e1413]:
+      - img "The Grid | Spot Priced LLM API" [ref=f12e1414]
+      - generic [ref=f12e1415]:
+        - generic [ref=f12e1416]: The Grid | Spot Priced LLM API
+        - paragraph [ref=f12e1417]: Stop chasing models. Select a quality tier, we handle the rest.
+        - link "Escape model anxiety →" [ref=f12e1418] [cursor=pointer]:
+          - /url: https://app.thegrid.ai/consumption?promo_code=PPT132&utm_source=pricepertoken&utm_medium=sponsor&utm_campaign=ppt1&utm_content=toast
+    - generic [ref=f12e1419]: Sponsored

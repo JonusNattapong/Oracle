@@ -42,6 +42,7 @@ describe("loadProjectConfig", () => {
       serve: { host: "0.0.0.0", port: 9474, manualLogin: false }
     });
     await expect(loadProjectConfig(root)).resolves.toMatchObject({
+      backend: "codex",
       provider: "auto",
       include: ["lib/**/*.ts"],
       browser: {
@@ -61,6 +62,27 @@ describe("loadProjectConfig", () => {
       routing: { defaultProvider: "browser", preferAzure: true },
       serve: { host: "0.0.0.0", port: 9474, manualLogin: false }
     });
+  });
+
+  test("supports backend key and legacy provider key migration", async () => {
+    const rootBackend = await rootWith({ backend: "anthropic" });
+    const configBackend = await loadProjectConfig(rootBackend);
+    expect(configBackend.backend).toBe("anthropic");
+
+    const rootProvider = await rootWith({ provider: "openai" });
+    const configProvider = await loadProjectConfig(rootProvider);
+    expect(configProvider.backend).toBe("openai");
+    expect(configProvider.provider).toBe("openai");
+  });
+
+  test("loads experimental.browserMode flag", async () => {
+    const root = await rootWith({
+      experimental: { browserMode: true },
+      browser: { timeoutMs: 60_000 }
+    });
+    const config = await loadProjectConfig(root);
+    expect(config.experimental?.browserMode).toBe(true);
+    expect(config.browser).toMatchObject({ timeoutMs: 60_000 });
   });
 
   test.each([

@@ -80,9 +80,33 @@ GET    /v1/control/approvals/:id
 POST   /v1/control/approvals/:id/decision
 POST   /v1/control/approvals/:id/execution/claim
 POST   /v1/control/executions/:id/complete
+POST   /v1/consult
+GET    /v1/consult/:sessionId
 POST   /v1/swarm/tokens
 DELETE /v1/swarm/tokens/:token-id
 ```
+
+`POST /v1/consult` accepts `question`, optional `files`, `backend`, `model`,
+`systemPrompt`, `conversationId`, `previousResponseId`, `accountMemory`, and a `cwd` confined
+to the daemon workspace. It uses the same bundle and secret-scanning path as
+CLI and MCP. Browser Mode additionally
+accepts `conversationId` to resume the latest native ChatGPT thread associated
+with that logical conversation. Advanced clients may pass a validated
+`previousResponseId` directly; for Browser Mode this is the HTTPS ChatGPT
+conversation URL returned by the prior result.
+Browser Mode also requires `experimental.browserMode` in the workspace config.
+`accountMemory` is an explicit, account-global side effect supported only by
+`chatgpt-browser`. It is limited to 2,000 characters and should contain only a
+high-level fact or preference. The raw value is not persisted in Oracle's
+session record; the result reports `accountMemoryRequested` and
+`accountMemorySaved`.
+
+With `backend: "chatgpt-browser"`, PNG/JPEG/WebP entries in `files` are
+uploaded to ChatGPT. Returned `images` are metadata records for files stored in
+the consult session's `artifacts/images/` directory; Runtime JSON does not
+inline their base64 bytes. `artifactWarnings` reports non-fatal capture issues.
+The MCP `oracle_ask` adapter additionally emits each stored file as a standard
+MCP image content block.
 
 Remote Swarm routes require a project-scoped agent token instead:
 

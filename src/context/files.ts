@@ -62,6 +62,7 @@ export async function resolveFiles(
 
   const maxFileSizeBytes = options.maxFileSizeBytes ?? 1_000_000;
   const cwd = path.resolve(options.cwd);
+  const realCwd = await fs.realpath(cwd);
   const { include, exclude } = splitPatterns(patterns);
   if (include.length === 0) return [];
 
@@ -83,6 +84,8 @@ export async function resolveFiles(
   const files: ContextFile[] = [];
   for (const absolutePath of matches.sort()) {
     assertInsideWorkingDirectory(absolutePath, cwd);
+    const realPath = await fs.realpath(absolutePath);
+    assertInsideWorkingDirectory(realPath, realCwd);
     const stat = await fs.stat(absolutePath);
     if (stat.size > maxFileSizeBytes) continue;
     const ext = path.extname(absolutePath).toLowerCase();

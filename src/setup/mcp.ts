@@ -22,7 +22,8 @@ export async function ensureProjectConfig(root: string): Promise<string> {
   try {
     await fs.access(configPath);
   } catch {
-    await fs.writeFile(configPath, `${JSON.stringify(DEFAULT_PROJECT_CONFIG, null, 2)}\n`, {
+    const { provider: _legacyProvider, ...newConfig } = DEFAULT_PROJECT_CONFIG;
+    await fs.writeFile(configPath, `${JSON.stringify(newConfig, null, 2)}\n`, {
       encoding: "utf8",
       flag: "wx"
     });

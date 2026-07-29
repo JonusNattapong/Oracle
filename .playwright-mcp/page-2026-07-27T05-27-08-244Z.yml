@@ -1,0 +1,1629 @@
+- generic [ref=f9e3]:
+  - banner [ref=f9e4]:
+    - link "Claude Platform Docs Home" [ref=f9e5] [cursor=pointer]:
+      - /url: /docs/en/home
+      - generic [ref=f9e6]: Claude Platform Docs
+    - navigation [ref=f9e12]:
+      - list [ref=f9e13]:
+        - listitem [ref=f9e14]:
+          - link "Messages" [ref=f9e15] [cursor=pointer]:
+            - /url: /docs/en/intro
+        - listitem [ref=f9e16]:
+          - link "Managed Agents" [ref=f9e17] [cursor=pointer]:
+            - /url: /docs/en/managed-agents/overview
+        - listitem [ref=f9e18]:
+          - link "Admin" [ref=f9e19] [cursor=pointer]:
+            - /url: /docs/en/manage-claude/admin-api
+        - listitem [ref=f9e20]:
+          - button "Resources" [ref=f9e22] [cursor=pointer]:
+            - text: Resources
+            - generic [ref=f9e23]: 
+    - generic [ref=f9e25]:
+      - button "Search documentation" [ref=f9e26] [cursor=pointer]:
+        - generic [ref=f9e27]: 
+      - button [ref=f9e28] [cursor=pointer]:
+        - generic [ref=f9e29]: 
+  - generic [ref=f9e31]:
+    - complementary [ref=f9e32]:
+      - button "Search documentation" [ref=f9e34] [cursor=pointer]:
+        - generic: 
+        - generic [ref=f9e35]: Search
+        - generic: ⌘K
+      - generic [ref=f9e39]:
+        - generic [ref=f9e40]: Models
+        - generic [ref=f9e41]:
+          - link "Models overview" [ref=f9e42] [cursor=pointer]:
+            - /url: /docs/en/about-claude/models/overview
+          - link "Model IDs and versioning" [ref=f9e45] [cursor=pointer]:
+            - /url: /docs/en/about-claude/models/model-ids-and-versions
+          - link "Choosing a model" [ref=f9e48] [cursor=pointer]:
+            - /url: /docs/en/about-claude/models/choosing-a-model
+          - link "Introducing Claude Fable 5 and Claude Mythos 5" [ref=f9e51] [cursor=pointer]:
+            - /url: /docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5
+          - link "What's new in Claude Sonnet 5" [ref=f9e54] [cursor=pointer]:
+            - /url: /docs/en/about-claude/models/whats-new-sonnet-5
+          - link "What's new in Claude Opus 5" [ref=f9e57] [cursor=pointer]:
+            - /url: /docs/en/about-claude/models/whats-new-opus-5
+          - link "Upgrade between model versions" [ref=f9e60] [cursor=pointer]:
+            - /url: /docs/en/about-claude/models/migration-guide
+          - link "Model deprecations" [ref=f9e63] [cursor=pointer]:
+            - /url: /docs/en/about-claude/model-deprecations
+          - link "Model cards" [ref=f9e66] [cursor=pointer]:
+            - /url: /docs/en/resources/overview
+          - link "System prompts" [ref=f9e69] [cursor=pointer]:
+            - /url: /docs/en/release-notes/system-prompts
+          - link "Pricing" [ref=f9e72] [cursor=pointer]:
+            - /url: /docs/en/about-claude/pricing
+    - main [ref=f9e78]:
+      - article [ref=f9e81]:
+        - generic [ref=f9e82]:
+          - generic [ref=f9e84]:
+            - generic [ref=f9e85]: Models & pricing
+            - generic [ref=f9e86]: /
+            - generic [ref=f9e87]: Models
+          - generic [ref=f9e88]:
+            - heading "Pricing" [level=1] [ref=f9e89]
+            - group "More options" [ref=f9e92]:
+              - button "Copy page" [ref=f9e94] [cursor=pointer]
+              - button "More options" [ref=f9e104] [cursor=pointer]:
+                - generic [ref=f9e106]: 
+          - generic [ref=f9e108]: Learn about Anthropic's pricing structure for models and features
+        - paragraph [ref=f9e109]: This page provides detailed pricing information for Anthropic's models and features. All prices are in USD.
+        - paragraph [ref=f9e110]:
+          - text: For the most current pricing information, visit
+          - link "claude.com/pricing" [ref=f9e111] [cursor=pointer]:
+            - /url: https://claude.com/pricing
+          - text: .
+        - heading "Copy link to clipboard Model pricing" [level=2] [ref=f9e112]:
+          - generic [ref=f9e113]:
+            - button "Copy link to clipboard" [ref=f9e115] [cursor=pointer]:
+              - generic [ref=f9e116]: 
+            - generic [ref=f9e117]: Model pricing
+        - paragraph [ref=f9e118]: "The following table shows pricing for all Claude models:"
+        - table [ref=f9e120]:
+          - rowgroup [ref=f9e121]:
+            - row [ref=f9e122]:
+              - columnheader "Model" [ref=f9e123]
+              - columnheader "Base Input Tokens" [ref=f9e124]
+              - columnheader "5m Cache Writes" [ref=f9e125]
+              - columnheader "1h Cache Writes" [ref=f9e126]
+              - columnheader "Cache Hits & Refreshes" [ref=f9e127]
+              - columnheader "Output Tokens" [ref=f9e128]
+          - rowgroup [ref=f9e129]:
+            - row [ref=f9e130]:
+              - cell "Claude Fable 5" [ref=f9e131]
+              - cell "$10 / MTok" [ref=f9e132]
+              - cell "$12.50 / MTok" [ref=f9e133]
+              - cell "$20 / MTok" [ref=f9e134]
+              - cell "$1 / MTok" [ref=f9e135]
+              - cell "$50 / MTok" [ref=f9e136]
+            - row [ref=f9e137]:
+              - cell [ref=f9e138]:
+                - text: Claude Mythos 5 (
+                - link "limited availability" [ref=f9e139] [cursor=pointer]:
+                  - /url: https://anthropic.com/glasswing
+                - text: )
+              - cell "$10 / MTok" [ref=f9e140]
+              - cell "$12.50 / MTok" [ref=f9e141]
+              - cell "$20 / MTok" [ref=f9e142]
+              - cell "$1 / MTok" [ref=f9e143]
+              - cell "$50 / MTok" [ref=f9e144]
+            - row [ref=f9e145]:
+              - cell "Claude Opus 5" [ref=f9e146]
+              - cell "$5 / MTok" [ref=f9e147]
+              - cell "$6.25 / MTok" [ref=f9e148]
+              - cell "$10 / MTok" [ref=f9e149]
+              - cell "$0.50 / MTok" [ref=f9e150]
+              - cell "$25 / MTok" [ref=f9e151]
+            - row [ref=f9e152]:
+              - cell "Claude Opus 4.8" [ref=f9e153]
+              - cell "$5 / MTok" [ref=f9e154]
+              - cell "$6.25 / MTok" [ref=f9e155]
+              - cell "$10 / MTok" [ref=f9e156]
+              - cell "$0.50 / MTok" [ref=f9e157]
+              - cell "$25 / MTok" [ref=f9e158]
+            - row [ref=f9e159]:
+              - cell "Claude Opus 4.7" [ref=f9e160]
+              - cell "$5 / MTok" [ref=f9e161]
+              - cell "$6.25 / MTok" [ref=f9e162]
+              - cell "$10 / MTok" [ref=f9e163]
+              - cell "$0.50 / MTok" [ref=f9e164]
+              - cell "$25 / MTok" [ref=f9e165]
+            - row [ref=f9e166]:
+              - cell "Claude Opus 4.6" [ref=f9e167]
+              - cell "$5 / MTok" [ref=f9e168]
+              - cell "$6.25 / MTok" [ref=f9e169]
+              - cell "$10 / MTok" [ref=f9e170]
+              - cell "$0.50 / MTok" [ref=f9e171]
+              - cell "$25 / MTok" [ref=f9e172]
+            - row [ref=f9e173]:
+              - cell "Claude Opus 4.5" [ref=f9e174]
+              - cell "$5 / MTok" [ref=f9e175]
+              - cell "$6.25 / MTok" [ref=f9e176]
+              - cell "$10 / MTok" [ref=f9e177]
+              - cell "$0.50 / MTok" [ref=f9e178]
+              - cell "$25 / MTok" [ref=f9e179]
+            - row [ref=f9e180]:
+              - cell [ref=f9e181]:
+                - text: Claude Opus 4.1 (
+                - link "deprecated" [ref=f9e182] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell "$15 / MTok" [ref=f9e183]
+              - cell "$18.75 / MTok" [ref=f9e184]
+              - cell "$30 / MTok" [ref=f9e185]
+              - cell "$1.50 / MTok" [ref=f9e186]
+              - cell "$75 / MTok" [ref=f9e187]
+            - row [ref=f9e188]:
+              - cell [ref=f9e189]:
+                - text: Claude Opus 4 (
+                - link "retired, except on Google Cloud" [ref=f9e190] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell "$15 / MTok" [ref=f9e191]
+              - cell "$18.75 / MTok" [ref=f9e192]
+              - cell "$30 / MTok" [ref=f9e193]
+              - cell "$1.50 / MTok" [ref=f9e194]
+              - cell "$75 / MTok" [ref=f9e195]
+            - row [ref=f9e196]:
+              - cell [ref=f9e197]:
+                - text: Claude Sonnet 5
+                - link "through August 31, 2026" [ref=f9e198] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/pricing#claude-sonnet-5-introductory-pricing
+              - cell "$2 / MTok" [ref=f9e199]
+              - cell "$2.50 / MTok" [ref=f9e200]
+              - cell "$4 / MTok" [ref=f9e201]
+              - cell "$0.20 / MTok" [ref=f9e202]
+              - cell "$10 / MTok" [ref=f9e203]
+            - row [ref=f9e204]:
+              - cell "Claude Sonnet 5 starting September 1, 2026" [ref=f9e205]: Claude Sonnet 5starting September 1, 2026
+              - cell "$3 / MTok" [ref=f9e206]
+              - cell "$3.75 / MTok" [ref=f9e207]
+              - cell "$6 / MTok" [ref=f9e208]
+              - cell "$0.30 / MTok" [ref=f9e209]
+              - cell "$15 / MTok" [ref=f9e210]
+            - row [ref=f9e211]:
+              - cell "Claude Sonnet 4.6" [ref=f9e212]
+              - cell "$3 / MTok" [ref=f9e213]
+              - cell "$3.75 / MTok" [ref=f9e214]
+              - cell "$6 / MTok" [ref=f9e215]
+              - cell "$0.30 / MTok" [ref=f9e216]
+              - cell "$15 / MTok" [ref=f9e217]
+            - row [ref=f9e218]:
+              - cell "Claude Sonnet 4.5" [ref=f9e219]
+              - cell "$3 / MTok" [ref=f9e220]
+              - cell "$3.75 / MTok" [ref=f9e221]
+              - cell "$6 / MTok" [ref=f9e222]
+              - cell "$0.30 / MTok" [ref=f9e223]
+              - cell "$15 / MTok" [ref=f9e224]
+            - row [ref=f9e225]:
+              - cell [ref=f9e226]:
+                - text: Claude Sonnet 4 (
+                - link "retired, except on Bedrock and Google Cloud" [ref=f9e227] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell "$3 / MTok" [ref=f9e228]
+              - cell "$3.75 / MTok" [ref=f9e229]
+              - cell "$6 / MTok" [ref=f9e230]
+              - cell "$0.30 / MTok" [ref=f9e231]
+              - cell "$15 / MTok" [ref=f9e232]
+            - row [ref=f9e233]:
+              - cell "Claude Haiku 4.5" [ref=f9e234]
+              - cell "$1 / MTok" [ref=f9e235]
+              - cell "$1.25 / MTok" [ref=f9e236]
+              - cell "$2 / MTok" [ref=f9e237]
+              - cell "$0.10 / MTok" [ref=f9e238]
+              - cell "$5 / MTok" [ref=f9e239]
+            - row [ref=f9e240]:
+              - cell [ref=f9e241]:
+                - text: Claude Haiku 3.5 (
+                - link "retired, except on Bedrock and Google Cloud" [ref=f9e242] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell "$0.80 / MTok" [ref=f9e243]
+              - cell "$1 / MTok" [ref=f9e244]
+              - cell "$1.60 / MTok" [ref=f9e245]
+              - cell "$0.08 / MTok" [ref=f9e246]
+              - cell "$4 / MTok" [ref=f9e247]
+        - generic [ref=f9e248]:
+          - generic [ref=f9e249]: 
+          - paragraph [ref=f9e252]: Introductory pricing of $2/$10 per million input/output tokens is in effect through August 31, 2026, after which the standard pricing of $3/$15 per million input/output tokens will take effect.
+        - generic [ref=f9e253]:
+          - generic [ref=f9e254]: 
+          - paragraph [ref=f9e257]:
+            - text: MTok = Million tokens. The "Base Input Tokens" column shows standard input pricing, the "5m Cache Writes", "1h Cache Writes", and "Cache Hits & Refreshes" columns are specific to
+            - link "prompt caching" [ref=f9e258] [cursor=pointer]:
+              - /url: "#prompt-caching"
+            - text: ", and \"Output Tokens\" shows output pricing. See"
+            - link "prompt caching pricing" [ref=f9e259] [cursor=pointer]:
+              - /url: "#prompt-caching"
+            - text: for an explanation of the cache columns and pricing multipliers.
+        - generic [ref=f9e260]:
+          - generic [ref=f9e261]: 
+          - paragraph [ref=f9e264]: Claude 4.7 and later models and Claude Mythos Preview use a newer tokenizer that contributes to their improved performance on a wide range of tasks. This tokenizer produces approximately 30% more tokens for the same text. The exact increase depends on the content and workload shape. Claude Sonnet 4.6 and earlier models use the previous tokenizer.
+        - paragraph [ref=f9e265]:
+          - text: For Claude Platform on AWS pricing, see
+          - link "Claude Platform on AWS pricing" [ref=f9e266] [cursor=pointer]:
+            - /url: "#claude-platform-on-aws-pricing"
+          - text: .
+        - heading "Copy link to clipboard Cloud platform pricing" [level=2] [ref=f9e267]:
+          - generic [ref=f9e268]:
+            - button "Copy link to clipboard" [ref=f9e270] [cursor=pointer]:
+              - generic [ref=f9e271]: 
+            - generic [ref=f9e272]: Cloud platform pricing
+        - paragraph [ref=f9e273]:
+          - text: This section covers partner-operated cloud platforms, where the cloud provider invoices you. For Anthropic-operated cloud platforms billed through a marketplace, see
+          - link "Claude Platform on AWS pricing" [ref=f9e274] [cursor=pointer]:
+            - /url: "#claude-platform-on-aws-pricing"
+          - text: and
+          - link "Claude in Microsoft Foundry pricing" [ref=f9e275] [cursor=pointer]:
+            - /url: "#claude-in-microsoft-foundry-pricing"
+          - text: .
+        - paragraph [ref=f9e276]:
+          - text: Claude models are available on
+          - link "Amazon Bedrock" [ref=f9e277] [cursor=pointer]:
+            - /url: /docs/en/build-with-claude/claude-in-amazon-bedrock
+          - text: and
+          - link "Google Cloud" [ref=f9e278] [cursor=pointer]:
+            - /url: /docs/en/build-with-claude/claude-on-vertex-ai
+          - text: ". For official pricing, visit:"
+        - list [ref=f9e279]:
+          - listitem [ref=f9e280]:
+            - text: •
+            - link "Amazon Bedrock pricing" [ref=f9e281] [cursor=pointer]:
+              - /url: https://aws.amazon.com/bedrock/pricing/
+          - listitem [ref=f9e282]:
+            - text: •
+            - link "Google Cloud pricing" [ref=f9e283] [cursor=pointer]:
+              - /url: https://cloud.google.com/vertex-ai/generative-ai/pricing#claude-models
+        - generic [ref=f9e284]:
+          - generic [ref=f9e285]: 
+          - generic [ref=f9e287]:
+            - paragraph [ref=f9e288]:
+              - strong [ref=f9e289]: Regional and multi-region endpoint pricing for Claude 4.5 models and beyond
+            - paragraph [ref=f9e290]: "Starting with Claude Sonnet 4.5, Haiku 4.5, and Opus 4.5:"
+            - list [ref=f9e291]:
+              - listitem [ref=f9e292]:
+                - text: •
+                - strong [ref=f9e293]: Bedrock
+                - text: "offers two endpoint types: global endpoints (dynamic routing for maximum availability) and regional endpoints (guaranteed data routing through specific geographic regions)."
+              - listitem [ref=f9e294]:
+                - text: •
+                - strong [ref=f9e295]: Google Cloud
+                - text: "offers three endpoint types: global endpoints, multi-region endpoints (dynamic routing within a geographic area), and regional endpoints."
+            - paragraph [ref=f9e296]:
+              - text: Regional and multi-region endpoints include a 10% premium over global endpoints. The Claude API (first-party) is global by default; for first-party data residency options and pricing, see
+              - link "Data residency pricing" [ref=f9e297] [cursor=pointer]:
+                - /url: "#data-residency-pricing"
+              - text: .
+            - paragraph [ref=f9e298]:
+              - strong [ref=f9e299]: "Scope:"
+              - text: This pricing structure applies to Claude Sonnet 4.5, Haiku 4.5, Opus 4.5, and all future models. Earlier models (Claude Opus 4.1 (deprecated) and prior releases) retain their existing pricing.
+            - paragraph [ref=f9e300]: "For implementation details and code examples:"
+            - list [ref=f9e301]:
+              - listitem [ref=f9e302]:
+                - text: •
+                - link "Amazon Bedrock global vs regional endpoints" [ref=f9e303] [cursor=pointer]:
+                  - /url: /docs/en/build-with-claude/claude-in-amazon-bedrock#regions
+                - text: for Opus 4.7, Haiku 4.5, and later models, or
+                - link "the legacy integration" [ref=f9e304] [cursor=pointer]:
+                  - /url: /docs/en/build-with-claude/claude-on-amazon-bedrock-legacy#global-vs-regional-endpoints
+                - text: for all other models on Bedrock
+              - listitem [ref=f9e305]:
+                - text: •
+                - link "Google Cloud global, multi-region, and regional endpoints" [ref=f9e306] [cursor=pointer]:
+                  - /url: /docs/en/build-with-claude/claude-on-vertex-ai#global-multi-region-and-regional-endpoints
+        - heading "Copy link to clipboard Claude Platform on AWS pricing" [level=2] [ref=f9e307]:
+          - generic [ref=f9e308]:
+            - button "Copy link to clipboard" [ref=f9e310] [cursor=pointer]:
+              - generic [ref=f9e311]: 
+            - generic [ref=f9e312]: Claude Platform on AWS pricing
+        - paragraph [ref=f9e313]:
+          - link "Claude Platform on AWS" [ref=f9e314] [cursor=pointer]:
+            - /url: /docs/en/build-with-claude/claude-platform-on-aws
+          - text: bills through AWS Marketplace using Claude Consumption Units (CCUs). Anthropic rates your token usage in USD at standard per-model, per-feature rates, applies any negotiated discount, converts the result to CCUs at $0.01 per CCU, and reports the CCU quantity to AWS Marketplace hourly. Your AWS bill shows a single CCU line item.
+        - table [ref=f9e316]:
+          - rowgroup [ref=f9e317]:
+            - row [ref=f9e318]:
+              - columnheader "Concept" [ref=f9e319]
+              - columnheader "Details" [ref=f9e320]
+          - rowgroup [ref=f9e321]:
+            - row [ref=f9e322]:
+              - cell [ref=f9e323]:
+                - strong [ref=f9e324]: Billing unit
+              - cell "Claude Consumption Unit (CCU)" [ref=f9e325]
+            - row [ref=f9e326]:
+              - cell [ref=f9e327]:
+                - strong [ref=f9e328]: CCU price
+              - cell "$0.01 per CCU (fixed; discounts apply at token-to-CCU conversion, not to the CCU price)" [ref=f9e329]
+            - row [ref=f9e330]:
+              - cell [ref=f9e331]:
+                - strong [ref=f9e332]: Conversion
+              - cell [ref=f9e333]:
+                - text: Token usage rated in USD at standard per-model, per-feature rates (same as
+                - link "Claude API pricing" [ref=f9e334] [cursor=pointer]:
+                  - /url: "#model-pricing"
+                - text: ), then converted to CCUs at $0.01 per CCU
+            - row [ref=f9e335]:
+              - cell [ref=f9e336]:
+                - strong [ref=f9e337]: Billing cadence
+              - cell "Hourly metering to AWS Marketplace; monthly invoices" [ref=f9e338]
+            - row [ref=f9e339]:
+              - cell [ref=f9e340]:
+                - strong [ref=f9e341]: Payment model
+              - cell "Arrears only (postpaid); no prepaid credits" [ref=f9e342]
+            - row [ref=f9e343]:
+              - cell [ref=f9e344]:
+                - strong [ref=f9e345]: Discounts
+              - cell "Applied as fewer CCUs metered" [ref=f9e346]
+            - row [ref=f9e347]:
+              - cell [ref=f9e348]:
+                - strong [ref=f9e349]: Tax
+              - cell "Pre-tax metering; AWS Marketplace handles tax" [ref=f9e350]
+            - row [ref=f9e351]:
+              - cell [ref=f9e352]:
+                - strong [ref=f9e353]: Cost visibility
+              - cell "Real-time breakdown in the Claude Console (access through the AWS Console); AWS Cost Explorer shows aggregated CCU" [ref=f9e354]
+        - generic [ref=f9e355]:
+          - generic [ref=f9e356]: 
+          - paragraph [ref=f9e359]:
+            - strong [ref=f9e360]: Claude Consumption Units.
+            - text: If Customer accesses the Services through certain Marketplace Platforms (e.g., Claude Platform on AWS), usage will be invoiced in Claude Consumption Units ("CCU") rather than per MTok. A CCU is a unit of measure used solely for Marketplace Platform invoicing. One hundred (100) CCU represents $1.00 USD of fees owed for the Services, calculated at the applicable prices on
+            - link "claude.com/pricing#api" [ref=f9e361] [cursor=pointer]:
+              - /url: https://claude.com/pricing#api
+            - text: ", after application of any discounts."
+        - heading "Copy link to clipboard Inference geography" [level=3] [ref=f9e362]:
+          - generic [ref=f9e363]:
+            - button "Copy link to clipboard" [ref=f9e365] [cursor=pointer]:
+              - generic [ref=f9e366]: 
+            - generic [ref=f9e367]: Inference geography
+        - paragraph [ref=f9e368]:
+          - text: For Claude 4.6 and later models, using
+          - code [ref=f9e369]: "inference_geo: \"us\""
+          - text: applies a 1.1x pricing multiplier.
+          - code [ref=f9e370]: "inference_geo: \"global\""
+          - text: (default) uses standard pricing. See
+          - link "Data residency" [ref=f9e371] [cursor=pointer]:
+            - /url: /docs/en/manage-claude/data-residency
+          - text: for details.
+        - heading "Copy link to clipboard Private offers" [level=3] [ref=f9e372]:
+          - generic [ref=f9e373]:
+            - button "Copy link to clipboard" [ref=f9e375] [cursor=pointer]:
+              - generic [ref=f9e376]: 
+            - generic [ref=f9e377]: Private offers
+        - paragraph [ref=f9e378]:
+          - text: When you sign up on the AWS Console
+          - strong [ref=f9e379]: Claude Platform on AWS
+          - text: service page, the AWS Console looks up any private offer associated with your account and prompts you to accept it in AWS Marketplace. Contact your Anthropic account representative for private offer terms.
+        - generic [ref=f9e380]:
+          - generic [ref=f9e381]: 
+          - paragraph [ref=f9e384]: If you have an existing Amazon Bedrock private offer, contact your Anthropic or AWS account representative before getting started with Claude Platform on AWS to ensure your discounts are applied correctly. Discounts cannot be applied retroactively to usage incurred before your private offer is accepted.
+        - heading "Copy link to clipboard Claude in Microsoft Foundry pricing" [level=2] [ref=f9e385]:
+          - generic [ref=f9e386]:
+            - button "Copy link to clipboard" [ref=f9e388] [cursor=pointer]:
+              - generic [ref=f9e389]: 
+            - generic [ref=f9e390]: Claude in Microsoft Foundry pricing
+        - paragraph [ref=f9e391]:
+          - link "Claude in Microsoft Foundry" [ref=f9e392] [cursor=pointer]:
+            - /url: /docs/en/build-with-claude/claude-in-microsoft-foundry
+          - text: bills through the Azure Marketplace using Claude Consumption Units (CCUs). Anthropic rates your token usage in USD at standard per-model, per-feature rates, applies any negotiated discount, converts the result to CCUs at $0.01 per CCU, and reports the CCU quantity to the Azure Marketplace hourly. Your Azure bill shows a single CCU line item.
+        - table [ref=f9e394]:
+          - rowgroup [ref=f9e395]:
+            - row [ref=f9e396]:
+              - columnheader "Concept" [ref=f9e397]
+              - columnheader "Details" [ref=f9e398]
+          - rowgroup [ref=f9e399]:
+            - row [ref=f9e400]:
+              - cell [ref=f9e401]:
+                - strong [ref=f9e402]: Billing unit
+              - cell "Claude Consumption Unit (CCU)" [ref=f9e403]
+            - row [ref=f9e404]:
+              - cell [ref=f9e405]:
+                - strong [ref=f9e406]: CCU price
+              - cell "$0.01 per CCU (fixed; discounts apply at token-to-CCU conversion, not to the CCU price)" [ref=f9e407]
+            - row [ref=f9e408]:
+              - cell [ref=f9e409]:
+                - strong [ref=f9e410]: Conversion
+              - cell [ref=f9e411]:
+                - text: Token usage rated in USD at standard per-model, per-feature rates (same as
+                - link "Claude API pricing" [ref=f9e412] [cursor=pointer]:
+                  - /url: "#model-pricing"
+                - text: ), then converted to CCUs at $0.01 per CCU
+            - row [ref=f9e413]:
+              - cell [ref=f9e414]:
+                - strong [ref=f9e415]: Billing cadence
+              - cell "Hourly metering to the Azure Marketplace; monthly invoices" [ref=f9e416]
+            - row [ref=f9e417]:
+              - cell [ref=f9e418]:
+                - strong [ref=f9e419]: Payment model
+              - cell "Arrears only (postpaid); no prepaid credits" [ref=f9e420]
+            - row [ref=f9e421]:
+              - cell [ref=f9e422]:
+                - strong [ref=f9e423]: Discounts
+              - cell "Applied as fewer CCUs metered" [ref=f9e424]
+            - row [ref=f9e425]:
+              - cell [ref=f9e426]:
+                - strong [ref=f9e427]: Tax
+              - cell "Pre-tax metering; Azure Marketplace handles tax" [ref=f9e428]
+            - row [ref=f9e429]:
+              - cell [ref=f9e430]:
+                - strong [ref=f9e431]: Cost visibility
+              - cell "Azure Cost Management shows aggregated CCU" [ref=f9e432]
+        - generic [ref=f9e433]:
+          - generic [ref=f9e434]: 
+          - paragraph [ref=f9e437]:
+            - strong [ref=f9e438]: Claude Consumption Units.
+            - text: If Customer accesses the Services through certain Marketplace Platforms (e.g., Claude Platform on AWS, Claude in Microsoft Foundry), usage will be invoiced in Claude Consumption Units ("CCU") rather than per MTok. A CCU is a unit of measure used solely for Marketplace Platform invoicing. One hundred (100) CCU represents $1.00 USD of fees owed for the Services, calculated at the applicable prices on
+            - link "claude.com/pricing#api" [ref=f9e439] [cursor=pointer]:
+              - /url: https://claude.com/pricing#api
+            - text: ", after application of any discounts."
+        - heading "Copy link to clipboard Inference geography" [level=3] [ref=f9e440]:
+          - generic [ref=f9e441]:
+            - button "Copy link to clipboard" [ref=f9e443] [cursor=pointer]:
+              - generic [ref=f9e444]: 
+            - generic [ref=f9e445]: Inference geography
+        - paragraph [ref=f9e446]:
+          - text: Deployments hosted on Azure can use the US Data Zone Standard deployment type, which keeps inference within the United States. This is equivalent to
+          - code [ref=f9e447]: "inference_geo: \"us\""
+          - text: on the Claude API and applies the same 1.1x pricing multiplier. See
+          - link "Data residency" [ref=f9e448] [cursor=pointer]:
+            - /url: /docs/en/manage-claude/data-residency
+          - text: for details.
+        - heading "Copy link to clipboard Feature-specific pricing" [level=2] [ref=f9e449]:
+          - generic [ref=f9e450]:
+            - button "Copy link to clipboard" [ref=f9e452] [cursor=pointer]:
+              - generic [ref=f9e453]: 
+            - generic [ref=f9e454]: Feature-specific pricing
+        - heading "Copy link to clipboard Prompt caching" [level=3] [ref=f9e455]:
+          - generic [ref=f9e456]:
+            - button "Copy link to clipboard" [ref=f9e458] [cursor=pointer]:
+              - generic [ref=f9e459]: 
+            - generic [ref=f9e460]: Prompt caching
+        - paragraph [ref=f9e461]: Prompt caching reduces costs and latency by reusing previously processed portions of your prompt across API calls. Instead of reprocessing the same large system prompt, document, or conversation history on every request, the API reads from cache at a fraction of the standard input price.
+        - paragraph [ref=f9e462]: "There are two ways to enable prompt caching:"
+        - list [ref=f9e463]:
+          - listitem [ref=f9e464]:
+            - text: •
+            - strong [ref=f9e465]: "Automatic caching:"
+            - text: Add a single
+            - code [ref=f9e466]: cache_control
+            - text: field at the top level of your request. The system automatically manages cache breakpoints as conversations grow. This is the recommended starting point for most use cases.
+          - listitem [ref=f9e467]:
+            - text: •
+            - strong [ref=f9e468]: "Explicit cache breakpoints:"
+            - text: Place
+            - code [ref=f9e469]: cache_control
+            - text: directly on individual content blocks for fine-grained control over exactly what gets cached.
+        - paragraph [ref=f9e470]: "Prompt caching uses the following pricing multipliers relative to base input token rates:"
+        - table [ref=f9e472]:
+          - rowgroup [ref=f9e473]:
+            - row [ref=f9e474]:
+              - columnheader "Cache operation" [ref=f9e475]
+              - columnheader "Multiplier" [ref=f9e476]
+              - columnheader "Duration" [ref=f9e477]
+          - rowgroup [ref=f9e478]:
+            - row [ref=f9e479]:
+              - cell "5-minute cache write" [ref=f9e480]
+              - cell "1.25x base input price" [ref=f9e481]
+              - cell "Cache valid for 5 minutes" [ref=f9e482]
+            - row [ref=f9e483]:
+              - cell "1-hour cache write" [ref=f9e484]
+              - cell "2x base input price" [ref=f9e485]
+              - cell "Cache valid for 1 hour" [ref=f9e486]
+            - row [ref=f9e487]:
+              - cell "Cache read (hit)" [ref=f9e488]
+              - cell "0.1x base input price" [ref=f9e489]
+              - cell "Same duration as the preceding write" [ref=f9e490]
+        - paragraph [ref=f9e491]: Cache write tokens are charged when content is first stored. Cache read tokens are charged when a subsequent request retrieves the cached content. A cache hit costs 10% of the standard input price, which means caching pays off after just one cache read for the 5-minute duration (1.25x write), or after two cache reads for the 1-hour duration (2x write).
+        - paragraph [ref=f9e492]: These multipliers stack with other pricing modifiers, including the Batch API discount and data residency.
+        - paragraph [ref=f9e493]:
+          - text: For implementation details, supported models, and code examples, see
+          - link "Prompt caching" [ref=f9e494] [cursor=pointer]:
+            - /url: /docs/en/build-with-claude/prompt-caching
+          - text: .
+        - heading "Copy link to clipboard Data residency pricing" [level=3] [ref=f9e495]:
+          - generic [ref=f9e496]:
+            - button "Copy link to clipboard" [ref=f9e498] [cursor=pointer]:
+              - generic [ref=f9e499]: 
+            - generic [ref=f9e500]: Data residency pricing
+        - paragraph [ref=f9e501]:
+          - text: For Claude 4.6 and later models, specifying US-only inference through the
+          - code [ref=f9e502]: inference_geo
+          - text: parameter incurs a 1.1x multiplier on all token pricing categories, including input tokens, output tokens, cache writes, and cache reads. Global routing (the default) uses standard pricing.
+        - paragraph [ref=f9e503]:
+          - text: This applies to the Claude API (first-party) and Claude Platform on AWS. On Claude in Microsoft Foundry, the same 1.1x multiplier applies to deployments that use the US Data Zone Standard deployment type (see
+          - link "Inference geography" [ref=f9e504] [cursor=pointer]:
+            - /url: "#foundry-inference-geography"
+          - text: ). Partner-operated platforms (Bedrock and Google Cloud) have independent regional pricing. See
+          - link "Bedrock" [ref=f9e505] [cursor=pointer]:
+            - /url: https://aws.amazon.com/bedrock/pricing/
+          - text: and
+          - link "Google Cloud" [ref=f9e506] [cursor=pointer]:
+            - /url: https://cloud.google.com/vertex-ai/generative-ai/pricing#claude-models
+          - text: for details. Earlier models do not support the
+          - code [ref=f9e507]: inference_geo
+          - text: parameter and always use standard pricing; requests that include the parameter on these models return a 400 error.
+        - paragraph [ref=f9e508]:
+          - text: For more information, see
+          - link "Data residency" [ref=f9e509] [cursor=pointer]:
+            - /url: /docs/en/manage-claude/data-residency
+          - text: .
+        - heading "Copy link to clipboard Fast mode pricing" [level=3] [ref=f9e510]:
+          - generic [ref=f9e511]:
+            - button "Copy link to clipboard" [ref=f9e513] [cursor=pointer]:
+              - generic [ref=f9e514]: 
+            - generic [ref=f9e515]: Fast mode pricing
+        - paragraph [ref=f9e516]:
+          - link "Fast mode" [ref=f9e517] [cursor=pointer]:
+            - /url: /docs/en/build-with-claude/fast-mode
+          - text: ", in research preview, provides significantly faster output for Claude Opus 5 and Claude Opus 4.8 at premium pricing. Fast mode pricing applies across the full context window, including requests over 200k input tokens. Fast mode is available on the Claude API (first-party) only; it is not available on Claude Platform on AWS or partner-operated cloud platforms."
+        - table [ref=f9e519]:
+          - rowgroup [ref=f9e520]:
+            - row [ref=f9e521]:
+              - columnheader "Model" [ref=f9e522]
+              - columnheader "Input" [ref=f9e523]
+              - columnheader "Output" [ref=f9e524]
+          - rowgroup [ref=f9e525]:
+            - row [ref=f9e526]:
+              - cell "Claude Opus 5 / Claude Opus 4.8" [ref=f9e527]
+              - cell "$10 / MTok" [ref=f9e528]
+              - cell "$50 / MTok" [ref=f9e529]
+        - paragraph [ref=f9e530]:
+          - text: Fast mode is not available on Claude Opus 4.7 (requests with
+          - code [ref=f9e531]: "speed: \"fast\""
+          - text: return an error) or Claude Opus 4.6 (requests run at standard speed and are billed at standard rates). See
+          - link "Fast mode" [ref=f9e532] [cursor=pointer]:
+            - /url: /docs/en/build-with-claude/fast-mode#supported-models
+          - text: .
+        - paragraph [ref=f9e533]: "Fast mode pricing stacks with other pricing modifiers:"
+        - list [ref=f9e534]:
+          - listitem [ref=f9e535]:
+            - text: •
+            - link "Prompt caching multipliers" [ref=f9e536] [cursor=pointer]:
+              - /url: "#prompt-caching"
+            - text: apply on top of fast mode pricing
+          - listitem [ref=f9e537]:
+            - text: •
+            - link "Data residency" [ref=f9e538] [cursor=pointer]:
+              - /url: /docs/en/manage-claude/data-residency
+            - text: multipliers apply on top of fast mode pricing
+        - paragraph [ref=f9e539]:
+          - text: Fast mode is not available with the
+          - link "Batch API" [ref=f9e540] [cursor=pointer]:
+            - /url: "#batch-processing"
+          - text: .
+        - paragraph [ref=f9e541]:
+          - text: For more information, see
+          - link "Fast mode" [ref=f9e542] [cursor=pointer]:
+            - /url: /docs/en/build-with-claude/fast-mode
+          - text: .
+        - heading "Copy link to clipboard Batch processing" [level=3] [ref=f9e543]:
+          - generic [ref=f9e544]:
+            - button "Copy link to clipboard" [ref=f9e546] [cursor=pointer]:
+              - generic [ref=f9e547]: 
+            - generic [ref=f9e548]: Batch processing
+        - paragraph [ref=f9e549]: The Batch API allows asynchronous processing of large volumes of requests with a 50% discount on both input and output tokens.
+        - table [ref=f9e551]:
+          - rowgroup [ref=f9e552]:
+            - row [ref=f9e553]:
+              - columnheader "Model" [ref=f9e554]
+              - columnheader "Batch input" [ref=f9e555]
+              - columnheader "Batch output" [ref=f9e556]
+          - rowgroup [ref=f9e557]:
+            - row [ref=f9e558]:
+              - cell "Claude Fable 5" [ref=f9e559]
+              - cell "$5 / MTok" [ref=f9e560]
+              - cell "$25 / MTok" [ref=f9e561]
+            - row [ref=f9e562]:
+              - cell [ref=f9e563]:
+                - text: Claude Mythos 5 (
+                - link "limited availability" [ref=f9e564] [cursor=pointer]:
+                  - /url: https://anthropic.com/glasswing
+                - text: )
+              - cell "$5 / MTok" [ref=f9e565]
+              - cell "$25 / MTok" [ref=f9e566]
+            - row [ref=f9e567]:
+              - cell "Claude Opus 5" [ref=f9e568]
+              - cell "$2.50 / MTok" [ref=f9e569]
+              - cell "$12.50 / MTok" [ref=f9e570]
+            - row [ref=f9e571]:
+              - cell "Claude Opus 4.8" [ref=f9e572]
+              - cell "$2.50 / MTok" [ref=f9e573]
+              - cell "$12.50 / MTok" [ref=f9e574]
+            - row [ref=f9e575]:
+              - cell "Claude Opus 4.7" [ref=f9e576]
+              - cell "$2.50 / MTok" [ref=f9e577]
+              - cell "$12.50 / MTok" [ref=f9e578]
+            - row [ref=f9e579]:
+              - cell "Claude Opus 4.6" [ref=f9e580]
+              - cell "$2.50 / MTok" [ref=f9e581]
+              - cell "$12.50 / MTok" [ref=f9e582]
+            - row [ref=f9e583]:
+              - cell "Claude Opus 4.5" [ref=f9e584]
+              - cell "$2.50 / MTok" [ref=f9e585]
+              - cell "$12.50 / MTok" [ref=f9e586]
+            - row [ref=f9e587]:
+              - cell [ref=f9e588]:
+                - text: Claude Opus 4.1 (
+                - link "deprecated" [ref=f9e589] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell "$7.50 / MTok" [ref=f9e590]
+              - cell "$37.50 / MTok" [ref=f9e591]
+            - row [ref=f9e592]:
+              - cell [ref=f9e593]:
+                - text: Claude Opus 4 (
+                - link "retired, except on Google Cloud" [ref=f9e594] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell "$7.50 / MTok" [ref=f9e595]
+              - cell "$37.50 / MTok" [ref=f9e596]
+            - row [ref=f9e597]:
+              - cell [ref=f9e598]:
+                - text: Claude Sonnet 5
+                - link "through August 31, 2026" [ref=f9e599] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/pricing#claude-sonnet-5-introductory-pricing
+              - cell "$1 / MTok" [ref=f9e600]
+              - cell "$5 / MTok" [ref=f9e601]
+            - row [ref=f9e602]:
+              - cell "Claude Sonnet 5 starting September 1, 2026" [ref=f9e603]: Claude Sonnet 5starting September 1, 2026
+              - cell "$1.50 / MTok" [ref=f9e604]
+              - cell "$7.50 / MTok" [ref=f9e605]
+            - row [ref=f9e606]:
+              - cell "Claude Sonnet 4.6" [ref=f9e607]
+              - cell "$1.50 / MTok" [ref=f9e608]
+              - cell "$7.50 / MTok" [ref=f9e609]
+            - row [ref=f9e610]:
+              - cell "Claude Sonnet 4.5" [ref=f9e611]
+              - cell "$1.50 / MTok" [ref=f9e612]
+              - cell "$7.50 / MTok" [ref=f9e613]
+            - row [ref=f9e614]:
+              - cell [ref=f9e615]:
+                - text: Claude Sonnet 4 (
+                - link "retired, except on Bedrock and Google Cloud" [ref=f9e616] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell "$1.50 / MTok" [ref=f9e617]
+              - cell "$7.50 / MTok" [ref=f9e618]
+            - row [ref=f9e619]:
+              - cell "Claude Haiku 4.5" [ref=f9e620]
+              - cell "$0.50 / MTok" [ref=f9e621]
+              - cell "$2.50 / MTok" [ref=f9e622]
+            - row [ref=f9e623]:
+              - cell [ref=f9e624]:
+                - text: Claude Haiku 3.5 (
+                - link "retired, except on Bedrock and Google Cloud" [ref=f9e625] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell "$0.40 / MTok" [ref=f9e626]
+              - cell "$2 / MTok" [ref=f9e627]
+        - paragraph [ref=f9e628]:
+          - text: For more information about batch processing, see
+          - link "Batch processing" [ref=f9e629] [cursor=pointer]:
+            - /url: /docs/en/build-with-claude/batch-processing
+          - text: .
+        - heading "Copy link to clipboard Long context pricing" [level=3] [ref=f9e630]:
+          - generic [ref=f9e631]:
+            - button "Copy link to clipboard" [ref=f9e633] [cursor=pointer]:
+              - generic [ref=f9e634]: 
+            - generic [ref=f9e635]: Long context pricing
+        - paragraph [ref=f9e636]:
+          - text: Claude 4.6 and later models and
+          - link "Claude Mythos Preview" [ref=f9e637] [cursor=pointer]:
+            - /url: https://anthropic.com/glasswing
+          - text: include the full
+          - link "1M token context window" [ref=f9e638] [cursor=pointer]:
+            - /url: /docs/en/build-with-claude/context-windows
+          - text: at standard pricing. (A 900k-token request is billed at the same per-token rate as a 9k-token request.) Prompt caching and batch processing discounts apply at standard rates across the full context window.
+        - heading "Copy link to clipboard Tool use pricing" [level=3] [ref=f9e639]:
+          - generic [ref=f9e640]:
+            - button "Copy link to clipboard" [ref=f9e642] [cursor=pointer]:
+              - generic [ref=f9e643]: 
+            - generic [ref=f9e644]: Tool use pricing
+        - paragraph [ref=f9e645]: "Tool use requests are priced based on:"
+        - list [ref=f9e646]:
+          - listitem [ref=f9e647]:
+            - text: The total number of input tokens sent to the model (including in the
+            - code [ref=f9e648]: tools
+            - text: parameter)
+          - listitem [ref=f9e649]: The number of output tokens generated
+          - listitem [ref=f9e650]: For server-side tools, additional usage-based pricing (e.g., web search charges per search performed)
+        - paragraph [ref=f9e651]: Client-side tools are priced the same as any other Claude API request, while server-side tools may incur additional charges based on their specific usage.
+        - paragraph [ref=f9e652]: "The additional tokens from tool use come from:"
+        - list [ref=f9e653]:
+          - listitem [ref=f9e654]:
+            - text: • The
+            - code [ref=f9e655]: tools
+            - text: parameter in API requests (tool names, descriptions, and schemas)
+          - listitem [ref=f9e656]:
+            - text: •
+            - code [ref=f9e657]: tool_use
+            - text: content blocks in API requests and responses
+          - listitem [ref=f9e658]:
+            - text: •
+            - code [ref=f9e659]: tool_result
+            - text: content blocks in API requests
+        - paragraph [ref=f9e660]:
+          - text: When you use
+          - code [ref=f9e661]: tools
+          - text: ", the API also automatically includes a special system prompt for the model which enables tool use. The number of tool use tokens required for each model are listed below (excluding the additional tokens listed above). Note that the table assumes at least 1 tool is provided. If no"
+          - code [ref=f9e662]: tools
+          - text: are provided, then a tool choice of
+          - code [ref=f9e663]: none
+          - text: uses 0 additional system prompt tokens.
+        - table [ref=f9e665]:
+          - rowgroup [ref=f9e666]:
+            - row [ref=f9e667]:
+              - columnheader "Model" [ref=f9e668]
+              - columnheader "Tool choice" [ref=f9e669]
+              - columnheader "Tool use system prompt token count" [ref=f9e670]
+          - rowgroup [ref=f9e671]:
+            - row [ref=f9e672]:
+              - cell "Claude Opus 5" [ref=f9e673]
+              - cell [ref=f9e674]:
+                - code [ref=f9e675]: auto
+                - text: ","
+                - code [ref=f9e676]: none
+                - separator [ref=f9e677]
+                - code [ref=f9e678]: any
+                - text: ","
+                - code [ref=f9e679]: tool
+              - cell "286 tokens 406 tokens" [ref=f9e680]:
+                - text: 286 tokens
+                - separator [ref=f9e681]
+                - text: 406 tokens
+            - row [ref=f9e682]:
+              - cell "Claude Opus 4.8" [ref=f9e683]
+              - cell [ref=f9e684]:
+                - code [ref=f9e685]: auto
+                - text: ","
+                - code [ref=f9e686]: none
+                - separator [ref=f9e687]
+                - code [ref=f9e688]: any
+                - text: ","
+                - code [ref=f9e689]: tool
+              - cell "290 tokens 410 tokens" [ref=f9e690]:
+                - text: 290 tokens
+                - separator [ref=f9e691]
+                - text: 410 tokens
+            - row [ref=f9e692]:
+              - cell "Claude Opus 4.7" [ref=f9e693]
+              - cell [ref=f9e694]:
+                - code [ref=f9e695]: auto
+                - text: ","
+                - code [ref=f9e696]: none
+                - separator [ref=f9e697]
+                - code [ref=f9e698]: any
+                - text: ","
+                - code [ref=f9e699]: tool
+              - cell "675 tokens 804 tokens" [ref=f9e700]:
+                - text: 675 tokens
+                - separator [ref=f9e701]
+                - text: 804 tokens
+            - row [ref=f9e702]:
+              - cell "Claude Opus 4.6" [ref=f9e703]
+              - cell [ref=f9e704]:
+                - code [ref=f9e705]: auto
+                - text: ","
+                - code [ref=f9e706]: none
+                - separator [ref=f9e707]
+                - code [ref=f9e708]: any
+                - text: ","
+                - code [ref=f9e709]: tool
+              - cell "497 tokens 589 tokens" [ref=f9e710]:
+                - text: 497 tokens
+                - separator [ref=f9e711]
+                - text: 589 tokens
+            - row [ref=f9e712]:
+              - cell "Claude Opus 4.5" [ref=f9e713]
+              - cell [ref=f9e714]:
+                - code [ref=f9e715]: auto
+                - text: ","
+                - code [ref=f9e716]: none
+                - separator [ref=f9e717]
+                - code [ref=f9e718]: any
+                - text: ","
+                - code [ref=f9e719]: tool
+              - cell "496 tokens 588 tokens" [ref=f9e720]:
+                - text: 496 tokens
+                - separator [ref=f9e721]
+                - text: 588 tokens
+            - row [ref=f9e722]:
+              - cell [ref=f9e723]:
+                - text: Claude Opus 4.1 (
+                - link "deprecated" [ref=f9e724] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell [ref=f9e725]:
+                - code [ref=f9e726]: auto
+                - text: ","
+                - code [ref=f9e727]: none
+                - separator [ref=f9e728]
+                - code [ref=f9e729]: any
+                - text: ","
+                - code [ref=f9e730]: tool
+              - cell "313 tokens 315 tokens" [ref=f9e731]:
+                - text: 313 tokens
+                - separator [ref=f9e732]
+                - text: 315 tokens
+            - row [ref=f9e733]:
+              - cell [ref=f9e734]:
+                - text: Claude Opus 4 (
+                - link "retired, except on Google Cloud" [ref=f9e735] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell [ref=f9e736]:
+                - code [ref=f9e737]: auto
+                - text: ","
+                - code [ref=f9e738]: none
+                - separator [ref=f9e739]
+                - code [ref=f9e740]: any
+                - text: ","
+                - code [ref=f9e741]: tool
+              - cell "313 tokens 315 tokens" [ref=f9e742]:
+                - text: 313 tokens
+                - separator [ref=f9e743]
+                - text: 315 tokens
+            - row [ref=f9e744]:
+              - cell "Claude Sonnet 5" [ref=f9e745]
+              - cell [ref=f9e746]:
+                - code [ref=f9e747]: auto
+                - text: ","
+                - code [ref=f9e748]: none
+                - separator [ref=f9e749]
+                - code [ref=f9e750]: any
+                - text: ","
+                - code [ref=f9e751]: tool
+              - cell "354 tokens 474 tokens" [ref=f9e752]:
+                - text: 354 tokens
+                - separator [ref=f9e753]
+                - text: 474 tokens
+            - row [ref=f9e754]:
+              - cell "Claude Sonnet 4.6" [ref=f9e755]
+              - cell [ref=f9e756]:
+                - code [ref=f9e757]: auto
+                - text: ","
+                - code [ref=f9e758]: none
+                - separator [ref=f9e759]
+                - code [ref=f9e760]: any
+                - text: ","
+                - code [ref=f9e761]: tool
+              - cell "497 tokens 589 tokens" [ref=f9e762]:
+                - text: 497 tokens
+                - separator [ref=f9e763]
+                - text: 589 tokens
+            - row [ref=f9e764]:
+              - cell "Claude Sonnet 4.5" [ref=f9e765]
+              - cell [ref=f9e766]:
+                - code [ref=f9e767]: auto
+                - text: ","
+                - code [ref=f9e768]: none
+                - separator [ref=f9e769]
+                - code [ref=f9e770]: any
+                - text: ","
+                - code [ref=f9e771]: tool
+              - cell "496 tokens 588 tokens" [ref=f9e772]:
+                - text: 496 tokens
+                - separator [ref=f9e773]
+                - text: 588 tokens
+            - row [ref=f9e774]:
+              - cell [ref=f9e775]:
+                - text: Claude Sonnet 4 (
+                - link "retired, except on Bedrock and Google Cloud" [ref=f9e776] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell [ref=f9e777]:
+                - code [ref=f9e778]: auto
+                - text: ","
+                - code [ref=f9e779]: none
+                - separator [ref=f9e780]
+                - code [ref=f9e781]: any
+                - text: ","
+                - code [ref=f9e782]: tool
+              - cell "313 tokens 315 tokens" [ref=f9e783]:
+                - text: 313 tokens
+                - separator [ref=f9e784]
+                - text: 315 tokens
+            - row [ref=f9e785]:
+              - cell "Claude Haiku 4.5" [ref=f9e786]
+              - cell [ref=f9e787]:
+                - code [ref=f9e788]: auto
+                - text: ","
+                - code [ref=f9e789]: none
+                - separator [ref=f9e790]
+                - code [ref=f9e791]: any
+                - text: ","
+                - code [ref=f9e792]: tool
+              - cell "496 tokens 588 tokens" [ref=f9e793]:
+                - text: 496 tokens
+                - separator [ref=f9e794]
+                - text: 588 tokens
+            - row [ref=f9e795]:
+              - cell [ref=f9e796]:
+                - text: Claude Haiku 3.5 (
+                - link "retired, except on Bedrock and Google Cloud" [ref=f9e797] [cursor=pointer]:
+                  - /url: /docs/en/about-claude/model-deprecations
+                - text: )
+              - cell [ref=f9e798]:
+                - code [ref=f9e799]: auto
+                - text: ","
+                - code [ref=f9e800]: none
+                - separator [ref=f9e801]
+                - code [ref=f9e802]: any
+                - text: ","
+                - code [ref=f9e803]: tool
+              - cell "264 tokens 355 tokens" [ref=f9e804]:
+                - text: 264 tokens
+                - separator [ref=f9e805]
+                - text: 355 tokens
+        - paragraph [ref=f9e806]: These token counts are added to your normal input and output tokens to calculate the total cost of a request.
+        - paragraph [ref=f9e807]:
+          - text: For current per-model prices, refer to the
+          - link "model pricing" [ref=f9e808] [cursor=pointer]:
+            - /url: "#model-pricing"
+          - text: section.
+        - paragraph [ref=f9e809]:
+          - text: For more information about tool use implementation and best practices, see
+          - link "Tool use" [ref=f9e810] [cursor=pointer]:
+            - /url: /docs/en/agents-and-tools/tool-use/overview
+          - text: .
+        - heading "Copy link to clipboard Specific tool pricing" [level=3] [ref=f9e811]:
+          - generic [ref=f9e812]:
+            - button "Copy link to clipboard" [ref=f9e814] [cursor=pointer]:
+              - generic [ref=f9e815]: 
+            - generic [ref=f9e816]: Specific tool pricing
+        - heading "Copy link to clipboard Bash tool" [level=4] [ref=f9e817]:
+          - generic [ref=f9e818]:
+            - button "Copy link to clipboard" [ref=f9e820] [cursor=pointer]:
+              - generic [ref=f9e821]: 
+            - generic [ref=f9e822]: Bash tool
+        - paragraph [ref=f9e823]:
+          - text: The bash tool definition adds the following input tokens to your request. This is in addition to the per-model
+          - link "tool use system prompt" [ref=f9e824] [cursor=pointer]:
+            - /url: /docs/en/agents-and-tools/tool-use/overview#pricing
+          - text: that applies whenever any tool is present.
+        - table [ref=f9e826]:
+          - rowgroup [ref=f9e827]:
+            - row [ref=f9e828]:
+              - columnheader "Model" [ref=f9e829]
+              - columnheader "Additional input tokens" [ref=f9e830]
+          - rowgroup [ref=f9e831]:
+            - row [ref=f9e832]:
+              - cell "Claude Opus 5, Claude Opus 4.8, and Claude Opus 4.7" [ref=f9e833]
+              - cell "325 tokens" [ref=f9e834]
+            - row [ref=f9e835]:
+              - cell "Claude Opus 4.6, Claude Sonnet 4.6, and earlier" [ref=f9e836]
+              - cell "244 tokens" [ref=f9e837]
+        - paragraph [ref=f9e838]: "Additional tokens are consumed by:"
+        - list [ref=f9e839]:
+          - listitem [ref=f9e840]: • Command outputs (stdout/stderr)
+          - listitem [ref=f9e841]: • Error messages
+          - listitem [ref=f9e842]: • Large file contents
+        - paragraph [ref=f9e843]:
+          - text: See
+          - link "tool use pricing" [ref=f9e844] [cursor=pointer]:
+            - /url: "#tool-use-pricing"
+          - text: for complete pricing details.
+        - heading "Copy link to clipboard Code execution tool" [level=4] [ref=f9e845]:
+          - generic [ref=f9e846]:
+            - button "Copy link to clipboard" [ref=f9e848] [cursor=pointer]:
+              - generic [ref=f9e849]: 
+            - generic [ref=f9e850]: Code execution tool
+        - paragraph [ref=f9e851]:
+          - strong [ref=f9e852]: Code execution is free when used with web search or web fetch.
+          - text: When
+          - code [ref=f9e853]: web_search_20260209
+          - text: (or later) or
+          - code [ref=f9e854]: web_fetch_20260209
+          - text: (or later) is included in your API request, there are no additional charges for code execution tool calls beyond the standard input and output token costs.
+        - paragraph [ref=f9e855]: "When used without these tools, code execution is billed by execution time, tracked separately from token usage:"
+        - list [ref=f9e856]:
+          - listitem [ref=f9e857]: • Execution time has a minimum of 5 minutes
+          - listitem [ref=f9e858]:
+            - text: • Each organization receives
+            - strong [ref=f9e859]: 1,550 free hours
+            - text: of usage per month
+          - listitem [ref=f9e860]:
+            - text: • Additional usage beyond 1,550 hours is billed at
+            - strong [ref=f9e861]: $0.05 USD per hour, per container
+          - listitem [ref=f9e862]: • If files are included in the request, execution time is billed even if the tool is not called, because files are preloaded onto the container
+        - paragraph [ref=f9e863]: "Code execution usage is tracked in the response:"
+        - generic [ref=f9e864]:
+          - code [ref=f9e868]:
+            - generic [ref=f9e869]: "{"
+            - generic [ref=f9e870]: "\"usage\": {"
+            - generic [ref=f9e871]: "\"input_tokens\": 105,"
+            - generic [ref=f9e872]: "\"output_tokens\": 239,"
+            - generic [ref=f9e873]: "\"server_tool_use\": {"
+            - generic [ref=f9e874]: "\"code_execution_requests\": 1"
+            - generic [ref=f9e875]: "}"
+            - generic [ref=f9e876]: "}"
+            - generic [ref=f9e877]: "}"
+          - button "Copy code" [ref=f9e879] [cursor=pointer]:
+            - generic [ref=f9e881]: 
+        - heading "Copy link to clipboard Text editor tool" [level=4] [ref=f9e883]:
+          - generic [ref=f9e884]:
+            - button "Copy link to clipboard" [ref=f9e886] [cursor=pointer]:
+              - generic [ref=f9e887]: 
+            - generic [ref=f9e888]: Text editor tool
+        - paragraph [ref=f9e889]: The text editor tool uses the same pricing structure as other tools used with Claude. It follows the standard input and output token pricing based on the Claude model you're using.
+        - paragraph [ref=f9e890]: "In addition to the base tokens, the following additional input tokens are needed for the text editor tool:"
+        - table [ref=f9e892]:
+          - rowgroup [ref=f9e893]:
+            - row [ref=f9e894]:
+              - columnheader "Tool" [ref=f9e895]
+              - columnheader "Additional input tokens" [ref=f9e896]
+          - rowgroup [ref=f9e897]:
+            - row [ref=f9e898]:
+              - cell [ref=f9e899]:
+                - code [ref=f9e900]: text_editor_20250429
+                - text: (Claude 4.x)
+              - cell "700 tokens" [ref=f9e901]
+        - paragraph [ref=f9e902]:
+          - text: See
+          - link "tool use pricing" [ref=f9e903] [cursor=pointer]:
+            - /url: "#tool-use-pricing"
+          - text: for complete pricing details.
+        - heading "Copy link to clipboard Web search tool" [level=4] [ref=f9e904]:
+          - generic [ref=f9e905]:
+            - button "Copy link to clipboard" [ref=f9e907] [cursor=pointer]:
+              - generic [ref=f9e908]: 
+            - generic [ref=f9e909]: Web search tool
+        - paragraph [ref=f9e910]: "Web search usage is charged in addition to token usage:"
+        - generic [ref=f9e911]:
+          - code [ref=f9e915]:
+            - generic [ref=f9e916]: "{"
+            - generic [ref=f9e917]: "\"usage\": {"
+            - generic [ref=f9e918]: "\"input_tokens\": 105,"
+            - generic [ref=f9e919]: "\"output_tokens\": 6039,"
+            - generic [ref=f9e920]: "\"cache_read_input_tokens\": 7123,"
+            - generic [ref=f9e921]: "\"cache_creation_input_tokens\": 7345,"
+            - generic [ref=f9e922]: "\"server_tool_use\": {"
+            - generic [ref=f9e923]: "\"web_search_requests\": 1"
+            - generic [ref=f9e924]: "}"
+            - generic [ref=f9e925]: "}"
+            - generic [ref=f9e926]: "}"
+          - button "Copy code" [ref=f9e928] [cursor=pointer]:
+            - generic [ref=f9e930]: 
+        - paragraph [ref=f9e932]:
+          - text: Web search is available on the Claude API for
+          - strong [ref=f9e933]: $10 per 1,000 searches
+          - text: ", plus standard token costs for search-generated content. Web search results retrieved throughout a conversation are counted as input tokens, in search iterations executed during a single turn and in subsequent conversation turns."
+        - paragraph [ref=f9e934]: Each web search counts as one use, regardless of the number of results returned. If an error occurs during web search, the web search will not be billed.
+        - heading "Copy link to clipboard Web fetch tool" [level=4] [ref=f9e935]:
+          - generic [ref=f9e936]:
+            - button "Copy link to clipboard" [ref=f9e938] [cursor=pointer]:
+              - generic [ref=f9e939]: 
+            - generic [ref=f9e940]: Web fetch tool
+        - paragraph [ref=f9e941]:
+          - text: Web fetch usage has
+          - strong [ref=f9e942]: no additional charges
+          - text: "beyond standard token costs:"
+        - generic [ref=f9e943]:
+          - code [ref=f9e947]:
+            - generic [ref=f9e948]: "{"
+            - generic [ref=f9e949]: "\"usage\": {"
+            - generic [ref=f9e950]: "\"input_tokens\": 25039,"
+            - generic [ref=f9e951]: "\"output_tokens\": 931,"
+            - generic [ref=f9e952]: "\"cache_read_input_tokens\": 0,"
+            - generic [ref=f9e953]: "\"cache_creation_input_tokens\": 0,"
+            - generic [ref=f9e954]: "\"server_tool_use\": {"
+            - generic [ref=f9e955]: "\"web_fetch_requests\": 1"
+            - generic [ref=f9e956]: "}"
+            - generic [ref=f9e957]: "}"
+            - generic [ref=f9e958]: "}"
+          - button "Copy code" [ref=f9e960] [cursor=pointer]:
+            - generic [ref=f9e962]: 
+        - paragraph [ref=f9e964]:
+          - text: The web fetch tool is available on the Claude API at
+          - strong [ref=f9e965]: no additional cost
+          - text: . You only pay standard token costs for the fetched content that becomes part of your conversation context.
+        - paragraph [ref=f9e966]:
+          - text: To protect against inadvertently fetching large content that would consume excessive tokens, use the
+          - code [ref=f9e967]: max_content_tokens
+          - text: parameter to set appropriate limits based on your use case and budget considerations.
+        - paragraph [ref=f9e968]: "Example token usage for typical content:"
+        - list [ref=f9e969]:
+          - listitem [ref=f9e970]: "• Average web page (10 kB): ~2,500 tokens"
+          - listitem [ref=f9e971]: "• Large documentation page (100 kB): ~25,000 tokens"
+          - listitem [ref=f9e972]: "• Research paper PDF (500 kB): ~125,000 tokens"
+        - heading "Copy link to clipboard Computer use tool" [level=4] [ref=f9e973]:
+          - generic [ref=f9e974]:
+            - button "Copy link to clipboard" [ref=f9e976] [cursor=pointer]:
+              - generic [ref=f9e977]: 
+            - generic [ref=f9e978]: Computer use tool
+        - paragraph [ref=f9e979]:
+          - text: Computer use follows the standard
+          - link "tool use pricing" [ref=f9e980] [cursor=pointer]:
+            - /url: /docs/en/agents-and-tools/tool-use/overview#pricing
+          - text: ". When using the computer use tool:"
+        - paragraph [ref=f9e981]:
+          - strong [ref=f9e982]: "System prompt overhead:"
+          - text: The computer use beta adds 466–499 tokens to the system prompt
+        - paragraph [ref=f9e983]:
+          - strong [ref=f9e984]: "Computer use tool token usage:"
+        - table [ref=f9e986]:
+          - rowgroup [ref=f9e987]:
+            - row [ref=f9e988]:
+              - columnheader "Model" [ref=f9e989]
+              - columnheader "Input tokens per tool definition" [ref=f9e990]
+          - rowgroup [ref=f9e991]:
+            - row [ref=f9e992]:
+              - cell "Claude 4.x models" [ref=f9e993]
+              - cell "735 tokens" [ref=f9e994]
+        - paragraph [ref=f9e995]:
+          - strong [ref=f9e996]: "Additional token consumption:"
+        - list [ref=f9e997]:
+          - listitem [ref=f9e998]:
+            - text: • Screenshot images (see
+            - link "Vision pricing" [ref=f9e999] [cursor=pointer]:
+              - /url: /docs/en/build-with-claude/vision
+            - text: )
+          - listitem [ref=f9e1000]: • Tool execution results returned to Claude
+        - generic [ref=f9e1001]:
+          - generic [ref=f9e1002]: 
+          - paragraph [ref=f9e1005]: If you're also using bash or text editor tools alongside computer use, those tools have their own token costs as documented in their respective pages.
+        - heading "Copy link to clipboard Claude Managed Agents pricing" [level=2] [ref=f9e1006]:
+          - generic [ref=f9e1007]:
+            - button "Copy link to clipboard" [ref=f9e1009] [cursor=pointer]:
+              - generic [ref=f9e1010]: 
+            - generic [ref=f9e1011]: Claude Managed Agents pricing
+        - paragraph [ref=f9e1012]:
+          - link "Claude Managed Agents" [ref=f9e1013] [cursor=pointer]:
+            - /url: /docs/en/managed-agents/overview
+          - text: "is billed on two dimensions: tokens and session runtime."
+        - heading "Copy link to clipboard Tokens" [level=3] [ref=f9e1014]:
+          - generic [ref=f9e1015]:
+            - button "Copy link to clipboard" [ref=f9e1017] [cursor=pointer]:
+              - generic [ref=f9e1018]: 
+            - generic [ref=f9e1019]: Tokens
+        - paragraph [ref=f9e1020]:
+          - text: All tokens consumed by a Claude Managed Agents session are billed at the rates shown in
+          - link "Model pricing" [ref=f9e1021] [cursor=pointer]:
+            - /url: "#model-pricing"
+          - text: .
+          - link "Prompt caching" [ref=f9e1022] [cursor=pointer]:
+            - /url: "#prompt-caching"
+          - text: multipliers apply identically. Web search triggered inside a session incurs the standard $10 per 1,000 searches. On
+          - link "Claude Platform on AWS" [ref=f9e1023] [cursor=pointer]:
+            - /url: "#claude-platform-on-aws-pricing"
+          - text: ", session token and runtime charges convert to Claude Consumption Units at the standard rate."
+        - paragraph [ref=f9e1024]:
+          - text: The following Messages API modifiers do
+          - strong [ref=f9e1025]: not
+          - text: "apply to Claude Managed Agents sessions:"
+        - table [ref=f9e1027]:
+          - rowgroup [ref=f9e1028]:
+            - row [ref=f9e1029]:
+              - columnheader "Modifier" [ref=f9e1030]
+              - columnheader "Why it doesn't apply" [ref=f9e1031]
+          - rowgroup [ref=f9e1032]:
+            - row [ref=f9e1033]:
+              - cell [ref=f9e1034]:
+                - link "Batch API discount" [ref=f9e1035] [cursor=pointer]:
+                  - /url: "#batch-processing"
+              - cell "Sessions are stateful and interactive. There is no batch mode." [ref=f9e1036]
+            - row [ref=f9e1037]:
+              - cell [ref=f9e1038]:
+                - link "Fast mode premium" [ref=f9e1039] [cursor=pointer]:
+                  - /url: "#fast-mode-pricing"
+              - cell "Inference speed is managed by the runtime." [ref=f9e1040]
+            - row [ref=f9e1041]:
+              - cell [ref=f9e1042]:
+                - link "Data residency multiplier" [ref=f9e1043] [cursor=pointer]:
+                  - /url: "#data-residency-pricing"
+              - cell [ref=f9e1044]:
+                - code [ref=f9e1045]: inference_geo
+                - text: is a Messages API request field.
+            - row [ref=f9e1046]:
+              - cell [ref=f9e1047]:
+                - link "Cloud platform pricing" [ref=f9e1048] [cursor=pointer]:
+                  - /url: "#cloud-platform-pricing"
+              - cell "Not available on partner-operated cloud platforms." [ref=f9e1049]
+        - heading "Copy link to clipboard Session runtime" [level=3] [ref=f9e1050]:
+          - generic [ref=f9e1051]:
+            - button "Copy link to clipboard" [ref=f9e1053] [cursor=pointer]:
+              - generic [ref=f9e1054]: 
+            - generic [ref=f9e1055]: Session runtime
+        - table [ref=f9e1057]:
+          - rowgroup [ref=f9e1058]:
+            - row [ref=f9e1059]:
+              - columnheader "SKU" [ref=f9e1060]
+              - columnheader "Rate" [ref=f9e1061]
+              - columnheader "Metering" [ref=f9e1062]
+          - rowgroup [ref=f9e1063]:
+            - row [ref=f9e1064]:
+              - cell "Session runtime" [ref=f9e1065]
+              - cell "$0.08 per session-hour" [ref=f9e1066]
+              - cell [ref=f9e1067]:
+                - code [ref=f9e1068]: running
+                - text: status duration
+        - paragraph [ref=f9e1069]:
+          - text: Runtime is measured to the millisecond and accrues only while the session's status is
+          - code [ref=f9e1070]: running
+          - text: . Time spent
+          - code [ref=f9e1071]: idle
+          - text: (waiting for your next message or a tool confirmation),
+          - code [ref=f9e1072]: rescheduling
+          - text: ", or"
+          - code [ref=f9e1073]: terminated
+          - text: does not count toward runtime.
+        - generic [ref=f9e1074]:
+          - generic [ref=f9e1075]: 
+          - paragraph [ref=f9e1078]:
+            - text: Session runtime replaces the
+            - link "Code Execution" [ref=f9e1079] [cursor=pointer]:
+              - /url: "#code-execution-tool"
+            - text: container-hour billing model when using Claude Managed Agents. You are not separately billed for container hours on top of session runtime.
+        - heading "Copy link to clipboard Worked example" [level=3] [ref=f9e1080]:
+          - generic [ref=f9e1081]:
+            - button "Copy link to clipboard" [ref=f9e1083] [cursor=pointer]:
+              - generic [ref=f9e1084]: 
+            - generic [ref=f9e1085]: Worked example
+        - paragraph [ref=f9e1086]: "A one-hour coding session using Claude Opus 5 that consumes 50,000 input tokens and 15,000 output tokens:"
+        - table [ref=f9e1088]:
+          - rowgroup [ref=f9e1089]:
+            - row [ref=f9e1090]:
+              - columnheader "Line item" [ref=f9e1091]
+              - columnheader "Calculation" [ref=f9e1092]
+              - columnheader "Cost" [ref=f9e1093]
+          - rowgroup [ref=f9e1094]:
+            - row [ref=f9e1095]:
+              - cell "Input tokens" [ref=f9e1096]
+              - cell "50,000 × $5 / 1,000,000" [ref=f9e1097]
+              - cell "$0.25" [ref=f9e1098]
+            - row [ref=f9e1099]:
+              - cell "Output tokens" [ref=f9e1100]
+              - cell "15,000 × $25 / 1,000,000" [ref=f9e1101]
+              - cell "$0.375" [ref=f9e1102]
+            - row [ref=f9e1103]:
+              - cell "Session runtime" [ref=f9e1104]
+              - cell "1.0 hour × $0.08" [ref=f9e1105]
+              - cell "$0.08" [ref=f9e1106]
+            - row [ref=f9e1107]:
+              - cell [ref=f9e1108]:
+                - strong [ref=f9e1109]: Total
+              - cell [ref=f9e1110]
+              - cell [ref=f9e1111]:
+                - strong [ref=f9e1112]: $0.705
+        - paragraph [ref=f9e1113]: "If prompt caching is active and 40,000 of the input tokens are cache reads:"
+        - table [ref=f9e1115]:
+          - rowgroup [ref=f9e1116]:
+            - row [ref=f9e1117]:
+              - columnheader "Line item" [ref=f9e1118]
+              - columnheader "Calculation" [ref=f9e1119]
+              - columnheader "Cost" [ref=f9e1120]
+          - rowgroup [ref=f9e1121]:
+            - row [ref=f9e1122]:
+              - cell "Uncached input tokens" [ref=f9e1123]
+              - cell "10,000 × $5 / 1,000,000" [ref=f9e1124]
+              - cell "$0.05" [ref=f9e1125]
+            - row [ref=f9e1126]:
+              - cell "Cache read tokens" [ref=f9e1127]
+              - cell "40,000 × $5 × 0.1 / 1,000,000" [ref=f9e1128]
+              - cell "$0.02" [ref=f9e1129]
+            - row [ref=f9e1130]:
+              - cell "Output tokens" [ref=f9e1131]
+              - cell "15,000 × $25 / 1,000,000" [ref=f9e1132]
+              - cell "$0.375" [ref=f9e1133]
+            - row [ref=f9e1134]:
+              - cell "Session runtime" [ref=f9e1135]
+              - cell "1.0 hour × $0.08" [ref=f9e1136]
+              - cell "$0.08" [ref=f9e1137]
+            - row [ref=f9e1138]:
+              - cell [ref=f9e1139]:
+                - strong [ref=f9e1140]: Total
+              - cell [ref=f9e1141]
+              - cell [ref=f9e1142]:
+                - strong [ref=f9e1143]: $0.525
+        - generic [ref=f9e1144]:
+          - generic [ref=f9e1145]: 
+          - generic [ref=f9e1147]:
+            - paragraph [ref=f9e1148]: "Example calculation for processing 10,000 support tickets:"
+            - list [ref=f9e1149]:
+              - listitem [ref=f9e1150]: • Average ~3,700 tokens per conversation
+              - listitem [ref=f9e1151]: • Using Claude Haiku 4.5 at $1/MTok input, $5/MTok output
+              - listitem [ref=f9e1152]: "• Total cost: ~$37.00 per 10,000 tickets"
+        - paragraph [ref=f9e1153]:
+          - text: For a detailed walkthrough of this calculation, see the
+          - link "customer support agent guide" [ref=f9e1154] [cursor=pointer]:
+            - /url: /docs/en/about-claude/use-case-guides/customer-support-chat
+          - text: .
+        - heading "Copy link to clipboard Additional pricing considerations" [level=2] [ref=f9e1155]:
+          - generic [ref=f9e1156]:
+            - button "Copy link to clipboard" [ref=f9e1158] [cursor=pointer]:
+              - generic [ref=f9e1159]: 
+            - generic [ref=f9e1160]: Additional pricing considerations
+        - heading "Copy link to clipboard Cost optimization strategies" [level=3] [ref=f9e1161]:
+          - generic [ref=f9e1162]:
+            - button "Copy link to clipboard" [ref=f9e1164] [cursor=pointer]:
+              - generic [ref=f9e1165]: 
+            - generic [ref=f9e1166]: Cost optimization strategies
+        - paragraph [ref=f9e1167]: "When building agents with Claude:"
+        - list [ref=f9e1168]:
+          - listitem [ref=f9e1169]:
+            - strong [ref=f9e1170]: "Use appropriate models:"
+            - text: Choose Haiku for simple tasks, Sonnet for most production workloads, and Opus for the most complex reasoning
+          - listitem [ref=f9e1171]:
+            - strong [ref=f9e1172]: "Implement prompt caching:"
+            - text: Reduce costs for repeated context
+          - listitem [ref=f9e1173]:
+            - strong [ref=f9e1174]: "Batch operations:"
+            - text: Use the Batch API for non-time-sensitive tasks
+          - listitem [ref=f9e1175]:
+            - strong [ref=f9e1176]: "Monitor usage patterns:"
+            - text: Track token consumption to identify optimization opportunities
+        - generic [ref=f9e1177]:
+          - generic [ref=f9e1178]: 
+          - paragraph [ref=f9e1181]:
+            - text: For high-volume agent applications, contact the
+            - link "enterprise sales team" [ref=f9e1182] [cursor=pointer]:
+              - /url: https://claude.com/contact-sales
+            - text: for custom pricing arrangements.
+        - heading "Copy link to clipboard Rate limits" [level=3] [ref=f9e1183]:
+          - generic [ref=f9e1184]:
+            - button "Copy link to clipboard" [ref=f9e1186] [cursor=pointer]:
+              - generic [ref=f9e1187]: 
+            - generic [ref=f9e1188]: Rate limits
+        - paragraph [ref=f9e1189]: "Rate limits vary by usage tier and affect how many requests you can make:"
+        - list [ref=f9e1190]:
+          - listitem [ref=f9e1191]:
+            - text: •
+            - strong [ref=f9e1192]: "Start tier:"
+            - text: Entry-level limits for getting started
+          - listitem [ref=f9e1193]:
+            - text: •
+            - strong [ref=f9e1194]: "Build tier:"
+            - text: Increased limits for growing applications
+          - listitem [ref=f9e1195]:
+            - text: •
+            - strong [ref=f9e1196]: "Scale tier:"
+            - text: Highest standard limits for production workloads
+        - paragraph [ref=f9e1197]:
+          - text: For detailed rate limit information, see
+          - link "Rate limits" [ref=f9e1198] [cursor=pointer]:
+            - /url: /docs/en/api/rate-limits
+          - text: .
+        - paragraph [ref=f9e1199]:
+          - text: For limits beyond the Scale tier or custom pricing arrangements,
+          - link "contact the sales team" [ref=f9e1200] [cursor=pointer]:
+            - /url: https://claude.com/contact-sales
+          - text: .
+        - heading "Copy link to clipboard Volume discounts" [level=3] [ref=f9e1201]:
+          - generic [ref=f9e1202]:
+            - button "Copy link to clipboard" [ref=f9e1204] [cursor=pointer]:
+              - generic [ref=f9e1205]: 
+            - generic [ref=f9e1206]: Volume discounts
+        - paragraph [ref=f9e1207]: Volume discounts may be available for high-volume users. These are negotiated on a case-by-case basis.
+        - list [ref=f9e1208]:
+          - listitem [ref=f9e1209]:
+            - text: • Standard usage tiers use the pricing shown in
+            - link "Model pricing" [ref=f9e1210] [cursor=pointer]:
+              - /url: "#model-pricing"
+          - listitem [ref=f9e1211]:
+            - text: • Enterprise customers can
+            - link "contact sales" [ref=f9e1212] [cursor=pointer]:
+              - /url: /cdn-cgi/l/email-protection#5724363b3224173639233f2538273e347934383a
+            - text: for custom pricing
+          - listitem [ref=f9e1213]: • Academic and research discounts may be available
+        - heading "Copy link to clipboard Enterprise pricing" [level=3] [ref=f9e1214]:
+          - generic [ref=f9e1215]:
+            - button "Copy link to clipboard" [ref=f9e1217] [cursor=pointer]:
+              - generic [ref=f9e1218]: 
+            - generic [ref=f9e1219]: Enterprise pricing
+        - paragraph [ref=f9e1220]: "For enterprise customers with specific needs:"
+        - list [ref=f9e1221]:
+          - listitem [ref=f9e1222]: • Custom rate limits
+          - listitem [ref=f9e1223]: • Volume discounts
+          - listitem [ref=f9e1224]: • Dedicated support
+          - listitem [ref=f9e1225]: • Custom terms
+        - paragraph [ref=f9e1226]:
+          - text: Contact the sales team at
+          - link "[email protected]" [ref=f9e1227] [cursor=pointer]:
+            - /url: /cdn-cgi/l/email-protection#0d7e6c61687e4d6c6379657f627d646e236e6260
+          - text: or through the
+          - link "Claude Console" [ref=f9e1228] [cursor=pointer]:
+            - /url: /settings/limits
+          - text: to discuss enterprise pricing options.
+        - heading "Copy link to clipboard Billing and payment" [level=2] [ref=f9e1229]:
+          - generic [ref=f9e1230]:
+            - button "Copy link to clipboard" [ref=f9e1232] [cursor=pointer]:
+              - generic [ref=f9e1233]: 
+            - generic [ref=f9e1234]: Billing and payment
+        - list [ref=f9e1235]:
+          - listitem [ref=f9e1236]: • Billing is based on actual monthly usage
+          - listitem [ref=f9e1237]: • All payments are in USD
+          - listitem [ref=f9e1238]: • Credit card and invoicing options available
+          - listitem [ref=f9e1239]:
+            - text: • Usage tracking available in the
+            - link "Claude Console" [ref=f9e1240] [cursor=pointer]:
+              - /url: /
+        - heading "Copy link to clipboard Frequently asked questions" [level=2] [ref=f9e1241]:
+          - generic [ref=f9e1242]:
+            - button "Copy link to clipboard" [ref=f9e1244] [cursor=pointer]:
+              - generic [ref=f9e1245]: 
+            - generic [ref=f9e1246]: Frequently asked questions
+        - paragraph [ref=f9e1247]:
+          - strong [ref=f9e1248]: How is token usage calculated?
+        - paragraph [ref=f9e1249]: Tokens are pieces of text that models process. As a rough estimate, 1 token is approximately 4 characters or 0.75 words in English. The exact count varies by language and content type.
+        - paragraph [ref=f9e1250]:
+          - strong [ref=f9e1251]: Are there free tiers or trials?
+        - paragraph [ref=f9e1252]:
+          - text: New users receive a small amount of free credits to test the API.
+          - link "Contact sales" [ref=f9e1253] [cursor=pointer]:
+            - /url: /cdn-cgi/l/email-protection#4330222f263003222d372b312c332a206d202c2e
+          - text: for information about extended trials for enterprise evaluation.
+        - paragraph [ref=f9e1254]:
+          - strong [ref=f9e1255]: How do discounts stack?
+        - paragraph [ref=f9e1256]:
+          - text: Batch API and prompt caching discounts can be combined. For example, using both features together provides significant cost savings compared to standard API calls. See
+          - link "prompt caching pricing" [ref=f9e1257] [cursor=pointer]:
+            - /url: "#prompt-caching"
+          - text: for how the multipliers interact.
+        - paragraph [ref=f9e1258]:
+          - strong [ref=f9e1259]: What payment methods are accepted?
+        - paragraph [ref=f9e1260]: Major credit cards are accepted for standard accounts. Enterprise customers can arrange invoicing and other payment methods.
+        - paragraph [ref=f9e1261]:
+          - text: For additional questions about pricing, contact
+          - link "[email protected]" [ref=f9e1262] [cursor=pointer]:
+            - /url: /cdn-cgi/l/email-protection#7f0c0a0f0f100d0b3f1e110b170d100f161c511c1012
+          - text: .
+        - generic [ref=f9e1263]:
+          - paragraph [ref=f9e1264]: Was this page helpful?
+          - generic [ref=f9e1265]:
+            - button "Thumbs up" [ref=f9e1266] [cursor=pointer]:
+              - generic [ref=f9e1267]: 
+            - button "Thumbs down" [ref=f9e1268] [cursor=pointer]:
+              - generic [ref=f9e1269]: 
+      - generic [ref=f9e1271]:
+        - generic [ref=f9e1272]:
+          - link "Claude Platform Docs home page" [ref=f9e1274] [cursor=pointer]:
+            - /url: /docs
+            - generic [ref=f9e1275]: Claude Platform Docs
+          - generic [ref=f9e1281]:
+            - link "X (Twitter)" [ref=f9e1282] [cursor=pointer]:
+              - /url: https://x.com/claudeai
+            - link "Threads" [ref=f9e1285] [cursor=pointer]:
+              - /url: https://www.threads.com/@claudeai
+            - link "LinkedIn" [ref=f9e1288] [cursor=pointer]:
+              - /url: https://www.linkedin.com/showcase/claude
+            - link "YouTube" [ref=f9e1291] [cursor=pointer]:
+              - /url: https://www.youtube.com/@anthropic-ai
+            - link "Instagram" [ref=f9e1294] [cursor=pointer]:
+              - /url: https://instagram.com/claudeai
+        - generic [ref=f9e1298]:
+          - generic [ref=f9e1299]:
+            - generic [ref=f9e1300]:
+              - heading "Solutions" [level=3] [ref=f9e1301]
+              - list [ref=f9e1302]:
+                - listitem [ref=f9e1303]:
+                  - link "AI agents" [ref=f9e1304] [cursor=pointer]:
+                    - /url: https://claude.com/solutions/agents
+                - listitem [ref=f9e1305]:
+                  - link "Code modernization" [ref=f9e1306] [cursor=pointer]:
+                    - /url: https://claude.com/solutions/code-modernization
+                - listitem [ref=f9e1307]:
+                  - link "Coding" [ref=f9e1308] [cursor=pointer]:
+                    - /url: https://claude.com/solutions/coding
+                - listitem [ref=f9e1309]:
+                  - link "Customer support" [ref=f9e1310] [cursor=pointer]:
+                    - /url: https://claude.com/solutions/customer-support
+                - listitem [ref=f9e1311]:
+                  - link "Financial services" [ref=f9e1312] [cursor=pointer]:
+                    - /url: https://claude.com/solutions/financial-services
+                - listitem [ref=f9e1313]:
+                  - link "Government" [ref=f9e1314] [cursor=pointer]:
+                    - /url: https://claude.com/solutions/government
+                - listitem [ref=f9e1315]:
+                  - link "Higher education" [ref=f9e1316] [cursor=pointer]:
+                    - /url: https://claude.com/solutions/education
+                - listitem [ref=f9e1317]:
+                  - link "K-12 teachers" [ref=f9e1318] [cursor=pointer]:
+                    - /url: https://claude.com/solutions/teachers
+                - listitem [ref=f9e1319]:
+                  - link "Life sciences" [ref=f9e1320] [cursor=pointer]:
+                    - /url: https://claude.com/solutions/life-sciences
+            - generic [ref=f9e1321]:
+              - heading "Partners" [level=3] [ref=f9e1322]
+              - list [ref=f9e1323]:
+                - listitem [ref=f9e1324]:
+                  - link "Claude on AWS" [ref=f9e1325] [cursor=pointer]:
+                    - /url: https://claude.com/partners/amazon-bedrock
+                - listitem [ref=f9e1326]:
+                  - link "Claude on Google Cloud" [ref=f9e1327] [cursor=pointer]:
+                    - /url: https://claude.com/partners/google-cloud-vertex-ai
+          - generic [ref=f9e1328]:
+            - generic [ref=f9e1329]:
+              - heading "Learn" [level=3] [ref=f9e1330]
+              - list [ref=f9e1331]:
+                - listitem [ref=f9e1332]:
+                  - link "Blog" [ref=f9e1333] [cursor=pointer]:
+                    - /url: https://claude.com/blog
+                - listitem [ref=f9e1334]:
+                  - link "Courses" [ref=f9e1335] [cursor=pointer]:
+                    - /url: https://claude.com/resources/courses
+                - listitem [ref=f9e1336]:
+                  - link "Use cases" [ref=f9e1337] [cursor=pointer]:
+                    - /url: https://claude.com/resources/use-cases
+                - listitem [ref=f9e1338]:
+                  - link "Connectors" [ref=f9e1339] [cursor=pointer]:
+                    - /url: https://claude.com/partners/mcp
+                - listitem [ref=f9e1340]:
+                  - link "Customer stories" [ref=f9e1341] [cursor=pointer]:
+                    - /url: https://claude.com/customers
+                - listitem [ref=f9e1342]:
+                  - link "Engineering at Anthropic" [ref=f9e1343] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/engineering
+                - listitem [ref=f9e1344]:
+                  - link "Events" [ref=f9e1345] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/events
+                - listitem [ref=f9e1346]:
+                  - link "Powered by Claude" [ref=f9e1347] [cursor=pointer]:
+                    - /url: https://claude.com/partners/powered-by-claude
+                - listitem [ref=f9e1348]:
+                  - link "Service partners" [ref=f9e1349] [cursor=pointer]:
+                    - /url: https://claude.com/partners/services
+                - listitem [ref=f9e1350]:
+                  - link "Startups program" [ref=f9e1351] [cursor=pointer]:
+                    - /url: https://claude.com/programs/startups
+            - generic [ref=f9e1352]:
+              - heading "Company" [level=3] [ref=f9e1353]
+              - list [ref=f9e1354]:
+                - listitem [ref=f9e1355]:
+                  - link "Anthropic" [ref=f9e1356] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/company
+                - listitem [ref=f9e1357]:
+                  - link "Careers" [ref=f9e1358] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/careers
+                - listitem [ref=f9e1359]:
+                  - link "Economic Futures" [ref=f9e1360] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/economic-futures
+                - listitem [ref=f9e1361]:
+                  - link "Research" [ref=f9e1362] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/research
+                - listitem [ref=f9e1363]:
+                  - link "News" [ref=f9e1364] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/news
+                - listitem [ref=f9e1365]:
+                  - link "Responsible Scaling Policy" [ref=f9e1366] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/news/announcing-our-updated-responsible-scaling-policy
+                - listitem [ref=f9e1367]:
+                  - link "Security and compliance" [ref=f9e1368] [cursor=pointer]:
+                    - /url: https://trust.anthropic.com
+                - listitem [ref=f9e1369]:
+                  - link "Transparency" [ref=f9e1370] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/transparency
+          - generic [ref=f9e1371]:
+            - generic [ref=f9e1372]:
+              - heading "Help and security" [level=3] [ref=f9e1373]
+              - list [ref=f9e1374]:
+                - listitem [ref=f9e1375]:
+                  - link "Availability" [ref=f9e1376] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/supported-countries
+                - listitem [ref=f9e1377]:
+                  - link "Status" [ref=f9e1378] [cursor=pointer]:
+                    - /url: https://status.claude.com/
+                - listitem [ref=f9e1379]:
+                  - link "Support" [ref=f9e1380] [cursor=pointer]:
+                    - /url: https://support.claude.com/
+                - listitem [ref=f9e1381]:
+                  - link "Discord" [ref=f9e1382] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/discord
+            - generic [ref=f9e1383]:
+              - heading "Terms and policies" [level=3] [ref=f9e1384]
+              - list [ref=f9e1385]:
+                - listitem [ref=f9e1386]:
+                  - link "Privacy policy" [ref=f9e1387] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/legal/privacy
+                - listitem [ref=f9e1388]:
+                  - link "Responsible disclosure policy" [ref=f9e1389] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/responsible-disclosure-policy
+                - listitem [ref=f9e1390]:
+                  - 'link "Terms of service: Commercial" [ref=f9e1391] [cursor=pointer]':
+                    - /url: https://www.anthropic.com/legal/commercial-terms
+                - listitem [ref=f9e1392]:
+                  - 'link "Terms of service: Consumer" [ref=f9e1393] [cursor=pointer]':
+                    - /url: https://www.anthropic.com/legal/consumer-terms
+                - listitem [ref=f9e1394]:
+                  - link "Usage policy" [ref=f9e1395] [cursor=pointer]:
+                    - /url: https://www.anthropic.com/legal/aup

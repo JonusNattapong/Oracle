@@ -6,11 +6,28 @@ export interface ContextFile {
   mimeType?: string;
 }
 
+export type SupportedImageMimeType = "image/png" | "image/jpeg" | "image/webp";
+
+export interface ImageArtifact {
+  path: string;
+  mimeType: SupportedImageMimeType;
+  sizeBytes: number;
+  fileName: string;
+  alt?: string;
+}
+
 export interface ConsultRequest {
   prompt: string;
   files?: string[];
   model?: string;
   provider?: string;
+  /** Stable logical conversation. Continuation-capable backends resume its latest response. */
+  conversationId?: string;
+  /**
+   * Exact high-level fact or preference explicitly authorized for the signed-in
+   * backend account. It is not added to bundles or persisted as session text.
+   */
+  accountMemory?: string;
   preset?: string;
   systemPrompt?: string;
   cwd?: string;
@@ -43,6 +60,11 @@ export interface ConsultResult {
   files: string[];
   estimatedInputTokens?: number;
   responseId?: string;
+  conversationId?: string;
+  accountMemoryRequested?: boolean;
+  accountMemorySaved?: boolean;
+  images?: ImageArtifact[];
+  artifactWarnings?: string[];
   output: string;
   usage: TokenUsage;
   error?: string;

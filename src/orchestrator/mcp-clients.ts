@@ -1,5 +1,4 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import type { MemoryPort } from "./ports.js";
 import type { MemoryStoreEntry, MemoryType } from "../memory/adapter.js";
 
@@ -16,7 +15,10 @@ export class McpMemoryAdapter implements MemoryPort {
 
   constructor(endpoint: string) {
     this.url = new URL(endpoint);
-    this.client = new Client({ name: "oracle-cli", version: "0.1.0" }, { capabilities: {} });
+    this.client = new Client(
+      { name: "oracle-cli", version: "0.1.0" },
+      { capabilities: {}, versionNegotiation: { mode: "auto" } }
+    );
   }
 
   private async ensureConnected(): Promise<void> {

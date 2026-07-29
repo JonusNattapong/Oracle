@@ -1,0 +1,1074 @@
+- generic [active] [ref=f19e1]:
+  - navigation [ref=f19e3]:
+    - generic [ref=f19e4]:
+      - link "Skip to content" [ref=f19e5] [cursor=pointer]:
+        - /url: "#skip"
+      - generic [ref=f19e6]:
+        - link [ref=f19e7] [cursor=pointer]:
+          - /url: /
+          - button [ref=f19e8]:
+            - img "OpenRouter" [ref=f19e11]
+        - button "Search" [ref=f19e14] [cursor=pointer]:
+          - generic [ref=f19e19]:
+            - generic [ref=f19e20]: ⌘
+            - generic [ref=f19e21]: K
+        - generic [ref=f19e22]:
+          - link [ref=f19e23] [cursor=pointer]:
+            - /url: /models
+            - button "Models" [ref=f19e24]
+          - link [ref=f19e25] [cursor=pointer]:
+            - /url: /fusion
+            - button "Fusion" [ref=f19e26]
+          - link [ref=f19e27] [cursor=pointer]:
+            - /url: /chat
+            - button "Chat" [ref=f19e28]
+          - link [ref=f19e29] [cursor=pointer]:
+            - /url: /rankings
+            - button "Rankings" [ref=f19e30]
+          - link [ref=f19e31] [cursor=pointer]:
+            - /url: /apps
+            - button "Apps" [ref=f19e32]
+          - link [ref=f19e33] [cursor=pointer]:
+            - /url: /docs/quickstart
+            - button "Docs" [ref=f19e34]
+          - button "Sign Up" [ref=f19e37] [cursor=pointer]
+  - main [ref=f19e38]:
+    - generic [ref=f19e40]:
+      - generic [ref=f19e43]:
+        - generic [ref=f19e44]:
+          - generic [ref=f19e45]:
+            - generic [ref=f19e46]:
+              - generic [ref=f19e47]:
+                - img "Favicon for anthropic" [ref=f19e51]
+                - 'heading "Anthropic: Claude Sonnet 4" [level=1] [ref=f19e52]'
+              - generic [ref=f19e53]:
+                - heading [level=3] [ref=f19e54]:
+                  - link "anthropic" [ref=f19e55] [cursor=pointer]:
+                    - /url: /anthropic
+                  - text: /claude-sonnet-4
+                - button [ref=f19e56] [cursor=pointer]
+            - generic [ref=f19e57]:
+              - link "Compare" [ref=f19e58] [cursor=pointer]:
+                - /url: /compare/anthropic/claude-sonnet-4
+              - button "Playground" [ref=f19e59] [cursor=pointer]
+              - button "Quick Start" [ref=f19e60] [cursor=pointer]
+          - generic [ref=f19e61]:
+            - generic [ref=f19e63]:
+              - paragraph [ref=f19e64]: Claude Sonnet 4 significantly enhances the capabilities of its predecessor, Sonnet 3.7, excelling in both coding and reasoning tasks with improved precision and controllability. Achieving state-of-the-art performance on SWE-bench (72.7%), Sonnet 4 balances capability and computational efficiency, making it suitable for a broad range of applications from routine coding tasks to complex software development projects. Key enhancements include improved autonomous codebase navigation, reduced error rates in agent-driven workflows, and increased reliability in following intricate instructions. Sonnet 4 is optimized for practical everyday use, providing advanced reasoning capabilities while maintaining efficiency and responsiveness in diverse internal and external scenarios.
+              - paragraph [ref=f19e65]:
+                - text: Read more at the
+                - link "blog post here (opens in new tab)" [ref=f19e66] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/news/claude-4
+                  - text: blog post here
+                  - generic [ref=f19e67]: (opens in new tab)
+            - button "Show more" [ref=f19e69] [cursor=pointer]
+          - generic [ref=f19e72]:
+            - paragraph [ref=f19e74]: Modalities
+            - generic [ref=f19e95]:
+              - paragraph [ref=f19e97]: In / Out Price
+              - paragraph [ref=f19e98]: $3 / $15per 1M
+            - generic [ref=f19e99]:
+              - paragraph [ref=f19e101]: Context
+              - paragraph [ref=f19e102]: 1M
+            - generic [ref=f19e103]:
+              - paragraph [ref=f19e105]: Released
+              - paragraph [ref=f19e106]: May 22, 2025
+            - generic [ref=f19e107]:
+              - paragraph [ref=f19e109]: Knowledge Cutoff
+              - paragraph [ref=f19e110]: Jan 2025
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - button:
+                  - generic: "Anthropic: Claude Sonnet 4"
+              - generic:
+                - link:
+                  - /url: /compare/anthropic/claude-sonnet-4
+                  - text: Compare
+                - button: Playground
+                - button: Quick Start
+        - generic [ref=f19e113]:
+          - complementary [ref=f19e114]:
+            - navigation "Model page sections" [ref=f19e115]:
+              - generic [ref=f19e117]:
+                - link "Providers" [ref=f19e118] [cursor=pointer]:
+                  - /url: "#providers"
+                - link "Effective Pricing" [ref=f19e122] [cursor=pointer]:
+                  - /url: "#pricing"
+                - link "Performance" [ref=f19e125] [cursor=pointer]:
+                  - /url: "#performance"
+                - link "Uptime" [ref=f19e128] [cursor=pointer]:
+                  - /url: "#uptime"
+                - link "Benchmarks" [ref=f19e131] [cursor=pointer]:
+                  - /url: "#benchmarks"
+                - link "Apps" [ref=f19e134] [cursor=pointer]:
+                  - /url: "#apps"
+                - link "Activity" [ref=f19e138] [cursor=pointer]:
+                  - /url: "#activity"
+                - link "FAQ" [ref=f19e142] [cursor=pointer]:
+                  - /url: "#faq"
+          - generic [ref=f19e147]:
+            - generic [ref=f19e148]:
+              - heading "Providers" [level=2] [ref=f19e153]
+              - paragraph [ref=f19e154]: Different companies host the same model. OpenRouter routes your request to one of them based on the routing mode you pick — Balanced (price + speed), Nitro (fastest), or Exacto (highest tool-calling accuracy).
+              - generic [ref=f19e156]:
+                - generic [ref=f19e157]:
+                  - generic [ref=f19e158]:
+                    - combobox [ref=f19e159] [cursor=pointer]:
+                      - generic [ref=f19e160]: Standard
+                    - textbox [ref=f19e165]: standard
+                  - generic [ref=f19e167]:
+                    - generic [ref=f19e168]: Latency / throughput
+                    - combobox "Latency / throughput percentile" [ref=f19e169] [cursor=pointer]:
+                      - generic [ref=f19e170]: P50
+                    - textbox [ref=f19e174]: p50
+                - status
+                - table [ref=f19e178]:
+                  - rowgroup [ref=f19e179]:
+                    - row [ref=f19e180]:
+                      - columnheader [ref=f19e181]:
+                        - button "Provider" [ref=f19e182] [cursor=pointer]
+                      - columnheader [ref=f19e187]:
+                        - button "Input /M" [ref=f19e188] [cursor=pointer]
+                      - columnheader [ref=f19e193]:
+                        - button "Output /M" [ref=f19e194] [cursor=pointer]
+                      - columnheader [ref=f19e199]:
+                        - button "Cache Read /M" [ref=f19e200] [cursor=pointer]
+                      - columnheader [ref=f19e205]:
+                        - button "Latency" [ref=f19e206] [cursor=pointer]
+                      - columnheader [ref=f19e211]:
+                        - button "Throughput" [ref=f19e212] [cursor=pointer]
+                      - columnheader [ref=f19e217]:
+                        - button "Uptime" [ref=f19e218] [cursor=pointer]
+                  - rowgroup [ref=f19e223]:
+                    - row [ref=f19e224] [cursor=pointer]:
+                      - cell [ref=f19e225]:
+                        - generic [ref=f19e226]:
+                          - button "Open Google Vertex (Global) details" [ref=f19e227]:
+                            - img "Favicon for Google" [ref=f19e231]
+                            - generic [ref=f19e232]: Google Vertex (Global)
+                          - 'img "Privacy: Private" [ref=f19e233]'
+                      - cell "$3.00" [ref=f19e237]
+                      - cell "$15.00" [ref=f19e239]
+                      - cell "$0.30" [ref=f19e241]
+                      - cell "1.13s" [ref=f19e243]
+                      - cell "42 tps" [ref=f19e244]
+                      - cell "100.00%" [ref=f19e245]
+                    - row [ref=f19e253] [cursor=pointer]:
+                      - cell [ref=f19e254]:
+                        - generic [ref=f19e255]:
+                          - button "Open Amazon Bedrock details" [ref=f19e256]:
+                            - img "Favicon for Amazon Bedrock" [ref=f19e260]
+                            - generic [ref=f19e261]: Amazon Bedrock
+                          - 'img "Privacy: Private" [ref=f19e262]'
+                      - cell "$3.00" [ref=f19e266]
+                      - cell "$15.00" [ref=f19e268]
+                      - cell "$0.30" [ref=f19e270]
+                      - cell "--" [ref=f19e272]
+                      - cell "--" [ref=f19e273]
+                      - cell "--" [ref=f19e274]
+                    - row [ref=f19e282] [cursor=pointer]:
+                      - cell [ref=f19e283]:
+                        - generic [ref=f19e284]:
+                          - button "Open Amazon Bedrock details" [ref=f19e285]:
+                            - img "Favicon for Amazon Bedrock" [ref=f19e289]
+                            - generic [ref=f19e290]: Amazon Bedrock
+                          - 'img "Privacy: Private" [ref=f19e291]'
+                      - cell "$3.00" [ref=f19e295]
+                      - cell "$15.00" [ref=f19e297]
+                      - cell "$0.30" [ref=f19e299]
+                      - cell "0.93s" [ref=f19e301]
+                      - cell "55 tps" [ref=f19e302]
+                      - cell "99.97%" [ref=f19e303]
+                    - row [ref=f19e311] [cursor=pointer]:
+                      - cell [ref=f19e312]:
+                        - generic [ref=f19e313]:
+                          - button "Open Google Vertex (Europe) details" [ref=f19e314]:
+                            - img "Favicon for Google" [ref=f19e318]
+                            - generic [ref=f19e319]: Google Vertex (Europe)
+                          - 'img "Privacy: Private" [ref=f19e320]'
+                      - cell "$3.00" [ref=f19e324]
+                      - cell "$15.00" [ref=f19e326]
+                      - cell "$0.30" [ref=f19e328]
+                      - cell "0.55s" [ref=f19e330]
+                      - cell "45 tps" [ref=f19e331]
+                      - cell "--" [ref=f19e332]
+                    - row [ref=f19e340] [cursor=pointer]:
+                      - cell [ref=f19e341]:
+                        - generic [ref=f19e342]:
+                          - button "Open Google Vertex details" [ref=f19e343]:
+                            - img "Favicon for Google" [ref=f19e347]
+                            - generic [ref=f19e348]: Google Vertex
+                          - 'img "Privacy: Private" [ref=f19e349]'
+                      - cell "$3.00" [ref=f19e353]
+                      - cell "$15.00" [ref=f19e355]
+                      - cell "$0.30" [ref=f19e357]
+                      - cell "--" [ref=f19e359]
+                      - cell "--" [ref=f19e360]
+                      - cell "--" [ref=f19e361]
+            - generic [ref=f19e369]:
+              - heading "Effective Pricing" [level=2] [ref=f19e373]
+              - paragraph [ref=f19e374]: The chart below shows the average price customers are actually paying after prompt caching. Depending on the amount of repeated context you send, this can be 60–80% cheaper than the provider list price. Shown are rolling averages from the past 30 days.
+              - generic [ref=f19e376]:
+                - generic [ref=f19e377]:
+                  - generic [ref=f19e378]:
+                    - heading "Weighted Average" [level=3] [ref=f19e379]
+                    - button "Weighted average explanation" [ref=f19e380]
+                  - generic [ref=f19e383]:
+                    - generic [ref=f19e384]:
+                      - paragraph [ref=f19e385]: Weighted Avg Input Price
+                      - paragraph [ref=f19e386]: $2.36
+                      - paragraph [ref=f19e387]: /M tokens
+                    - generic [ref=f19e388]:
+                      - paragraph [ref=f19e389]: Weighted Avg Output Price
+                      - paragraph [ref=f19e390]: $15.00
+                      - paragraph [ref=f19e391]: /M tokens
+                - table [ref=f19e395]:
+                  - rowgroup [ref=f19e396]:
+                    - row [ref=f19e397]:
+                      - columnheader [ref=f19e398]:
+                        - button "Provider" [ref=f19e399] [cursor=pointer]
+                      - columnheader [ref=f19e404]:
+                        - button "Input $/1M" [ref=f19e405] [cursor=pointer]
+                      - columnheader [ref=f19e410]:
+                        - button "Output $/1M" [ref=f19e411] [cursor=pointer]
+                      - columnheader [ref=f19e416]:
+                        - button "Cache hit rate" [ref=f19e417] [cursor=pointer]
+                      - columnheader [ref=f19e422]:
+                        - button "Token share (1d)" [ref=f19e423] [cursor=pointer]
+                  - rowgroup [ref=f19e428]:
+                    - row [ref=f19e429] [cursor=pointer]:
+                      - cell [ref=f19e430]:
+                        - button "Open Amazon Bedrock (1) details" [ref=f19e432]:
+                          - img "Favicon for Amazon Bedrock" [ref=f19e436]
+                          - generic [ref=f19e437]: Amazon Bedrock (1)
+                      - cell "$2.55" [ref=f19e438]
+                      - cell "$15.00" [ref=f19e440]
+                      - cell "17.5%" [ref=f19e442]
+                      - cell "86.5%" [ref=f19e443]
+                    - row [ref=f19e448] [cursor=pointer]:
+                      - cell [ref=f19e449]:
+                        - button "Open Google Vertex (Global) details" [ref=f19e451]:
+                          - img "Favicon for Google" [ref=f19e455]
+                          - generic [ref=f19e456]: Google Vertex (Global)
+                      - cell "$1.23" [ref=f19e457]
+                      - cell "$15.00" [ref=f19e459]
+                      - cell "69.1%" [ref=f19e461]
+                      - cell "13.5%" [ref=f19e462]
+                    - row [ref=f19e467] [cursor=pointer]:
+                      - cell [ref=f19e468]:
+                        - button "Open Google Vertex (Europe) details" [ref=f19e470]:
+                          - img "Favicon for Google" [ref=f19e474]
+                          - generic [ref=f19e475]: Google Vertex (Europe)
+                      - cell "$3.00" [ref=f19e476]
+                      - cell "$15.00" [ref=f19e478]
+                      - cell "0.0%" [ref=f19e480]
+                      - cell "0.0%" [ref=f19e481]
+                    - row [ref=f19e485] [cursor=pointer]:
+                      - cell [ref=f19e486]:
+                        - button "Open Amazon Bedrock (2) details" [ref=f19e488]:
+                          - img "Favicon for Amazon Bedrock" [ref=f19e492]
+                          - generic [ref=f19e493]: Amazon Bedrock (2)
+                      - cell "$3.00" [ref=f19e494]
+                      - cell "$15.00" [ref=f19e496]
+                      - cell "0.0%" [ref=f19e498]
+                      - cell "0.0%" [ref=f19e499]
+                - generic [ref=f19e503]:
+                  - generic [ref=f19e504]:
+                    - heading "Input Price / 1M tokens (7 days)" [level=3] [ref=f19e505]
+                    - application [ref=f19e509]:
+                      - generic [ref=f19e511]:
+                        - generic [ref=f19e512]: Jul 20
+                        - generic [ref=f19e514]: Jul 22
+                        - generic [ref=f19e516]: Jul 24
+                        - generic [ref=f19e518]: Jul 26
+                      - generic [ref=f19e520]:
+                        - generic [ref=f19e521]:
+                          - generic [ref=f19e522]: "0"
+                          - generic [ref=f19e524]: "0.8"
+                          - generic [ref=f19e526]: "1.5"
+                          - generic [ref=f19e528]: "2.3"
+                          - generic [ref=f19e530]: "3"
+                        - generic [ref=f19e532]: $/1M
+                  - generic [ref=f19e541]:
+                    - heading "Output Price / 1M tokens (7 days)" [level=3] [ref=f19e542]
+                    - application [ref=f19e546]:
+                      - generic [ref=f19e548]:
+                        - generic [ref=f19e549]: Jul 20
+                        - generic [ref=f19e551]: Jul 22
+                        - generic [ref=f19e553]: Jul 24
+                        - generic [ref=f19e555]: Jul 26
+                      - generic [ref=f19e557]:
+                        - generic [ref=f19e558]:
+                          - generic [ref=f19e559]: "0"
+                          - generic [ref=f19e561]: "4"
+                          - generic [ref=f19e563]: "8"
+                          - generic [ref=f19e565]: "12"
+                          - generic [ref=f19e567]: "16"
+                        - generic [ref=f19e569]: $/1M
+            - generic [ref=f19e572]:
+              - heading "Performance" [level=2] [ref=f19e576]
+              - paragraph [ref=f19e577]: Throughput is how fast the model writes (tokens per second — higher is better). Latency is total round-trip time (lower is better). TTFT is time-to-first-token — how long before you see anything appear (lower is better).
+              - generic [ref=f19e579]:
+                - generic [ref=f19e580]:
+                  - generic [ref=f19e581]:
+                    - paragraph [ref=f19e582]: Throughput
+                    - paragraph [ref=f19e583]: 55tok/s
+                    - paragraph [ref=f19e584]: P50, best across providers
+                  - generic [ref=f19e585]:
+                    - paragraph [ref=f19e586]: Latency
+                    - paragraph [ref=f19e587]: 0.55s
+                    - paragraph [ref=f19e588]: P50, best provider
+                - generic [ref=f19e589]:
+                  - combobox [ref=f19e590] [cursor=pointer]:
+                    - generic [ref=f19e591]: All locations
+                  - textbox [ref=f19e595]: all
+                  - generic [ref=f19e596]:
+                    - generic [ref=f19e597]:
+                      - generic [ref=f19e598]: Latency / throughput
+                      - combobox "Latency / throughput percentile" [ref=f19e599] [cursor=pointer]:
+                        - generic [ref=f19e600]: P50
+                      - textbox [ref=f19e604]: p50
+                    - combobox [ref=f19e605] [cursor=pointer]:
+                      - generic [ref=f19e606]: 1 week
+                    - textbox [ref=f19e610]: 1w
+                - generic [ref=f19e611]:
+                  - button "Throughput Expand chart Amazon Bedrock Avg 48 tok/s Google Vertex (Global) Avg 41 tok/s" [ref=f19e614] [cursor=pointer]:
+                    - generic [ref=f19e616]:
+                      - generic [ref=f19e617]: Throughput
+                      - button "Expand chart" [ref=f19e618]
+                    - generic [ref=f19e620]:
+                      - application [ref=f19e624]
+                      - generic [ref=f19e629]:
+                        - button "Amazon Bedrock Avg 48 tok/s" [ref=f19e630]:
+                          - generic [ref=f19e631]: Amazon Bedrock
+                          - generic [ref=f19e634]:
+                            - generic [ref=f19e635]: Avg
+                            - generic [ref=f19e636]: 48 tok/s
+                        - button "Google Vertex (Global) Avg 41 tok/s" [ref=f19e637]:
+                          - generic [ref=f19e638]: Google Vertex (Global)
+                          - generic [ref=f19e641]:
+                            - generic [ref=f19e642]: Avg
+                            - generic [ref=f19e643]: 41 tok/s
+                  - button "Latency Expand chart Amazon Bedrock Avg 0.94 s Google Vertex (Global) Avg 0.96 s" [ref=f19e646] [cursor=pointer]:
+                    - generic [ref=f19e648]:
+                      - generic [ref=f19e649]: Latency
+                      - button "Expand chart" [ref=f19e650]
+                    - generic [ref=f19e652]:
+                      - application [ref=f19e656]
+                      - generic [ref=f19e661]:
+                        - button "Amazon Bedrock Avg 0.94 s" [ref=f19e662]:
+                          - generic [ref=f19e663]: Amazon Bedrock
+                          - generic [ref=f19e666]:
+                            - generic [ref=f19e667]: Avg
+                            - generic [ref=f19e668]: 0.94 s
+                        - button "Google Vertex (Global) Avg 0.96 s" [ref=f19e669]:
+                          - generic [ref=f19e670]: Google Vertex (Global)
+                          - generic [ref=f19e673]:
+                            - generic [ref=f19e674]: Avg
+                            - generic [ref=f19e675]: 0.96 s
+                  - button "E2E Latency Expand chart Amazon Bedrock Avg 3.79 s Google Vertex (Global) Avg 10.74 s" [ref=f19e678] [cursor=pointer]:
+                    - generic [ref=f19e680]:
+                      - generic [ref=f19e681]: E2E Latency
+                      - button "Expand chart" [ref=f19e682]
+                    - generic [ref=f19e684]:
+                      - application [ref=f19e688]
+                      - generic [ref=f19e693]:
+                        - button "Amazon Bedrock Avg 3.79 s" [ref=f19e694]:
+                          - generic [ref=f19e695]: Amazon Bedrock
+                          - generic [ref=f19e698]:
+                            - generic [ref=f19e699]: Avg
+                            - generic [ref=f19e700]: 3.79 s
+                        - button "Google Vertex (Global) Avg 10.74 s" [ref=f19e701]:
+                          - generic [ref=f19e702]: Google Vertex (Global)
+                          - generic [ref=f19e705]:
+                            - generic [ref=f19e706]: Avg
+                            - generic [ref=f19e707]: 10.74 s
+                  - button "Tool Call Error Rate Expand chart Google Vertex Avg 0.00 % Amazon Bedrock Avg 0.60 % Google Vertex (Global) Avg 1.10 %" [ref=f19e710] [cursor=pointer]:
+                    - generic [ref=f19e712]:
+                      - generic [ref=f19e713]: Tool Call Error Rate
+                      - button "Expand chart" [ref=f19e714]
+                    - generic [ref=f19e716]:
+                      - application [ref=f19e720]
+                      - generic [ref=f19e725]:
+                        - button "Google Vertex Avg 0.00 %" [ref=f19e726]:
+                          - generic [ref=f19e727]: Google Vertex
+                          - generic [ref=f19e730]:
+                            - generic [ref=f19e731]: Avg
+                            - generic [ref=f19e732]: 0.00 %
+                        - button "Amazon Bedrock Avg 0.60 %" [ref=f19e733]:
+                          - generic [ref=f19e734]: Amazon Bedrock
+                          - generic [ref=f19e737]:
+                            - generic [ref=f19e738]: Avg
+                            - generic [ref=f19e739]: 0.60 %
+                        - button "Google Vertex (Global) Avg 1.10 %" [ref=f19e740]:
+                          - generic [ref=f19e741]: Google Vertex (Global)
+                          - generic [ref=f19e744]:
+                            - generic [ref=f19e745]: Avg
+                            - generic [ref=f19e746]: 1.10 %
+                  - button "Cache Hit Rate Expand chart Google Vertex (Global) Avg 61.73 % Google Vertex Avg 59.25 % Amazon Bedrock Avg 27.55 %" [ref=f19e749] [cursor=pointer]:
+                    - generic [ref=f19e751]:
+                      - generic [ref=f19e752]: Cache Hit Rate
+                      - button "Expand chart" [ref=f19e753]
+                    - generic [ref=f19e755]:
+                      - application [ref=f19e759]
+                      - generic [ref=f19e766]:
+                        - button "Google Vertex (Global) Avg 61.73 %" [ref=f19e767]:
+                          - generic [ref=f19e768]: Google Vertex (Global)
+                          - generic [ref=f19e771]:
+                            - generic [ref=f19e772]: Avg
+                            - generic [ref=f19e773]: 61.73 %
+                        - button "Google Vertex Avg 59.25 %" [ref=f19e774]:
+                          - generic [ref=f19e775]: Google Vertex
+                          - generic [ref=f19e778]:
+                            - generic [ref=f19e779]: Avg
+                            - generic [ref=f19e780]: 59.25 %
+                        - button "Amazon Bedrock Avg 27.55 %" [ref=f19e781]:
+                          - generic [ref=f19e782]: Amazon Bedrock
+                          - generic [ref=f19e785]:
+                            - generic [ref=f19e786]: Avg
+                            - generic [ref=f19e787]: 27.55 %
+            - generic [ref=f19e788]:
+              - heading "Uptime" [level=2] [ref=f19e792]
+              - paragraph [ref=f19e793]: Percent of requests that succeeded over the last 30 days. OpenRouter monitors every provider continuously and automatically retries on the next-best provider when one returns an error.
+              - generic [ref=f19e796]:
+                - generic [ref=f19e797]:
+                  - paragraph [ref=f19e798]: Avg. Provider Uptime (3d)
+                  - paragraph [ref=f19e799]: 99.97%
+                  - paragraph [ref=f19e800]: averaged across all endpoints
+                - iframe [ref=f19e802]:
+                  - generic [ref=f21e4]:
+                    - text: Generated by
+                    - link "Datadog" [ref=f21e5] [cursor=pointer]:
+                      - /url: http://www.datadoghq.com
+                - paragraph [ref=f19e803]:
+                  - text: When an error occurs in an upstream provider, we can recover by routing to another healthy provider, if your request filters allow it. You can access uptime data programmatically through the
+                  - link "Endpoints API" [ref=f19e804] [cursor=pointer]:
+                    - /url: /docs/api/api-reference/endpoints/list-endpoints
+                  - text: .
+                  - link "Learn more" [ref=f19e805] [cursor=pointer]:
+                    - /url: /docs/provider-routing
+                  - text: about our load balancing and customization options.
+                - iframe [ref=f19e807]:
+                  - generic [ref=f22e4]:
+                    - text: Generated by
+                    - link "Datadog" [ref=f22e5] [cursor=pointer]:
+                      - /url: http://www.datadoghq.com
+            - generic [ref=f19e808]:
+              - heading "Benchmarks" [level=2] [ref=f19e812]
+              - paragraph [ref=f19e813]: Scores on standardized evaluations. Higher percentages are better — and rank percentile shows where this model lands among all models on OpenRouter.
+              - generic [ref=f19e815]:
+                - radiogroup [ref=f19e817]:
+                  - radio "Artificial Analysis" [checked] [ref=f19e818] [cursor=pointer]
+                  - radio "Design Arena" [ref=f19e819] [cursor=pointer]
+                - generic [ref=f19e820]:
+                  - combobox [ref=f19e821] [cursor=pointer]:
+                    - generic [ref=f19e822]: Claude 4 Sonnet (Reasoning)
+                  - textbox [ref=f19e826]: "1"
+                  - generic [ref=f19e827]:
+                    - generic [ref=f19e828]:
+                      - link "28.9 Artificial Analysis Intelligence Index Better than 42% of models compared" [ref=f19e829] [cursor=pointer]:
+                        - /url: /rankings?benchmark=intelligence#benchmarks
+                        - generic [ref=f19e830]:
+                          - paragraph [ref=f19e831]: "28.9"
+                          - generic [ref=f19e832]:
+                            - paragraph [ref=f19e833]: Artificial Analysis
+                            - paragraph [ref=f19e834]: Intelligence Index
+                          - generic [ref=f19e835]: Better than 42% of models compared
+                      - link "37.6 Artificial Analysis Coding Index Better than 44% of models compared" [ref=f19e858] [cursor=pointer]:
+                        - /url: /rankings?benchmark=coding#benchmarks
+                        - generic [ref=f19e859]:
+                          - paragraph [ref=f19e860]: "37.6"
+                          - generic [ref=f19e861]:
+                            - paragraph [ref=f19e862]: Artificial Analysis
+                            - paragraph [ref=f19e863]: Coding Index
+                          - generic [ref=f19e864]: Better than 44% of models compared
+                      - link "16.6 Artificial Analysis Agentic Index Better than 41% of models compared" [ref=f19e887] [cursor=pointer]:
+                        - /url: /rankings?benchmark=agentic#benchmarks
+                        - generic [ref=f19e888]:
+                          - paragraph [ref=f19e889]: "16.6"
+                          - generic [ref=f19e890]:
+                            - paragraph [ref=f19e891]: Artificial Analysis
+                            - paragraph [ref=f19e892]: Agentic Index
+                          - generic [ref=f19e893]: Better than 41% of models compared
+                    - generic [ref=f19e916]:
+                      - generic [ref=f19e917]:
+                        - generic [ref=f19e918]: Reasoning
+                        - generic [ref=f19e920]:
+                          - generic [ref=f19e921]:
+                            - generic [ref=f19e922]:
+                              - generic [ref=f19e923]:
+                                - paragraph [ref=f19e924]: GPQA Diamond
+                                - button "More information about GPQA Diamond" [ref=f19e925]
+                              - paragraph [ref=f19e928]: Graduate-level scientific reasoning
+                            - paragraph [ref=f19e933]: 77.7%
+                          - generic [ref=f19e934]:
+                            - generic [ref=f19e935]:
+                              - generic [ref=f19e936]:
+                                - paragraph [ref=f19e937]: HLE
+                                - button "More information about HLE" [ref=f19e938]
+                              - paragraph [ref=f19e941]: Humanity's Last Exam
+                            - paragraph [ref=f19e946]: 9.6%
+                          - generic [ref=f19e947]:
+                            - generic [ref=f19e948]:
+                              - generic [ref=f19e949]:
+                                - paragraph [ref=f19e950]: IFBench
+                                - button "More information about IFBench" [ref=f19e951]
+                              - paragraph [ref=f19e954]: Instruction-following benchmark
+                            - paragraph [ref=f19e959]: 54.7%
+                          - generic [ref=f19e960]:
+                            - generic [ref=f19e961]:
+                              - generic [ref=f19e962]:
+                                - paragraph [ref=f19e963]: τ²-Bench Telecom
+                                - button "More information about τ²-Bench Telecom" [ref=f19e964]
+                              - paragraph [ref=f19e967]: Conversational AI agents in dual-control scenarios
+                            - paragraph [ref=f19e972]: 64.6%
+                          - generic [ref=f19e973]:
+                            - generic [ref=f19e974]:
+                              - generic [ref=f19e975]:
+                                - paragraph [ref=f19e976]: AA-LCR
+                                - button "More information about AA-LCR" [ref=f19e977]
+                              - paragraph [ref=f19e980]: Long context reasoning evaluation
+                            - paragraph [ref=f19e985]: 64.7%
+                          - generic [ref=f19e986]:
+                            - generic [ref=f19e987]:
+                              - generic [ref=f19e988]:
+                                - paragraph [ref=f19e989]: GDPval-AA
+                                - button "More information about GDPval-AA" [ref=f19e990]
+                              - paragraph [ref=f19e993]: Economically valuable tasks
+                            - paragraph [ref=f19e998]: 18.6%
+                          - generic [ref=f19e999]:
+                            - generic [ref=f19e1000]:
+                              - generic [ref=f19e1001]:
+                                - paragraph [ref=f19e1002]: CritPt
+                                - button "More information about CritPt" [ref=f19e1003]
+                              - paragraph [ref=f19e1006]: Research-level physics reasoning
+                            - paragraph [ref=f19e1011]: 0.3%
+                      - generic [ref=f19e1012]:
+                        - generic [ref=f19e1013]: Coding
+                        - generic [ref=f19e1015]:
+                          - generic [ref=f19e1016]:
+                            - generic [ref=f19e1017]:
+                              - generic [ref=f19e1018]:
+                                - paragraph [ref=f19e1019]: SciCode
+                                - button "More information about SciCode" [ref=f19e1020]
+                              - paragraph [ref=f19e1023]: Python programming for scientific computing
+                            - paragraph [ref=f19e1028]: 40.0%
+                          - generic [ref=f19e1029]:
+                            - generic [ref=f19e1030]:
+                              - generic [ref=f19e1031]:
+                                - paragraph [ref=f19e1032]: Terminal-Bench Hard
+                                - button "More information about Terminal-Bench Hard" [ref=f19e1033]
+                              - paragraph [ref=f19e1036]: Agentic coding & terminal use
+                            - paragraph [ref=f19e1041]: 31.1%
+                      - generic [ref=f19e1042]:
+                        - generic [ref=f19e1043]: Knowledge
+                        - generic [ref=f19e1045]:
+                          - generic [ref=f19e1046]:
+                            - generic [ref=f19e1047]:
+                              - generic [ref=f19e1048]:
+                                - paragraph [ref=f19e1049]: AA-Omniscience Accuracy
+                                - button "More information about AA-Omniscience Accuracy" [ref=f19e1050]
+                              - paragraph [ref=f19e1053]: Proportion of correctly answered questions
+                            - paragraph [ref=f19e1058]: 22.3%
+                          - generic [ref=f19e1059]:
+                            - generic [ref=f19e1060]:
+                              - generic [ref=f19e1061]:
+                                - paragraph [ref=f19e1062]: AA-Omniscience Non-Hallucination Rate
+                                - button "More information about AA-Omniscience Non-Hallucination Rate" [ref=f19e1063]
+                              - paragraph [ref=f19e1066]: Rate of avoiding hallucination among non-correct responses
+                            - paragraph [ref=f19e1071]: 71.5%
+                  - generic [ref=f19e1072]:
+                    - text: Metrics sourced from
+                    - link "Artificial Analysis" [ref=f19e1073] [cursor=pointer]:
+                      - /url: https://artificialanalysis.ai/models/claude-4-sonnet-thinking
+            - generic [ref=f19e1074]:
+              - heading "Apps" [level=2] [ref=f19e1079]
+              - paragraph [ref=f19e1080]: Public apps that send the most traffic to this model. Good signal for what real production workloads look like — and a hint at which use cases this model is best suited for.
+              - generic [ref=f19e1083]:
+                - generic [ref=f19e1084]:
+                  - generic [ref=f19e1085]:
+                    - generic [ref=f19e1086]: "1."
+                    - generic [ref=f19e1088]:
+                      - img "Favicon for https://nousresearch.com" [ref=f19e1091]
+                      - generic [ref=f19e1092]:
+                        - link "Hermes Agent" [ref=f19e1093] [cursor=pointer]:
+                          - /url: /apps/hermes-agent
+                        - generic [ref=f19e1096]: Hermes Agent is an open-source, self-improving AI agent by Nous Research that runs persistently with memory across sessions, and builds reusable skills from experience. It comes with 40+ built-in tools, including web search, browser automation, and vision, plus scheduled automations and subagents.
+                    - generic [ref=f19e1098]: 35.9Btokens
+                  - generic [ref=f19e1099]:
+                    - generic [ref=f19e1100]: "2."
+                    - generic [ref=f19e1102]:
+                      - img "Favicon for https://openclaw.ai/" [ref=f19e1105]
+                      - generic [ref=f19e1106]:
+                        - link "OpenClaw" [ref=f19e1107] [cursor=pointer]:
+                          - /url: /apps/openclaw
+                        - generic [ref=f19e1110]: OpenClaw is an open-source AI agent that connects to your messaging apps and takes real actions on your behalf, from running commands and browsing the web to managing files and sending emails.
+                    - generic [ref=f19e1112]: 10.6Btokens
+                  - generic [ref=f19e1113]:
+                    - generic [ref=f19e1114]: "3."
+                    - generic [ref=f19e1116]:
+                      - img "Favicon for https://kilocode.ai/" [ref=f19e1119]
+                      - generic [ref=f19e1120]:
+                        - link "Kilo Code" [ref=f19e1121] [cursor=pointer]:
+                          - /url: /apps/kilo-code
+                        - generic [ref=f19e1124]: Kilo Code is an open-source AI coding agent that works across VS Code, JetBrains, and CLI to help developers ship code faster with agentic workflows.
+                    - generic [ref=f19e1126]: 2.82Btokens
+                  - generic [ref=f19e1127]:
+                    - generic [ref=f19e1128]: "4."
+                    - generic [ref=f19e1130]:
+                      - img "Favicon for https://claude.ai/apple-touch-icon.png" [ref=f19e1133]
+                      - generic [ref=f19e1134]:
+                        - link "Claude Code" [ref=f19e1135] [cursor=pointer]:
+                          - /url: /apps/claude-code
+                        - generic [ref=f19e1138]: Claude Code is Anthropic's agentic coding tool that reads your entire codebase, plans and executes changes across files, runs tests, and iterates on failures, all from natural language prompts.
+                    - generic [ref=f19e1140]: 1.99Btokens
+                  - generic [ref=f19e1141]:
+                    - generic [ref=f19e1142]: "5."
+                    - generic [ref=f19e1144]:
+                      - img "Favicon for https://cline.bot/" [ref=f19e1147]
+                      - generic [ref=f19e1148]:
+                        - link "Cline" [ref=f19e1149] [cursor=pointer]:
+                          - /url: /apps/cline
+                        - generic [ref=f19e1152]: Cline is an open-source AI coding agent that lives inside your IDE, autonomously exploring your codebase, editing files, running terminal commands, and using browser automation.
+                    - generic [ref=f19e1154]: 1.91Btokens
+                - application [ref=f19e1158]:
+                  - generic [ref=f19e1160]:
+                    - generic [ref=f19e1161]: Jun 27
+                    - generic [ref=f19e1163]: Jul 4
+                    - generic [ref=f19e1165]: Jul 11
+                    - generic [ref=f19e1167]: Jul 18
+                    - generic [ref=f19e1169]: Jul 25
+            - generic [ref=f19e1171]:
+              - heading "Activity" [level=2] [ref=f19e1176]
+              - paragraph [ref=f19e1177]: Token volume and request traffic to this model over time.
+              - generic [ref=f19e1179]:
+                - generic [ref=f19e1180]:
+                  - combobox [ref=f19e1181] [cursor=pointer]:
+                    - generic [ref=f19e1182]: Tokens
+                  - textbox [ref=f19e1186]: Tokens
+                - generic [ref=f19e1187]:
+                  - application [ref=f19e1191]:
+                    - generic [ref=f19e1193]:
+                      - generic [ref=f19e1194]: Jun 27
+                      - generic [ref=f19e1196]: Jul 4
+                      - generic [ref=f19e1198]: Jul 11
+                      - generic [ref=f19e1200]: Jul 18
+                      - generic [ref=f19e1202]: Jul 25
+                    - generic [ref=f19e1205]:
+                      - generic [ref=f19e1206]: 2B
+                      - generic [ref=f19e1208]: 4B
+                      - generic [ref=f19e1210]: 6B
+                      - generic [ref=f19e1212]: 8B
+                  - generic [ref=f19e1214]:
+                    - generic [ref=f19e1215]:
+                      - button "Prompt" [ref=f19e1216]:
+                        - generic [ref=f19e1221]: 1.27B
+                      - button "Completion" [ref=f19e1223]:
+                        - generic [ref=f19e1228]: 96.7M
+                      - button "Reasoning" [ref=f19e1230]:
+                        - generic [ref=f19e1235]: 1.41M
+                    - paragraph [ref=f19e1237]: Prompt tokens measure input size. Reasoning tokens show internal thinking before a response. Completion tokens reflect total output length.
+        - generic [ref=f19e1239]:
+          - heading "Frequently asked questions" [level=2] [ref=f19e1241]
+          - region [ref=f19e1242]:
+            - heading [level=3] [ref=f19e1244]:
+              - button "What is Claude Sonnet 4?" [ref=f19e1245] [cursor=pointer]
+            - heading [level=3] [ref=f19e1249]:
+              - button "What is the context length of Claude Sonnet 4?" [ref=f19e1250] [cursor=pointer]
+            - heading [level=3] [ref=f19e1254]:
+              - button "How much does Claude Sonnet 4 cost?" [ref=f19e1255] [cursor=pointer]
+            - heading [level=3] [ref=f19e1259]:
+              - button "What providers serve Claude Sonnet 4, and can I use it via API?" [ref=f19e1260] [cursor=pointer]
+            - heading [level=3] [ref=f19e1264]:
+              - button "What modalities does Claude Sonnet 4 support?" [ref=f19e1265] [cursor=pointer]
+            - heading [level=3] [ref=f19e1269]:
+              - button "When was Claude Sonnet 4 released?" [ref=f19e1270] [cursor=pointer]
+        - generic [ref=f19e1273]:
+          - heading [level=2] [ref=f19e1274]:
+            - text: More models from
+            - link "Anthropic" [ref=f19e1276] [cursor=pointer]:
+              - /url: /anthropic
+          - generic [ref=f19e1278]:
+            - generic [ref=f19e1280]:
+              - group [ref=f19e1281]:
+                - 'link "Claude Opus 5 Fast-mode variant of Opus 5 - identical capabilities with higher output speed at 2x pricing relative to regular Opus 5. Learn more in Anthropic''s docs: https://platform.claude.com/docs/en/build-with-claude/fast-mode" [ref=f19e1282] [cursor=pointer]':
+                  - /url: /anthropic/claude-opus-5-fast
+                  - generic [ref=f19e1283]: Claude Opus 5
+                  - generic [ref=f19e1284]:
+                    - paragraph [ref=f19e1285]: Fast-mode variant of Opus 5 - identical capabilities with higher output speed at 2x pricing relative to regular Opus 5.
+                    - paragraph [ref=f19e1286]: "Learn more in Anthropic's docs: https://platform.claude.com/docs/en/build-with-claude/fast-mode"
+              - group [ref=f19e1287]:
+                - link "Claude Opus 5 Claude Opus 5 is Anthropic’s flagship model for demanding reasoning, coding, and long-horizon agentic work. It is particularly strong at end-to-end software tasks, code review and bug finding, visual analysis of charts and documents, complex office deliverables, and coordinating parallel subagents. The model maintains strong instruction following and tool use across extended tasks, while remaining effective at lower effort settings for workloads that prioritize latency and token efficiency." [ref=f19e1288] [cursor=pointer]:
+                  - /url: /anthropic/claude-opus-5
+                  - generic [ref=f19e1289]: Claude Opus 5
+                  - generic [ref=f19e1290]:
+                    - paragraph [ref=f19e1291]: Claude Opus 5 is Anthropic’s flagship model for demanding reasoning, coding, and long-horizon agentic work. It is particularly strong at end-to-end software tasks, code review and bug finding, visual analysis of charts and documents, complex office deliverables, and coordinating parallel subagents.
+                    - paragraph [ref=f19e1292]: The model maintains strong instruction following and tool use across extended tasks, while remaining effective at lower effort settings for workloads that prioritize latency and token efficiency.
+              - group [ref=f19e1293]:
+                - link "Claude Sonnet 5 Sonnet 5 is Anthropic's most capable Sonnet-class model, with frontier performance across coding, agents, and professional work. It supports adaptive thinking with selectable reasoning effort levels (low, medium, high, max, and x-high), a 1M-token context window, and text, image, and file inputs. Sonnet 5 uses an updated tokenizer and includes real-time cyber safeguards that block certain high-risk dual-use activities." [ref=f19e1294] [cursor=pointer]:
+                  - /url: /anthropic/claude-sonnet-5
+                  - generic [ref=f19e1295]: Claude Sonnet 5
+                  - paragraph [ref=f19e1297]: Sonnet 5 is Anthropic's most capable Sonnet-class model, with frontier performance across coding, agents, and professional work. It supports adaptive thinking with selectable reasoning effort levels (low, medium, high, max, and x-high), a 1M-token context window, and text, image, and file inputs. Sonnet 5 uses an updated tokenizer and includes real-time cyber safeguards that block certain high-risk dual-use activities.
+              - group [ref=f19e1298]:
+                - link "Claude Fable Latest This model always redirects to the latest model in the Claude Fable family." [ref=f19e1299] [cursor=pointer]:
+                  - /url: /~anthropic/claude-fable-latest
+                  - generic [ref=f19e1300]: Claude Fable Latest
+                  - paragraph [ref=f19e1302]: This model always redirects to the latest model in the Claude Fable family.
+              - group [ref=f19e1303]:
+                - link "Claude Fable 5 Claude Fable 5 is a Mythos-class model from Anthropic, built for autonomous knowledge work and coding. It supports text, image, and file inputs with text output, with reasoning support and a 1M-token context window. It is suited for long-running, complex, and asynchronous tasks that previously required frequent human check-ins. It is particularly strong at end-to-end work that would otherwise take a person hours, days, or weeks - taking on problems that are long-running, ambiguous, or highly multi-step. It executes well-scoped tasks with few mistakes, automatically self-correcting through verification loops, and ships with robust safeguards." [ref=f19e1304] [cursor=pointer]:
+                  - /url: /anthropic/claude-fable-5
+                  - generic [ref=f19e1305]: Claude Fable 5
+                  - generic [ref=f19e1306]:
+                    - paragraph [ref=f19e1307]: Claude Fable 5 is a Mythos-class model from Anthropic, built for autonomous knowledge work and coding. It supports text, image, and file inputs with text output, with reasoning support and a 1M-token context window. It is suited for long-running, complex, and asynchronous tasks that previously required frequent human check-ins.
+                    - paragraph [ref=f19e1308]: It is particularly strong at end-to-end work that would otherwise take a person hours, days, or weeks - taking on problems that are long-running, ambiguous, or highly multi-step. It executes well-scoped tasks with few mistakes, automatically self-correcting through verification loops, and ships with robust safeguards.
+              - group [ref=f19e1309]:
+                - 'link "Claude Opus 4.8 Fast-mode variant of Opus 4.8 - identical capabilities with higher output speed at 2x pricing relative to regular Opus 4.8. Learn more in Anthropic''s docs: https://platform.claude.com/docs/en/build-with-claude/fast-mode" [ref=f19e1310] [cursor=pointer]':
+                  - /url: /anthropic/claude-opus-4.8-fast
+                  - generic [ref=f19e1311]: Claude Opus 4.8
+                  - generic [ref=f19e1312]:
+                    - paragraph [ref=f19e1313]: Fast-mode variant of Opus 4.8 - identical capabilities with higher output speed at 2x pricing relative to regular Opus 4.8.
+                    - paragraph [ref=f19e1314]: "Learn more in Anthropic's docs: https://platform.claude.com/docs/en/build-with-claude/fast-mode"
+              - group [ref=f19e1315]:
+                - link "Claude Opus 4.8 Claude Opus 4.8 is Anthropic's most capable generally available model in the Opus family. It supports text, image, and file inputs with text output, with reasoning support and a 1M-token context window. It is suited for highly autonomous agents, long-horizon agentic work, knowledge work, and memory-driven tasks where coherence over extended sessions matters. It is particularly strong on multi-step reasoning, complex coding, and end-to-end project orchestration - large codebases, multi-stage debugging, and long-running asynchronous agent pipelines. Beyond coding, it handles knowledge work such as drafting documents, building presentations, and analyzing data, maintaining quality across very long outputs." [ref=f19e1316] [cursor=pointer]:
+                  - /url: /anthropic/claude-opus-4.8
+                  - generic [ref=f19e1317]: Claude Opus 4.8
+                  - generic [ref=f19e1318]:
+                    - paragraph [ref=f19e1319]: Claude Opus 4.8 is Anthropic's most capable generally available model in the Opus family. It supports text, image, and file inputs with text output, with reasoning support and a 1M-token context window. It is suited for highly autonomous agents, long-horizon agentic work, knowledge work, and memory-driven tasks where coherence over extended sessions matters.
+                    - paragraph [ref=f19e1320]: It is particularly strong on multi-step reasoning, complex coding, and end-to-end project orchestration - large codebases, multi-stage debugging, and long-running asynchronous agent pipelines. Beyond coding, it handles knowledge work such as drafting documents, building presentations, and analyzing data, maintaining quality across very long outputs.
+              - group [ref=f19e1321]:
+                - 'link "Claude Opus 4.7 Fast-mode variant of Opus 4.7 - identical capabilities with higher output speed at premium 6x pricing. Learn more in Anthropic''s docs: https://platform.claude.com/docs/en/build-with-claude/fast-mode" [ref=f19e1322] [cursor=pointer]':
+                  - /url: /anthropic/claude-opus-4.7-fast
+                  - generic [ref=f19e1323]: Claude Opus 4.7
+                  - generic [ref=f19e1324]:
+                    - paragraph [ref=f19e1325]: Fast-mode variant of Opus 4.7 - identical capabilities with higher output speed at premium 6x pricing.
+                    - paragraph [ref=f19e1326]: "Learn more in Anthropic's docs: https://platform.claude.com/docs/en/build-with-claude/fast-mode"
+              - group [ref=f19e1327]:
+                - link "Anthropic Claude Haiku Latest This model always redirects to the latest model in the Anthropic Claude Haiku family." [ref=f19e1328] [cursor=pointer]:
+                  - /url: /~anthropic/claude-haiku-latest
+                  - generic [ref=f19e1329]: Anthropic Claude Haiku Latest
+                  - paragraph [ref=f19e1331]: This model always redirects to the latest model in the Anthropic Claude Haiku family.
+              - group [ref=f19e1332]:
+                - link "Anthropic Claude Sonnet Latest This model always redirects to the latest model in the Anthropic Claude Sonnet family." [ref=f19e1333] [cursor=pointer]:
+                  - /url: /~anthropic/claude-sonnet-latest
+                  - generic [ref=f19e1334]: Anthropic Claude Sonnet Latest
+                  - paragraph [ref=f19e1336]: This model always redirects to the latest model in the Anthropic Claude Sonnet family.
+              - group [ref=f19e1337]:
+                - link "Claude Opus Latest This model always redirects to the latest model in the Claude Opus family." [ref=f19e1338] [cursor=pointer]:
+                  - /url: /~anthropic/claude-opus-latest
+                  - generic [ref=f19e1339]: Claude Opus Latest
+                  - paragraph [ref=f19e1341]: This model always redirects to the latest model in the Claude Opus family.
+              - group [ref=f19e1342]:
+                - link "Claude Opus 4.7 Opus 4.7 is the next generation of Anthropic's Opus family, built for long-running, asynchronous agents. Building on the coding and agentic strengths of Opus 4.6, it delivers stronger performance on complex, multi-step tasks and more reliable agentic execution across extended workflows. It is especially effective for asynchronous agent pipelines where tasks unfold over time - large codebases, multi-stage debugging, and end-to-end project orchestration. Beyond coding, Opus 4.7 brings improved knowledge work capabilities - from drafting documents and building presentations to analyzing data. It maintains coherence across very long outputs and extended sessions, making it a strong default for tasks that require persistence, judgment, and follow-through. For users upgrading from earlier Opus versions, see our official migration guide here" [ref=f19e1343] [cursor=pointer]:
+                  - /url: /anthropic/claude-opus-4.7
+                  - generic [ref=f19e1344]: Claude Opus 4.7
+                  - generic [ref=f19e1345]:
+                    - paragraph [ref=f19e1346]: Opus 4.7 is the next generation of Anthropic's Opus family, built for long-running, asynchronous agents. Building on the coding and agentic strengths of Opus 4.6, it delivers stronger performance on complex, multi-step tasks and more reliable agentic execution across extended workflows. It is especially effective for asynchronous agent pipelines where tasks unfold over time - large codebases, multi-stage debugging, and end-to-end project orchestration.
+                    - paragraph [ref=f19e1347]: Beyond coding, Opus 4.7 brings improved knowledge work capabilities - from drafting documents and building presentations to analyzing data. It maintains coherence across very long outputs and extended sessions, making it a strong default for tasks that require persistence, judgment, and follow-through.
+                    - paragraph [ref=f19e1348]: For users upgrading from earlier Opus versions, see our official migration guide here
+              - group [ref=f19e1349]:
+                - 'link "Claude Opus 4.6 Fast-mode variant of Opus 4.6 - identical capabilities with higher output speed at premium 6x pricing. Learn more in Anthropic''s docs: https://platform.claude.com/docs/en/build-with-claude/fast-mode" [ref=f19e1350] [cursor=pointer]':
+                  - /url: /anthropic/claude-opus-4.6-fast
+                  - generic [ref=f19e1351]: Claude Opus 4.6
+                  - generic [ref=f19e1352]:
+                    - paragraph [ref=f19e1353]: Fast-mode variant of Opus 4.6 - identical capabilities with higher output speed at premium 6x pricing.
+                    - paragraph [ref=f19e1354]: "Learn more in Anthropic's docs: https://platform.claude.com/docs/en/build-with-claude/fast-mode"
+              - group [ref=f19e1355]:
+                - link "Claude Sonnet 4.6 Sonnet 4.6 is Anthropic's most capable Sonnet-class model yet, with frontier performance across coding, agents, and professional work. It excels at iterative development, complex codebase navigation, end-to-end project management with memory, polished document creation, and confident computer use for web QA and workflow automation." [ref=f19e1356] [cursor=pointer]:
+                  - /url: /anthropic/claude-sonnet-4.6
+                  - generic [ref=f19e1357]: Claude Sonnet 4.6
+                  - paragraph [ref=f19e1359]: Sonnet 4.6 is Anthropic's most capable Sonnet-class model yet, with frontier performance across coding, agents, and professional work. It excels at iterative development, complex codebase navigation, end-to-end project management with memory, polished document creation, and confident computer use for web QA and workflow automation.
+              - group [ref=f19e1360]:
+                - link [ref=f19e1361] [cursor=pointer]:
+                  - /url: /anthropic/claude-opus-4.6
+                  - generic [ref=f19e1362]: Claude Opus 4.6
+                  - generic [ref=f19e1363]:
+                    - paragraph [ref=f19e1364]: Opus 4.6 is Anthropic’s strongest model for coding and long-running professional tasks. It is built for agents that operate across entire workflows rather than single prompts, making it especially effective for large codebases, complex refactors, and multi-step debugging that unfolds over time. The model shows deeper contextual understanding, stronger problem decomposition, and greater reliability on hard engineering tasks than prior generations.
+                    - paragraph [ref=f19e1365]: Beyond coding, Opus 4.6 excels at sustained knowledge work. It produces near-production-ready documents, plans, and analyses in a single pass, and maintains coherence across very long outputs and extended sessions. This makes it a strong default for tasks that require persistence, judgment, and follow-through, such as technical design, migration planning, and end-to-end project execution.
+                    - paragraph [ref=f19e1366]: For users upgrading from earlier Opus versions, see our official migration guide here
+              - group [ref=f19e1367]:
+                - link [ref=f19e1368] [cursor=pointer]:
+                  - /url: /anthropic/claude-opus-4.5
+                  - generic [ref=f19e1369]: Claude Opus 4.5
+                  - generic [ref=f19e1370]:
+                    - paragraph [ref=f19e1371]: Claude Opus 4.5 is Anthropic’s frontier reasoning model optimized for complex software engineering, agentic workflows, and long-horizon computer use. It offers strong multimodal capabilities, competitive performance across real-world coding and reasoning benchmarks, and improved robustness to prompt injection. The model is designed to operate efficiently across varied effort levels, enabling developers to trade off speed, depth, and token usage depending on task requirements. It comes with a new parameter to control token efficiency, which can be accessed using the OpenRouter Verbosity parameter with low, medium, or high.
+                    - paragraph [ref=f19e1372]: Opus 4.5 supports advanced tool use, extended context management, and coordinated multi-agent setups, making it well-suited for autonomous research, debugging, multi-step planning, and spreadsheet/browser manipulation. It delivers substantial gains in structured reasoning, execution reliability, and alignment compared to prior Opus generations, while reducing token overhead and improving performance on long-running tasks.
+              - group [ref=f19e1373]:
+                - link "Claude Haiku 4.5 Claude Haiku 4.5 is Anthropic’s fastest and most efficient model, delivering near-frontier intelligence at a fraction of the cost and latency of larger Claude models. Matching Claude Sonnet 4’s performance across reasoning, coding, and computer-use tasks, Haiku 4.5 brings frontier-level capability to real-time and high-volume applications. It introduces extended thinking to the Haiku line; enabling controllable reasoning depth, summarized or interleaved thought output, and tool-assisted workflows with full support for coding, bash, web search, and computer-use tools. Scoring >73% on SWE-bench Verified, Haiku 4.5 ranks among the world’s best coding models while maintaining exceptional responsiveness for sub-agents, parallelized execution, and scaled deployment." [ref=f19e1374] [cursor=pointer]:
+                  - /url: /anthropic/claude-haiku-4.5
+                  - generic [ref=f19e1375]: Claude Haiku 4.5
+                  - generic [ref=f19e1376]:
+                    - paragraph [ref=f19e1377]: Claude Haiku 4.5 is Anthropic’s fastest and most efficient model, delivering near-frontier intelligence at a fraction of the cost and latency of larger Claude models. Matching Claude Sonnet 4’s performance across reasoning, coding, and computer-use tasks, Haiku 4.5 brings frontier-level capability to real-time and high-volume applications.
+                    - paragraph [ref=f19e1378]: It introduces extended thinking to the Haiku line; enabling controllable reasoning depth, summarized or interleaved thought output, and tool-assisted workflows with full support for coding, bash, web search, and computer-use tools. Scoring >73% on SWE-bench Verified, Haiku 4.5 ranks among the world’s best coding models while maintaining exceptional responsiveness for sub-agents, parallelized execution, and scaled deployment.
+              - group [ref=f19e1379]:
+                - link [ref=f19e1380] [cursor=pointer]:
+                  - /url: /anthropic/claude-sonnet-4.5
+                  - generic [ref=f19e1381]: Claude Sonnet 4.5
+                  - generic [ref=f19e1382]:
+                    - paragraph [ref=f19e1383]: Claude Sonnet 4.5 is Anthropic’s most advanced Sonnet model to date, optimized for real-world agents and coding workflows. It delivers state-of-the-art performance on coding benchmarks such as SWE-bench Verified, with improvements across system design, code security, and specification adherence. The model is designed for extended autonomous operation, maintaining task continuity across sessions and providing fact-based progress tracking.
+                    - paragraph [ref=f19e1384]: Sonnet 4.5 also introduces stronger agentic capabilities, including improved tool orchestration, speculative parallel execution, and more efficient context and memory management. With enhanced context tracking and awareness of token usage across tool calls, it is particularly well-suited for multi-context and long-running workflows. Use cases span software engineering, cybersecurity, financial analysis, research agents, and other domains requiring sustained reasoning and tool use.
+              - group [ref=f19e1385]:
+                - link "Claude Opus 4.1 Claude Opus 4.1 is an updated version of Anthropic’s flagship model, offering improved performance in coding, reasoning, and agentic tasks. It achieves 74.5% on SWE-bench Verified and shows notable gains in multi-file code refactoring, debugging precision, and detail-oriented reasoning. The model supports extended thinking up to 64K tokens and is optimized for tasks involving research, data analysis, and tool-assisted reasoning." [ref=f19e1386] [cursor=pointer]:
+                  - /url: /anthropic/claude-opus-4.1
+                  - generic [ref=f19e1387]: Claude Opus 4.1
+                  - paragraph [ref=f19e1389]: Claude Opus 4.1 is an updated version of Anthropic’s flagship model, offering improved performance in coding, reasoning, and agentic tasks. It achieves 74.5% on SWE-bench Verified and shows notable gains in multi-file code refactoring, debugging precision, and detail-oriented reasoning. The model supports extended thinking up to 64K tokens and is optimized for tasks involving research, data analysis, and tool-assisted reasoning.
+              - group [ref=f19e1390]:
+                - link "Claude Opus 4 Claude Opus 4 is benchmarked as the world’s best coding model, at time of release, bringing sustained performance on complex, long-running tasks and agent workflows. It sets new benchmarks in software engineering, achieving leading results on SWE-bench (72.5%) and Terminal-bench (43.2%). Opus 4 supports extended, agentic workflows, handling thousands of task steps continuously for hours without degradation. Read more at the blog post here" [ref=f19e1391] [cursor=pointer]:
+                  - /url: /anthropic/claude-opus-4
+                  - generic [ref=f19e1392]: Claude Opus 4
+                  - generic [ref=f19e1393]:
+                    - paragraph [ref=f19e1394]: Claude Opus 4 is benchmarked as the world’s best coding model, at time of release, bringing sustained performance on complex, long-running tasks and agent workflows. It sets new benchmarks in software engineering, achieving leading results on SWE-bench (72.5%) and Terminal-bench (43.2%). Opus 4 supports extended, agentic workflows, handling thousands of task steps continuously for hours without degradation.
+                    - paragraph [ref=f19e1395]: Read more at the blog post here
+              - group [ref=f19e1396]:
+                - link "Claude 3.7 Sonnet Claude 3.7 Sonnet is an advanced large language model with improved reasoning, coding, and problem-solving capabilities. It introduces a hybrid reasoning approach, allowing users to choose between rapid responses and extended, step-by-step processing for complex tasks. The model demonstrates notable improvements in coding, particularly in front-end development and full-stack updates, and excels in agentic workflows, where it can autonomously navigate multi-step processes. Claude 3.7 Sonnet maintains performance parity with its predecessor in standard mode while offering an extended reasoning mode for enhanced accuracy in math, coding, and instruction-following tasks. Read more at the blog post here" [ref=f19e1397] [cursor=pointer]:
+                  - /url: /anthropic/claude-3.7-sonnet
+                  - generic [ref=f19e1398]: Claude 3.7 Sonnet
+                  - generic [ref=f19e1399]:
+                    - paragraph [ref=f19e1400]: Claude 3.7 Sonnet is an advanced large language model with improved reasoning, coding, and problem-solving capabilities. It introduces a hybrid reasoning approach, allowing users to choose between rapid responses and extended, step-by-step processing for complex tasks. The model demonstrates notable improvements in coding, particularly in front-end development and full-stack updates, and excels in agentic workflows, where it can autonomously navigate multi-step processes.
+                    - paragraph [ref=f19e1401]: Claude 3.7 Sonnet maintains performance parity with its predecessor in standard mode while offering an extended reasoning mode for enhanced accuracy in math, coding, and instruction-following tasks.
+                    - paragraph [ref=f19e1402]: Read more at the blog post here
+              - group [ref=f19e1403]:
+                - link "Claude 3.5 Haiku Claude 3.5 Haiku features enhancements across all skill sets including coding, tool use, and reasoning. As the fastest model in the Anthropic lineup, it offers rapid response times suitable for applications that require high interactivity and low latency, such as user-facing chatbots and on-the-fly code completions. It also excels in specialized tasks like data extraction and real-time content moderation, making it a versatile tool for a broad range of industries. It does not support image inputs. See the launch announcement and benchmark results here" [ref=f19e1404] [cursor=pointer]:
+                  - /url: /anthropic/claude-3.5-haiku-20241022
+                  - generic [ref=f19e1405]: Claude 3.5 Haiku
+                  - generic [ref=f19e1406]:
+                    - paragraph [ref=f19e1407]: Claude 3.5 Haiku features enhancements across all skill sets including coding, tool use, and reasoning. As the fastest model in the Anthropic lineup, it offers rapid response times suitable for applications that require high interactivity and low latency, such as user-facing chatbots and on-the-fly code completions. It also excels in specialized tasks like data extraction and real-time content moderation, making it a versatile tool for a broad range of industries.
+                    - paragraph [ref=f19e1408]: It does not support image inputs.
+                    - paragraph [ref=f19e1409]: See the launch announcement and benchmark results here
+              - group [ref=f19e1410]:
+                - link "Claude 3.5 Haiku Claude 3.5 Haiku features offers enhanced capabilities in speed, coding accuracy, and tool use. Engineered to excel in real-time applications, it delivers quick response times that are essential for dynamic tasks such as chat interactions and immediate coding suggestions. This makes it highly suitable for environments that demand both speed and precision, such as software development, customer service bots, and data management systems. This model is currently pointing to Claude 3.5 Haiku (2024-10-22)." [ref=f19e1411] [cursor=pointer]:
+                  - /url: /anthropic/claude-3.5-haiku
+                  - generic [ref=f19e1412]: Claude 3.5 Haiku
+                  - generic [ref=f19e1413]:
+                    - paragraph [ref=f19e1414]: Claude 3.5 Haiku features offers enhanced capabilities in speed, coding accuracy, and tool use. Engineered to excel in real-time applications, it delivers quick response times that are essential for dynamic tasks such as chat interactions and immediate coding suggestions.
+                    - paragraph [ref=f19e1415]: This makes it highly suitable for environments that demand both speed and precision, such as software development, customer service bots, and data management systems.
+                    - paragraph [ref=f19e1416]: This model is currently pointing to Claude 3.5 Haiku (2024-10-22).
+              - group [ref=f19e1417]:
+                - 'link "Claude 3.5 Sonnet New Claude 3.5 Sonnet delivers better-than-Opus capabilities, faster-than-Sonnet speeds, at the same Sonnet prices. Sonnet is particularly good at: #multimodal" [ref=f19e1418] [cursor=pointer]':
+                  - /url: /anthropic/claude-3.5-sonnet
+                  - generic [ref=f19e1419]: Claude 3.5 Sonnet
+                  - generic [ref=f19e1420]:
+                    - paragraph [ref=f19e1421]: "New Claude 3.5 Sonnet delivers better-than-Opus capabilities, faster-than-Sonnet speeds, at the same Sonnet prices. Sonnet is particularly good at:"
+                    - paragraph [ref=f19e1422]: "#multimodal"
+              - group [ref=f19e1423]:
+                - 'link "Claude 3.5 Sonnet Claude 3.5 Sonnet delivers better-than-Opus capabilities, faster-than-Sonnet speeds, at the same Sonnet prices. Sonnet is particularly good at: For the latest version (2024-10-23), check out Claude 3.5 Sonnet. #multimodal" [ref=f19e1424] [cursor=pointer]':
+                  - /url: /anthropic/claude-3.5-sonnet-20240620
+                  - generic [ref=f19e1425]: Claude 3.5 Sonnet
+                  - generic [ref=f19e1426]:
+                    - paragraph [ref=f19e1427]: "Claude 3.5 Sonnet delivers better-than-Opus capabilities, faster-than-Sonnet speeds, at the same Sonnet prices. Sonnet is particularly good at:"
+                    - paragraph [ref=f19e1428]: For the latest version (2024-10-23), check out Claude 3.5 Sonnet.
+                    - paragraph [ref=f19e1429]: "#multimodal"
+              - group [ref=f19e1430]:
+                - 'link "Claude 3 Haiku Claude 3 Haiku is Anthropic''s fastest and most compact model for near-instant responsiveness. Quick and accurate targeted performance. See the launch announcement and benchmark results here #multimodal" [ref=f19e1431] [cursor=pointer]':
+                  - /url: /anthropic/claude-3-haiku
+                  - generic [ref=f19e1432]: Claude 3 Haiku
+                  - generic [ref=f19e1433]:
+                    - paragraph [ref=f19e1434]: Claude 3 Haiku is Anthropic's fastest and most compact model for near-instant responsiveness. Quick and accurate targeted performance.
+                    - paragraph [ref=f19e1435]: See the launch announcement and benchmark results here
+                    - paragraph [ref=f19e1436]: "#multimodal"
+              - group [ref=f19e1437]:
+                - 'link "Claude 3 Opus Claude 3 Opus is Anthropic''s most powerful model for highly complex tasks. It boasts top-level performance, intelligence, fluency, and understanding. See the launch announcement and benchmark results here #multimodal" [ref=f19e1438] [cursor=pointer]':
+                  - /url: /anthropic/claude-3-opus
+                  - generic [ref=f19e1439]: Claude 3 Opus
+                  - generic [ref=f19e1440]:
+                    - paragraph [ref=f19e1441]: Claude 3 Opus is Anthropic's most powerful model for highly complex tasks. It boasts top-level performance, intelligence, fluency, and understanding.
+                    - paragraph [ref=f19e1442]: See the launch announcement and benchmark results here
+                    - paragraph [ref=f19e1443]: "#multimodal"
+              - group [ref=f19e1444]:
+                - 'link "Claude 3 Sonnet Claude 3 Sonnet is an ideal balance of intelligence and speed for enterprise workloads. Maximum utility at a lower price, dependable, balanced for scaled deployments. See the launch announcement and benchmark results here #multimodal" [ref=f19e1445] [cursor=pointer]':
+                  - /url: /anthropic/claude-3-sonnet
+                  - generic [ref=f19e1446]: Claude 3 Sonnet
+                  - generic [ref=f19e1447]:
+                    - paragraph [ref=f19e1448]: Claude 3 Sonnet is an ideal balance of intelligence and speed for enterprise workloads. Maximum utility at a lower price, dependable, balanced for scaled deployments.
+                    - paragraph [ref=f19e1449]: See the launch announcement and benchmark results here
+                    - paragraph [ref=f19e1450]: "#multimodal"
+              - group [ref=f19e1451]:
+                - 'link "Claude v2 Claude 2 delivers advancements in key capabilities for enterprises—including an industry-leading 200K token context window, significant reductions in rates of model hallucination, system prompts and a new beta feature: tool use." [ref=f19e1452] [cursor=pointer]':
+                  - /url: /anthropic/claude-2
+                  - generic [ref=f19e1453]: Claude v2
+                  - paragraph [ref=f19e1455]: "Claude 2 delivers advancements in key capabilities for enterprises—including an industry-leading 200K token context window, significant reductions in rates of model hallucination, system prompts and a new beta feature: tool use."
+              - group [ref=f19e1456]:
+                - 'link "Claude v2.1 Claude 2 delivers advancements in key capabilities for enterprises—including an industry-leading 200K token context window, significant reductions in rates of model hallucination, system prompts and a new beta feature: tool use." [ref=f19e1457] [cursor=pointer]':
+                  - /url: /anthropic/claude-2.1
+                  - generic [ref=f19e1458]: Claude v2.1
+                  - paragraph [ref=f19e1460]: "Claude 2 delivers advancements in key capabilities for enterprises—including an industry-leading 200K token context window, significant reductions in rates of model hallucination, system prompts and a new beta feature: tool use."
+              - group [ref=f19e1461]:
+                - link "Claude Instant v1.1 Anthropic's model for low-latency, high throughput text generation. Supports hundreds of pages of text." [ref=f19e1462] [cursor=pointer]:
+                  - /url: /anthropic/claude-instant-1.1
+                  - generic [ref=f19e1463]: Claude Instant v1.1
+                  - paragraph [ref=f19e1465]: Anthropic's model for low-latency, high throughput text generation. Supports hundreds of pages of text.
+              - group [ref=f19e1466]:
+                - link "Claude v1 Anthropic's model for low-latency, high throughput text generation. Supports hundreds of pages of text." [ref=f19e1467] [cursor=pointer]:
+                  - /url: /anthropic/claude-1
+                  - generic [ref=f19e1468]: Claude v1
+                  - paragraph [ref=f19e1470]: Anthropic's model for low-latency, high throughput text generation. Supports hundreds of pages of text.
+              - group [ref=f19e1471]:
+                - link "Claude Instant v1.0 Anthropic's model for low-latency, high throughput text generation. Supports hundreds of pages of text." [ref=f19e1472] [cursor=pointer]:
+                  - /url: /anthropic/claude-instant-1.0
+                  - generic [ref=f19e1473]: Claude Instant v1.0
+                  - paragraph [ref=f19e1475]: Anthropic's model for low-latency, high throughput text generation. Supports hundreds of pages of text.
+              - group [ref=f19e1476]:
+                - link "Claude v2.0 Anthropic's flagship model. Superior performance on tasks that require complex reasoning. Supports hundreds of pages of text." [ref=f19e1477] [cursor=pointer]:
+                  - /url: /anthropic/claude-2.0
+                  - generic [ref=f19e1478]: Claude v2.0
+                  - paragraph [ref=f19e1480]: Anthropic's flagship model. Superior performance on tasks that require complex reasoning. Supports hundreds of pages of text.
+              - group [ref=f19e1481]:
+                - link "Claude v1.2 Anthropic's model for low-latency, high throughput text generation. Supports hundreds of pages of text." [ref=f19e1482] [cursor=pointer]:
+                  - /url: /anthropic/claude-1.2
+                  - generic [ref=f19e1483]: Claude v1.2
+                  - paragraph [ref=f19e1485]: Anthropic's model for low-latency, high throughput text generation. Supports hundreds of pages of text.
+              - group [ref=f19e1486]:
+                - link "Claude Instant v1 Anthropic's model for low-latency, high throughput text generation. Supports hundreds of pages of text." [ref=f19e1487] [cursor=pointer]:
+                  - /url: /anthropic/claude-instant-1
+                  - generic [ref=f19e1488]: Claude Instant v1
+                  - paragraph [ref=f19e1490]: Anthropic's model for low-latency, high throughput text generation. Supports hundreds of pages of text.
+            - button "Previous slide" [ref=f19e1491] [cursor=pointer]
+            - button "Next slide" [ref=f19e1493] [cursor=pointer]
+      - generic [ref=f19e1497]:
+        - generic [ref=f19e1498]:
+          - link [ref=f19e1499] [cursor=pointer]:
+            - /url: /
+            - img "OpenRouter" [ref=f19e1500]
+          - generic [ref=f19e1501]: © 2026 OpenRouter, Inc
+        - generic [ref=f19e1502]:
+          - heading "Product" [level=3] [ref=f19e1503]
+          - list [ref=f19e1504]:
+            - listitem [ref=f19e1505]:
+              - link "Chat" [ref=f19e1506] [cursor=pointer]:
+                - /url: /chat
+            - listitem [ref=f19e1507]:
+              - link "Rankings" [ref=f19e1508] [cursor=pointer]:
+                - /url: /rankings
+            - listitem [ref=f19e1509]:
+              - link "Apps" [ref=f19e1510] [cursor=pointer]:
+                - /url: /apps
+            - listitem [ref=f19e1511]:
+              - link "Discover" [ref=f19e1512] [cursor=pointer]:
+                - /url: /discover
+            - listitem [ref=f19e1513]:
+              - link "Models" [ref=f19e1514] [cursor=pointer]:
+                - /url: /models
+            - listitem [ref=f19e1515]:
+              - link "Providers" [ref=f19e1516] [cursor=pointer]:
+                - /url: /providers
+            - listitem [ref=f19e1517]:
+              - link "Pricing" [ref=f19e1518] [cursor=pointer]:
+                - /url: /pricing
+            - listitem [ref=f19e1519]:
+              - link "Enterprise" [ref=f19e1520] [cursor=pointer]:
+                - /url: /enterprise
+            - listitem [ref=f19e1521]:
+              - link "Labs" [ref=f19e1522] [cursor=pointer]:
+                - /url: /labs
+        - generic [ref=f19e1523]:
+          - heading "Company" [level=3] [ref=f19e1524]
+          - list [ref=f19e1525]:
+            - listitem [ref=f19e1526]:
+              - link "About" [ref=f19e1527] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=f19e1528]:
+              - link "Blog" [ref=f19e1529] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=f19e1530]:
+              - link "Careers Hiring" [ref=f19e1531] [cursor=pointer]:
+                - /url: /careers
+                - text: Careers
+                - generic [ref=f19e1532]: Hiring
+            - listitem [ref=f19e1533]:
+              - link "Privacy" [ref=f19e1534] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=f19e1535]:
+              - link "Terms of Service" [ref=f19e1536] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=f19e1537]:
+              - link "Support" [ref=f19e1538] [cursor=pointer]:
+                - /url: /support
+            - listitem [ref=f19e1539]:
+              - link "Works With OR" [ref=f19e1540] [cursor=pointer]:
+                - /url: /works-with-openrouter
+            - listitem [ref=f19e1541]:
+              - link "Data" [ref=f19e1542] [cursor=pointer]:
+                - /url: /data
+        - generic [ref=f19e1543]:
+          - heading "Developer" [level=3] [ref=f19e1544]
+          - list [ref=f19e1545]:
+            - listitem [ref=f19e1546]:
+              - link "Documentation" [ref=f19e1547] [cursor=pointer]:
+                - /url: /docs
+            - listitem [ref=f19e1548]:
+              - link "API Reference" [ref=f19e1549] [cursor=pointer]:
+                - /url: /docs/api_reference/overview
+            - listitem [ref=f19e1550]:
+              - link "SDK" [ref=f19e1551] [cursor=pointer]:
+                - /url: /sdk
+            - listitem [ref=f19e1552]:
+              - link "Status" [ref=f19e1553] [cursor=pointer]:
+                - /url: https://status.openrouter.ai
+        - generic [ref=f19e1554]:
+          - heading "Connect" [level=3] [ref=f19e1555]
+          - list [ref=f19e1556]:
+            - listitem [ref=f19e1557]:
+              - link "Discord" [ref=f19e1558] [cursor=pointer]:
+                - /url: https://discord.gg/fVyRaUDgxW
+            - listitem [ref=f19e1559]:
+              - link "GitHub" [ref=f19e1560] [cursor=pointer]:
+                - /url: https://github.com/OpenRouterTeam
+            - listitem [ref=f19e1561]:
+              - link "LinkedIn" [ref=f19e1562] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/104068329
+            - listitem [ref=f19e1563]:
+              - link "X" [ref=f19e1564] [cursor=pointer]:
+                - /url: https://twitter.com/openrouter
+            - listitem [ref=f19e1565]:
+              - link "YouTube" [ref=f19e1566] [cursor=pointer]:
+                - /url: https://www.youtube.com/@OpenRouterAI
+  - generic:
+    - complementary "Playground":
+      - generic:
+        - generic:
+          - generic: Playground
+          - generic:
+            - button "Get code"
+            - link "Open in Chatroom":
+              - /url: /chat?models=anthropic/claude-sonnet-4
+            - button "Close playground"
+        - generic: Sign in to try this model
+        - region "Playground input":
+          - generic:
+            - generic:
+              - textbox "Enter your message..."
+              - generic:
+                - button "Add attachment" [ref=f19e1568] [cursor=pointer]
+                - button "Sign in to generate" [ref=f19e1570] [cursor=pointer]
+            - generic:
+              - button "Explain quantum entanglement to a 10-year-old"
+              - button "Sieve of Eratosthenes in Python"
+              - button "SQL query for top regions by growth"
+            - paragraph: Responses are AI-generated. Verify before relying on them.
+    - complementary "Playground":
+      - generic:
+        - generic:
+          - generic: Playground
+          - generic:
+            - button "Get code"
+            - link "Open in Chatroom":
+              - /url: /chat?models=anthropic/claude-sonnet-4
+            - button "Close playground"
+        - generic: Sign in to try this model
+        - region "Playground input":
+          - generic:
+            - generic:
+              - textbox "Enter your message..."
+              - generic:
+                - button "Add attachment" [ref=f19e1572] [cursor=pointer]
+                - button "Sign in to generate" [ref=f19e1574] [cursor=pointer]
+            - generic:
+              - button "Explain quantum entanglement to a 10-year-old"
+              - button "Sieve of Eratosthenes in Python"
+              - button "SQL query for top regions by growth"
+            - paragraph: Responses are AI-generated. Verify before relying on them.
+  - alert [ref=f19e1575]
+  - generic:
+    - region "Notifications"
+  - generic [ref=f19e1576]: "4"

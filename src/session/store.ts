@@ -23,6 +23,8 @@ export class FileSessionStore {
     prompt: string;
     model: string;
     provider?: string;
+    conversationId?: string;
+    accountMemoryRequested?: boolean;
     preset?: string;
     files: string[];
     bundle: string;
@@ -38,6 +40,8 @@ export class FileSessionStore {
       status: "error",
       model: input.model,
       provider: input.provider,
+      conversationId: input.conversationId,
+      accountMemoryRequested: input.accountMemoryRequested,
       preset: input.preset,
       files: input.files,
       output: "",

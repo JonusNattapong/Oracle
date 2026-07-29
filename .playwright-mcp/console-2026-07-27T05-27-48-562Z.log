@@ -1,0 +1,3 @@
+[    5457ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://api.pricepertoken.com/api/auth/user/:0
+[    5539ms] [ERROR] Hydration completed but contains mismatches. @ https://pricepertoken.com/_nuxt/DcFM0E2b.js:13
+[    6285ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: https://fonts.gstatic.com/s/ptserif/v19/EJRVQgYoZZY2vCFuvAFWzr8.woff2 @ https://subscribe-forms.beehiiv.com/assets/webfontloader-0ac16cf4.js:2

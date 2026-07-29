@@ -1,16 +1,33 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
+import fs from "node:fs/promises";
 import { z } from "zod";
 import type { ConsultService } from "../../core/consult.js";
 import type { ProjectConfig } from "../../config/project.js";
 import type { MemoryPort } from "../../orchestrator/ports.js";
-import { serializeOracleError } from "../../errors.js";
+import { OracleError, serializeOracleError } from "../../errors.js";
 import { getConversationContext, recordSelfLog } from "../../core/selfMemory.js";
 import { loadSoul } from "../../core/souls.js";
 import { buildOracleSystemPrompt } from "../../core/systemPrompt.js";
 import { searchDocs } from "../../docs/reader.js";
 
-function success(text: string, structuredContent: Record<string, unknown>) {
-  return { content: [{ type: "text" as const, text }], structuredContent };
+async function success(
+  text: string,
+  structuredContent: Record<string, unknown>,
+  images: Array<{ path: string; mimeType: string }> = []
+) {
+  const content: Array<
+    { type: "text"; text: string }
+    | { type: "image"; data: string; mimeType: string }
+  > = [{ type: "text", text }];
+  for (const image of images) {
+    const data = await fs.readFile(image.path);
+    content.push({
+      type: "image",
+      data: data.toString("base64"),
+      mimeType: image.mimeType
+    });
+  }
+  return { content, structuredContent };
 }
 
 function failure(error: unknown) {
@@ -37,18 +54,20 @@ export function registerConsultTool(
     "oracle_ask",
     {
       title: "Ask Oracle",
-      description: "Ask anything. Pass `files` to read code, `conversationId` for multi-turn recall.",
+      description: "Ask anything. Pass `files` to read code, `conversationId` for multi-turn recall, or `accountMemory` to explicitly save a high-level fact to the signed-in ChatGPT account.",
       inputSchema: {
         question: z.string().min(1).describe("Your question or what you're stuck on"),
         soul: z.string().optional().describe("Soul prompt name (e.g. 'engineer', 'philosopher'). Defaults to 'default'"),
         context: z.string().optional().describe("Additional context: code snippets, error messages, what you've tried"),
         files: z.array(z.string()).optional().describe("File paths or glob patterns to read and include, when the question needs real code (e.g. ['src/**/*.ts'])"),
+        backend: z.enum(["codex", "openai", "anthropic", "opencode", "gemini", "chatgpt-browser"]).optional().describe("Execution backend override"),
         conversationId: z.string().optional().describe("Stable id for this exchange — pass the same value across multiple oracle_ask calls so Oracle recalls what it already said"),
+        accountMemory: z.string().min(1).max(2000).optional().describe("Explicit opt-in: exact high-level fact or preference to save to the signed-in ChatGPT account's Saved Memory. Requires backend='chatgpt-browser'; never use for secrets or large text."),
         include_docs: z.boolean().optional().describe("Search .oracle/docs/ for relevant documentation and include as context"),
         doc_search: z.string().optional().describe("Specific doc query (defaults to using the question itself)")
       }
     },
-    async ({ question, soul, context, files, conversationId, include_docs, doc_search }) => {
+    async ({ question, soul, context, files, backend, conversationId, accountMemory, include_docs, doc_search }) => {
       try {
         if (soul !== undefined) {
           soul = soul.trim();
@@ -82,10 +101,13 @@ export function registerConsultTool(
 
         const prompt = `${ctxBlock}\n\n## Question\n${question}`;
         const hasFiles = files !== undefined && files.length > 0;
+        const targetBackend = backend ?? deps.providerId;
         const result = await deps.service.consult({
           prompt,
           preset: "review",
-          provider: deps.providerId,
+          provider: targetBackend,
+          conversationId,
+          accountMemory,
           files: hasFiles ? files : [],
           model: deps.config.model,
           cwd: deps.workspaceRoot,
@@ -94,16 +116,29 @@ export function registerConsultTool(
           systemPrompt,
           allowEmptyFiles: !hasFiles,
         });
+        if (result.status !== "completed") {
+          throw new OracleError(
+            "ORACLE_PROVIDER_UNAVAILABLE",
+            result.error ?? `Backend '${targetBackend}' failed to answer.`,
+            "Run oracle_doctor for the selected backend and retry."
+          );
+        }
 
         if (conversationId) {
           await recordSelfLog(deps.memory, conversationId, { question, answerSummary: result.output.slice(0, 400) });
         }
 
-        return success(result.output, {
+        return await success(result.output, {
           soul: soulName,
           sessionId: result.sessionId,
-          filesIncluded: result.files.length
-        });
+          responseId: result.responseId,
+          conversationId: result.conversationId,
+          accountMemoryRequested: result.accountMemoryRequested,
+          accountMemorySaved: result.accountMemorySaved,
+          filesIncluded: result.files.length,
+          images: result.images ?? [],
+          artifactWarnings: result.artifactWarnings ?? []
+        }, result.images);
       } catch (error) {
         return failure(error);
       }

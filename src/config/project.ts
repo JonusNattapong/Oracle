@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { OracleError } from "../errors.js";
-import type { ProviderName, ProviderSelection } from "../providers/factory.js";
+import type { BackendName, ProviderName, ProviderSelection } from "../providers/factory.js";
 
 export interface McpServerConfig {
   name: string;
@@ -16,6 +16,7 @@ export interface McpServerConfig {
 }
 
 export interface ProjectConfig {
+  backend: BackendName;
   provider: ProviderSelection;
   model: string;
   include: string[];
@@ -23,7 +24,12 @@ export interface ProjectConfig {
   maxFileSizeBytes: number;
   maxInputBytes: number;
   mcpServers?: McpServerConfig[];
+  experimental?: {
+    browserMode?: boolean;
+  };
   browser: {
+    profileDir?: string;
+    timeoutMs?: number;
     model: string;
     manualLogin: boolean;
     attachRunning: boolean;
@@ -85,6 +91,8 @@ export interface ProjectConfig {
 
 const browserSchema = z
   .object({
+    profileDir: z.string().trim().min(1).optional(),
+    timeoutMs: z.number().int().min(1_000).max(900_000).optional(),
     model: z.string().trim().min(1).optional(),
     manualLogin: z.boolean().optional(),
     attachRunning: z.boolean().optional(),
@@ -150,6 +158,7 @@ const providerValues = [
   "opencode",
   "gemini",
   "browser",
+  "chatgpt-browser",
   "azure",
   "openrouter",
 ] as const;
@@ -172,6 +181,7 @@ const serveSchema = z
 
 const schema = z
   .object({
+    backend: z.enum(providerValues).optional(),
     provider: z.enum([...providerValues, "auto"]).optional(),
     model: z.string().trim().min(1).optional(),
     include: z.array(z.string().trim().min(1)).min(1).optional(),
@@ -189,6 +199,10 @@ const schema = z
         })
       )
       .optional(),
+    experimental: z
+      .object({ browserMode: z.boolean().optional() })
+      .strict()
+      .optional(),
     browser: browserSchema.optional(),
     worker: workerSchema.optional(),
     azure: azureSchema.optional(),
@@ -199,6 +213,7 @@ const schema = z
   .strict();
 
 export const DEFAULT_PROJECT_CONFIG: Readonly<ProjectConfig> = Object.freeze({
+  backend: "codex",
   provider: "codex",
   model: "gpt-5.4",
   include: Object.freeze(["src/**/*", "README.md", "package.json"]) as unknown as string[],
@@ -210,6 +225,7 @@ export const DEFAULT_PROJECT_CONFIG: Readonly<ProjectConfig> = Object.freeze({
   ]) as unknown as string[],
   maxFileSizeBytes: 1_000_000,
   maxInputBytes: 5_000_000,
+  experimental: Object.freeze({ browserMode: false }),
   browser: Object.freeze({
     model: "gpt-5.6-sol",
     manualLogin: false,
@@ -256,6 +272,7 @@ function copyDefaults(): ProjectConfig {
     ...DEFAULT_PROJECT_CONFIG,
     include: [...DEFAULT_PROJECT_CONFIG.include],
     exclude: [...DEFAULT_PROJECT_CONFIG.exclude],
+    experimental: { ...DEFAULT_PROJECT_CONFIG.experimental },
     browser: {
       ...DEFAULT_PROJECT_CONFIG.browser,
       followUps: [...DEFAULT_PROJECT_CONFIG.browser.followUps],
@@ -274,9 +291,17 @@ export async function loadProjectConfig(root: string): Promise<ProjectConfig> {
     const raw = JSON.parse(await fs.readFile(configPath, "utf8")) as unknown;
     const parsed = schema.parse(raw);
     const defaults = copyDefaults();
+    const backend = parsed.backend
+      ?? (parsed.provider !== "auto" ? parsed.provider : undefined)
+      ?? defaults.backend;
+    if (!parsed.backend && parsed.provider && parsed.provider !== "auto") {
+      console.warn("Warning: 'provider' in .oracle/config.json is deprecated. Please rename to 'backend'.");
+    }
     return {
       ...defaults,
       ...parsed,
+      backend,
+      provider: parsed.provider ?? backend,
       browser: {
         ...defaults.browser,
         ...parsed.browser,

@@ -12,12 +12,16 @@ const homeDir = path.join(temporaryRoot, "home");
 const workspaceRoot = path.join(temporaryRoot, "workspace");
 await fs.mkdir(workspaceRoot, { recursive: true });
 
-function run(args) {
-  const result = spawnSync(process.execPath, [cliPath, ...args], {
+function execute(args) {
+  return spawnSync(process.execPath, [cliPath, ...args], {
     cwd: repositoryRoot,
     env: { ...process.env, ORACLE_HOME_DIR: homeDir },
     encoding: "utf8"
   });
+}
+
+function run(args) {
+  const result = execute(args);
   if (result.status !== 0) {
     throw new Error(
       `oracle ${args.join(" ")} failed (${result.status})\n${result.stdout}\n${result.stderr}`
@@ -96,6 +100,22 @@ try {
   const audit = run(["audit", "show", "--cwd", workspaceRoot]);
   if (!audit.includes("src/example.ts")) {
     throw new Error(`Audit CLI did not read its persisted log:\n${audit}`);
+  }
+
+  const unsupportedAgent = execute([
+    "agent",
+    "do not run",
+    "--backend",
+    "chatgpt-browser",
+    "--cwd",
+    workspaceRoot
+  ]);
+  const unsupportedOutput = `${unsupportedAgent.stdout}${unsupportedAgent.stderr}`;
+  if (
+    unsupportedAgent.status === 0
+    || !unsupportedOutput.includes("does not support agent tool use")
+  ) {
+    throw new Error(`Browser backend was not rejected before agent startup:\n${unsupportedOutput}`);
   }
 
   console.log("CLI smoke tests passed.");

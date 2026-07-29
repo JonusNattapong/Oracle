@@ -9,7 +9,7 @@ const [
   os,
   path,
   { McpServer },
-  { StdioServerTransport },
+  { serveStdio },
   { MessageStore },
   { AgentRegistry },
   { TaskStore },
@@ -21,8 +21,8 @@ const [
 ] = await Promise.all([
   import("node:os"),
   import("node:path"),
-  import("@modelcontextprotocol/sdk/server/mcp.js"),
-  import("@modelcontextprotocol/sdk/server/stdio.js"),
+  import("@modelcontextprotocol/server"),
+  import("@modelcontextprotocol/server/stdio"),
   import("./messaging/store.js"),
   import("./messaging/registry.js"),
   import("./tasks/store.js"),
@@ -45,20 +45,22 @@ const [
  * the exact same bus as the full oracle-mcp server and the `oracle msg`/
  * `oracle task` CLI commands.
  */
-const homeDir = process.env.ORACLE_HOME_DIR ?? path.join(os.homedir(), ".oracle");
-const server = new McpServer(
-  { name: "oracle-messaging", version: VERSION },
-  { instructions: `${MESSAGING_INSTRUCTIONS} ${TASK_INSTRUCTIONS}` }
-);
-const messages = new MessageStore(homeDir);
-const tasks = new TaskStore(homeDir);
-const registry = new AgentRegistry(homeDir);
-registerMessagingTools(server, messages, registry);
-registerTaskTools(
-  server,
-  tasks,
-  messages,
-  registry,
-  new CoordinationService(tasks, messages, new SwarmStore(homeDir))
-);
-await server.connect(new StdioServerTransport());
+serveStdio(() => {
+  const homeDir = process.env.ORACLE_HOME_DIR ?? path.join(os.homedir(), ".oracle");
+  const server = new McpServer(
+    { name: "oracle-messaging", version: VERSION },
+    { instructions: `${MESSAGING_INSTRUCTIONS} ${TASK_INSTRUCTIONS}` }
+  );
+  const messages = new MessageStore(homeDir);
+  const tasks = new TaskStore(homeDir);
+  const registry = new AgentRegistry(homeDir);
+  registerMessagingTools(server, messages, registry);
+  registerTaskTools(
+    server,
+    tasks,
+    messages,
+    registry,
+    new CoordinationService(tasks, messages, new SwarmStore(homeDir))
+  );
+  return server;
+});

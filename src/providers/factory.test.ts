@@ -3,7 +3,13 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { CodexCliProvider } from "./codex.js";
-import { createProvider, createAgentProvider, checkProvider, readAnthropicOAuthSession } from "./factory.js";
+import {
+  createExecutionBackend,
+  createProvider,
+  createAgentProvider,
+  checkProvider,
+  readAnthropicOAuthSession
+} from "./factory.js";
 import { TokenStore } from "../auth/store.js";
 
 describe("provider factory", () => {
@@ -21,6 +27,28 @@ describe("provider factory", () => {
       { name: "codex executable", ok: true, detail: "codex-cli 0.144.4" },
       { name: "codex authentication", ok: true, detail: "Logged in using ChatGPT" }
     ]);
+  });
+
+  test("passes the experimental opt-in into the ChatGPT browser backend", async () => {
+    const home = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-browser-factory-"));
+    try {
+      const backend = createExecutionBackend("chatgpt-browser", {
+        homeDir: home,
+        experimentalBrowserMode: true,
+        browser: { profileDir: home }
+      });
+      const checks = await backend.healthCheck();
+      expect(checks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "experimental.browserMode",
+            ok: true
+          })
+        ])
+      );
+    } finally {
+      await fs.rm(home, { recursive: true, force: true });
+    }
   });
 });
 

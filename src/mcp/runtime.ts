@@ -1,9 +1,13 @@
 import path from "node:path";
 import os from "node:os";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { loadProjectConfig } from "../config/project.js";
 import { ConsultService } from "../core/consult.js";
-import { createProvider, createAgentProvider } from "../providers/factory.js";
+import {
+  createExecutionBackend,
+  createAgentBackend,
+  parseBackendName
+} from "../providers/factory.js";
 import { resolveProviderRoute } from "../providers/router.js";
 import { AgentService } from "../agent/service.js";
 import { SkillRegistry } from "../skills/registry.js";
@@ -36,6 +40,7 @@ export async function createOracleMcpServer(
   });
   const resolvedConfig = {
     ...config,
+    backend: route.provider,
     provider: route.provider,
     model: route.model,
   };
@@ -89,12 +94,29 @@ export async function createOracleMcpServer(
     console.error("[oracle-mcp] background memory maintenance started (1h interval, graph prune 2h, reflection 4h)");
   }
 
+  const configuredProfile = config.browser.profileDir;
+  const backendOptions = {
+    homeDir,
+    experimentalBrowserMode: config.experimental?.browserMode,
+    browser: {
+      ...config.browser,
+      browserTimeout: config.browser.timeout,
+      browserInputTimeout: config.browser.inputTimeout,
+      maxConcurrentTabs: String(config.browser.maxConcurrentTabs),
+      profileDir: configuredProfile
+        ? path.resolve(homeDir, configuredProfile)
+        : path.join(homeDir, "chrome-profile"),
+      remoteHost: process.env.ORACLE_REMOTE_HOST ?? config.browser.remoteHost,
+      remoteToken: process.env.ORACLE_REMOTE_TOKEN
+    },
+    azure: config.azure,
+    openrouter: config.openrouter
+  };
+
   let agent: AgentService | undefined;
   let agentUnavailableReason: string | undefined;
   try {
-    const agentProvider =
-      config.provider === "auto" ? config.routing.defaultProvider : config.provider;
-    agent = new AgentService(createAgentProvider(agentProvider));
+    agent = new AgentService(createAgentBackend(route.provider));
   } catch (error) {
     agentUnavailableReason = error instanceof Error ? error.message : String(error);
   }
@@ -106,41 +128,11 @@ export async function createOracleMcpServer(
   registerOracleTools({
     server,
     service: new ConsultService(
-      createProvider(route.provider, {
-        browser: {
-          manualLogin: config.browser.manualLogin,
-          attachRunning: config.browser.attachRunning,
-          remoteChrome: config.browser.remoteChrome,
-          remoteHost: process.env.ORACLE_REMOTE_HOST ?? config.browser.remoteHost,
-          remoteToken: process.env.ORACLE_REMOTE_TOKEN,
-          chatgptUrl: config.browser.chatgptUrl,
-          modelStrategy: config.browser.modelStrategy,
-          tab: config.browser.tab,
-          thinkingTime: config.browser.thinkingTime,
-          research: config.browser.research,
-          followUps: config.browser.followUps,
-          archive: config.browser.archive,
-          attachments: config.browser.attachments,
-          bundleFiles: config.browser.bundleFiles,
-          bundleFormat: config.browser.bundleFormat,
-          port: config.browser.port,
-          hideWindow: config.browser.hideWindow,
-          browserTimeout: config.browser.timeout,
-          browserInputTimeout: config.browser.inputTimeout,
-          attachmentTimeout: config.browser.attachmentTimeout,
-          recheckDelay: config.browser.recheckDelay,
-          recheckTimeout: config.browser.recheckTimeout,
-          heartbeat: config.browser.heartbeat,
-          reuseWait: config.browser.reuseWait,
-          profileLockTimeout: config.browser.profileLockTimeout,
-          maxConcurrentTabs: String(config.browser.maxConcurrentTabs),
-          autoReattachDelay: config.browser.autoReattachDelay,
-          autoReattachInterval: config.browser.autoReattachInterval,
-          autoReattachTimeout: config.browser.autoReattachTimeout,
-        },
-        azure: config.azure,
-        openrouter: config.openrouter,
-      })
+      createExecutionBackend(route.provider, backendOptions),
+      undefined,
+      undefined,
+      undefined,
+      (requested) => createExecutionBackend(parseBackendName(requested), backendOptions)
     ),
     config: resolvedConfig,
     workspaceRoot,

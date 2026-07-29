@@ -2,9 +2,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
+import { McpServer } from "@modelcontextprotocol/server";
 import { DEFAULT_PROJECT_CONFIG } from "../config/project.js";
 import { ConsultService } from "../core/consult.js";
 import type { Provider } from "../providers/provider.js";
@@ -20,8 +19,54 @@ import { registerOracleTools } from "./server.js";
 
 const provider: Provider = {
   id: "codex",
+  capabilities: {
+    consult: true,
+    toolUse: false,
+    images: false,
+    continuation: false,
+    structuredUsage: false,
+    supportedPlatforms: ["darwin", "linux", "win32"]
+  },
+  healthCheck: async () => [],
   async run(request) {
     return { text: `ANSWER: ${request.userPrompt}`, usage: {} };
+  }
+};
+
+let lastBrowserImageCount = 0;
+const browserProvider: Provider = {
+  ...provider,
+  id: "chatgpt-browser",
+  capabilities: {
+    ...provider.capabilities,
+    accountMemory: true,
+    images: true
+  },
+  async run(request) {
+    lastBrowserImageCount = request.images?.length ?? 0;
+    if (request.userPrompt.includes("Return an image")) {
+      const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+      const outputDir = path.join(request.artifactsDir!, "images");
+      await fs.mkdir(outputDir, { recursive: true });
+      const outputPath = path.join(outputDir, "output-001.png");
+      await fs.writeFile(outputPath, png);
+      return {
+        text: "BROWSER IMAGE ANSWER",
+        usage: {},
+        images: [{
+          path: outputPath,
+          mimeType: "image/png" as const,
+          sizeBytes: png.length,
+          fileName: "output-001.png",
+          alt: "Test output"
+        }]
+      };
+    }
+    return {
+      text: `BROWSER ANSWER: ${request.userPrompt}`,
+      usage: {},
+      accountMemorySaved: request.accountMemory ? true : undefined
+    };
   }
 };
 
@@ -36,6 +81,10 @@ beforeAll(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-mcp-test-"));
   await fs.mkdir(path.join(root, "src"));
   await fs.writeFile(path.join(root, "src", "sample.ts"), "export const answer = 42;", "utf8");
+  await fs.writeFile(
+    path.join(root, "src", "sample.png"),
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+  );
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   server = new McpServer({ name: "oracle-test", version: "1.0.0" });
   const skills = new SkillRegistry(root, path.join(root, ".oracle", "skills"));
@@ -43,7 +92,13 @@ beforeAll(async () => {
   const oracles = new OracleRegistry(root, root);
   registerOracleTools({
     server,
-    service: new ConsultService(provider, new FileSessionStore(path.join(root, ".sessions"))),
+    service: new ConsultService(
+      provider,
+      new FileSessionStore(path.join(root, ".sessions")),
+      undefined,
+      undefined,
+      (id) => id === "chatgpt-browser" ? browserProvider : provider
+    ),
     config: { ...DEFAULT_PROJECT_CONFIG, include: ["src/**/*.ts"], exclude: [] },
     workspaceRoot: root,
     providerId: "codex",
@@ -226,6 +281,87 @@ describe("Oracle MCP tools", () => {
     expect((doctor.structuredContent as { checks: Array<{ name: string }> }).checks).toEqual(
       expect.arrayContaining([expect.objectContaining({ name: "provider" })])
     );
+  });
+
+  test("oracle_ask routes a per-call backend override through the shared bundle service", async () => {
+    const consultation = await client.callTool({
+      name: "oracle_ask",
+      arguments: {
+        question: "Use the browser backend",
+        backend: "chatgpt-browser",
+        files: ["src/sample.ts"]
+      }
+    });
+    expect(consultation.isError).not.toBe(true);
+    expect(consultation.content).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "text",
+          text: expect.stringContaining("BROWSER ANSWER:")
+        })
+      ])
+    );
+    expect(consultation.content).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          text: expect.stringContaining("export const answer = 42")
+        })
+      ])
+    );
+  });
+
+  test("oracle_ask explicitly routes account memory without adding it to the answer prompt", async () => {
+    const consultation = await client.callTool({
+      name: "oracle_ask",
+      arguments: {
+        question: "Answer this normally",
+        backend: "chatgpt-browser",
+        accountMemory: "Prefers concise architecture reviews"
+      }
+    });
+
+    expect(consultation.isError).not.toBe(true);
+    expect(consultation.structuredContent).toMatchObject({
+      accountMemoryRequested: true,
+      accountMemorySaved: true
+    });
+    expect(consultation.content).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          text: expect.stringContaining("Prefers concise architecture reviews")
+        })
+      ])
+    );
+  });
+
+  test("oracle_ask sends image files and returns generated images as MCP image content", async () => {
+    const consultation = await client.callTool({
+      name: "oracle_ask",
+      arguments: {
+        question: "Return an image",
+        backend: "chatgpt-browser",
+        files: ["src/sample.png"]
+      }
+    });
+
+    expect(consultation.isError).not.toBe(true);
+    expect(lastBrowserImageCount).toBe(1);
+    expect(consultation.content).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        type: "image",
+        mimeType: "image/png",
+        data: expect.any(String)
+      })
+    ]));
+    expect(consultation.structuredContent).toMatchObject({
+      images: [
+        expect.objectContaining({
+          fileName: "output-001.png",
+          mimeType: "image/png",
+          alt: "Test output"
+        })
+      ]
+    });
   });
 
   test("identity_setup accepts a single freeform string as well as an array for list fields", async () => {

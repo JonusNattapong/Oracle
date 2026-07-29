@@ -4,15 +4,38 @@
 
 ## v0.7.0 additions
 
-### Provider credentials
+### Execution backend
 
-| Provider | Environment variable | Notes |
+`backend` selects the model transport. The former `provider` key remains
+accepted for compatibility and is normalized at load time.
+
+```jsonc
+{
+  "backend": "codex",
+  "model": "gpt-5.4",
+  "experimental": {
+    "browserMode": false
+  },
+  "browser": {
+    "profileDir": "chrome-profile",
+    "timeoutMs": 180000
+  }
+}
+```
+
+Browser paths relative to `~/.oracle/` keep login state outside the project.
+See [browser-mode.md](browser-mode.md).
+
+### Backend credentials
+
+| Backend | Environment variable | Notes |
 |---|---|---|
 | Anthropic | `ANTHROPIC_API_KEY` | |
 | OpenAI | `OPENAI_API_KEY` | `OPENAI_API_BASE` to redirect |
 | Gemini | `GEMINI_API_KEY` or `GOOGLE_API_KEY` | `GEMINI_API_BASE` to redirect |
 | OpenCode | `OPENCODE_API_KEY` | any OpenAI-compatible endpoint |
 | Codex | — | uses local CLI login state |
+| ChatGPT Browser | — | manual login in an isolated Chrome profile; experimental |
 
 `oracle models` lists every model and which providers have credentials.
 

@@ -1,15 +1,14 @@
-import type { ProviderResponse } from "../types.js";
+import type {
+  ExecutionBackend,
+  ExecutionBackendRequest,
+  ExecutionBackendResponse
+} from "../backends/backend.js";
 
-export interface ProviderRequest {
-  model: string;
-  systemPrompt: string;
-  userPrompt: string;
-  cwd: string;
-  previousResponseId?: string;
-  images?: Array<{ base64: string; mimeType: string }>;
-}
+/** @deprecated Use `ExecutionBackendRequest` instead. */
+export type ProviderRequest = ExecutionBackendRequest;
 
-export interface Provider {
-  readonly id: string;
-  run(request: ProviderRequest): Promise<ProviderResponse>;
-}
+/** @deprecated Use `ExecutionBackendResponse` instead. */
+export type ProviderResponse = ExecutionBackendResponse;
+
+/** @deprecated Use `ExecutionBackend` instead. */
+export type Provider = ExecutionBackend;

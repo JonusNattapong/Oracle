@@ -27,7 +27,23 @@ describe("OracleDaemon", () => {
       workspaceRoot: home,
       host: "127.0.0.1",
       port: 0,
-      token: "test-token"
+      token: "test-token",
+      backendFactory: (name) => ({
+        id: name,
+        capabilities: {
+          consult: true,
+          toolUse: false,
+          images: false,
+          continuation: false,
+          structuredUsage: false,
+          supportedPlatforms: ["darwin", "linux", "win32"]
+        },
+        healthCheck: async () => [],
+        run: async (request) => ({
+          text: `API ANSWER: ${request.userPrompt}`,
+          usage: {}
+        })
+      })
     });
     const state = await daemon.start();
     const stateStat = await fs.stat(path.join(home, "runtime", "daemon.json"));
@@ -53,6 +69,25 @@ describe("OracleDaemon", () => {
       workspaceRoot: home,
       approvals: { pending: 0 }
     });
+
+    const consultRes = await client!.consult({
+      question: "Hello daemon API",
+      backend: "codex"
+    });
+    expect(consultRes.status).toBe("completed");
+    expect(consultRes.sessionId).toBeDefined();
+
+    const fetchedSession = await client!.getConsultSession(consultRes.sessionId);
+    expect(fetchedSession.sessionId).toBe(consultRes.sessionId);
+    expect(fetchedSession.prompt).toBe("Hello daemon API");
+    await expect(client!.consult({
+      question: "escape",
+      cwd: path.dirname(home)
+    })).rejects.toThrow(/workspace root/i);
+    await expect(client!.consult({
+      question: "relative escape",
+      cwd: ".."
+    })).rejects.toThrow(/workspace root/i);
 
     const leadToken = await client!.issueSwarmToken({
       projectId: "runtime-test",

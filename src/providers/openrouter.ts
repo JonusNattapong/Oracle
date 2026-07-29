@@ -11,6 +11,14 @@ export interface OpenRouterOptions {
 
 export class OpenRouterProvider implements Provider {
   readonly id = "openrouter";
+  readonly capabilities = {
+    consult: true,
+    toolUse: false,
+    images: true,
+    continuation: false,
+    structuredUsage: true,
+    supportedPlatforms: ["darwin", "linux", "win32"] as const
+  };
   private readonly client: OpenAI;
 
   constructor(options: OpenRouterOptions = {}) {
@@ -72,5 +80,9 @@ export class OpenRouterProvider implements Provider {
         totalTokens: response.usage?.total_tokens
       }
     };
+  }
+
+  async healthCheck() {
+    return [{ name: "openrouter configuration", ok: true, detail: "configured" }];
   }
 }

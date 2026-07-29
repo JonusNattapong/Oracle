@@ -1,0 +1,286 @@
+- generic [active] [ref=f8e1]:
+  - navigation [ref=f8e2]:
+    - generic [ref=f8e3]:
+      - link "TLDL Logo TLDL" [ref=f8e4] [cursor=pointer]:
+        - /url: /
+        - img "TLDL Logo" [ref=f8e5]
+        - generic [ref=f8e6]: TLDL
+      - generic [ref=f8e7]:
+        - link "Home" [ref=f8e8] [cursor=pointer]:
+          - /url: /
+        - link "Newsletters" [ref=f8e9] [cursor=pointer]:
+          - /url: /newsletters
+        - link "Blog" [ref=f8e10] [cursor=pointer]:
+          - /url: /blog
+        - link "Resources" [ref=f8e11] [cursor=pointer]:
+          - /url: /resources
+        - link "Tools" [ref=f8e12] [cursor=pointer]:
+          - /url: /tools
+        - link "About" [ref=f8e13] [cursor=pointer]:
+          - /url: /about
+  - main [ref=f8e14]:
+    - article [ref=f8e15]:
+      - generic [ref=f8e17]:
+        - 'heading "DeepSeek API Pricing (July 2026): V4 Flash $0.14/M · V4 Pro $0.435/M" [level=1] [ref=f8e18]'
+        - paragraph [ref=f8e19]: "DeepSeek API pricing (July 2026): DeepSeek V4 Flash $0.14/M input, $0.28/M output. Compare cache, context, source, and verified date."
+        - generic [ref=f8e20]:
+          - time [ref=f8e21]: Published February 27, 2026
+          - generic [ref=f8e22]: ·
+          - time [ref=f8e23]: Updated July 4, 2026
+          - generic [ref=f8e24]: ·
+          - generic [ref=f8e25]: 2 min read
+        - generic [ref=f8e27]:
+          - generic [ref=f8e28]: Share
+          - button "Share on X (Twitter)" [ref=f8e29] [cursor=pointer]
+          - button "Share on LinkedIn" [ref=f8e32] [cursor=pointer]
+          - button "Copy link" [ref=f8e35] [cursor=pointer]
+      - navigation [ref=f8e37]:
+        - paragraph [ref=f8e38]: On this page
+        - list [ref=f8e39]:
+          - listitem [ref=f8e40]:
+            - button "What changed" [ref=f8e41] [cursor=pointer]
+          - listitem [ref=f8e42]:
+            - button "When DeepSeek makes sense" [ref=f8e43] [cursor=pointer]
+          - listitem [ref=f8e44]:
+            - button "Migration notes" [ref=f8e45] [cursor=pointer]
+          - listitem [ref=f8e46]:
+            - button "Related" [ref=f8e47] [cursor=pointer]
+      - generic [ref=f8e48]:
+        - generic [ref=f8e50]:
+          - generic [ref=f8e51]:
+            - generic [ref=f8e52]:
+              - paragraph [ref=f8e53]: Verified pricing data
+              - heading "DeepSeek API prices as of July 2026" [level=2] [ref=f8e54]
+              - paragraph [ref=f8e55]:
+                - text: "Source:"
+                - link "https://api-docs.deepseek.com/quick_start/pricing" [ref=f8e56] [cursor=pointer]:
+                  - /url: https://api-docs.deepseek.com/quick_start/pricing
+              - generic [ref=f8e57]:
+                - generic [ref=f8e58]:
+                  - term [ref=f8e59]: As of
+                  - definition [ref=f8e60]:
+                    - time [ref=f8e61]: July 4, 2026
+                - generic [ref=f8e62]:
+                  - term [ref=f8e63]: Update cadence
+                  - definition [ref=f8e64]: Checked daily; published only after source verification.
+                - generic [ref=f8e65]:
+                  - term [ref=f8e66]: Source policy
+                  - definition [ref=f8e67]: Official provider pricing pages or APIs only.
+                - generic [ref=f8e68]:
+                  - term [ref=f8e69]: Machine-readable data
+                  - definition [ref=f8e70]:
+                    - link "/api/pricing.json" [ref=f8e71] [cursor=pointer]:
+                      - /url: /api/pricing.json
+                - generic [ref=f8e72]:
+                  - term [ref=f8e73]: Tracked sources
+                  - definition [ref=f8e74]:
+                    - link "https://api-docs.deepseek.com/quick_start/pricing" [ref=f8e75] [cursor=pointer]:
+                      - /url: https://api-docs.deepseek.com/quick_start/pricing
+              - link "Estimate monthly costs with these prices" [ref=f8e76] [cursor=pointer]:
+                - /url: /tools/llm-cost-calculator
+            - generic [ref=f8e77]:
+              - heading "Quick pricing answers" [level=3] [ref=f8e78]
+              - generic [ref=f8e79]:
+                - generic [ref=f8e80]:
+                  - paragraph [ref=f8e81]: Cheapest input
+                  - paragraph [ref=f8e82]: DeepSeek V4 Flash
+                  - paragraph [ref=f8e83]: $0.14/M input · $0.28/M output
+                - generic [ref=f8e84]:
+                  - paragraph [ref=f8e85]: Cheapest output
+                  - paragraph [ref=f8e86]: DeepSeek V4 Flash
+                  - paragraph [ref=f8e87]: $0.28/M output
+                - generic [ref=f8e88]:
+                  - paragraph [ref=f8e89]: Best cached-input price
+                  - paragraph [ref=f8e90]: DeepSeek V4 Flash
+                  - paragraph [ref=f8e91]: $0.0028/M cached input
+                - generic [ref=f8e92]:
+                  - paragraph [ref=f8e93]: Widest context
+                  - paragraph [ref=f8e94]: DeepSeek V4 Flash
+                  - paragraph [ref=f8e95]: 1,000,000 tokens context
+              - paragraph [ref=f8e96]: These answers are generated from 2 verified DeepSeek models as of July 2026. Use the calculator for workload-specific totals because output tokens and cache hit rate can change the cheapest choice.
+            - table [ref=f8e98]:
+              - rowgroup [ref=f8e99]:
+                - row [ref=f8e100]:
+                  - columnheader "Model" [ref=f8e101]
+                  - columnheader "Input / 1M" [ref=f8e102]
+                  - columnheader "Cached input / 1M" [ref=f8e103]
+                  - columnheader "Output / 1M" [ref=f8e104]
+                  - columnheader "Context" [ref=f8e105]
+                  - columnheader "Max output" [ref=f8e106]
+              - rowgroup [ref=f8e107]:
+                - row [ref=f8e108]:
+                  - cell "DeepSeek V4 Flash" [ref=f8e109]
+                  - cell "$0.14" [ref=f8e110]
+                  - cell "$0.0028" [ref=f8e111]
+                  - cell "$0.28" [ref=f8e112]
+                  - cell "1,000,000" [ref=f8e113]
+                  - cell "384,000" [ref=f8e114]
+                - row [ref=f8e115]:
+                  - cell "DeepSeek V4 Pro" [ref=f8e116]
+                  - cell "$0.435" [ref=f8e117]
+                  - cell "$0.0036" [ref=f8e118]
+                  - cell "$0.87" [ref=f8e119]
+                  - cell "1,000,000" [ref=f8e120]
+                  - cell "384,000" [ref=f8e121]
+            - generic [ref=f8e122]:
+              - paragraph [ref=f8e123]: DeepSeek says deepseek-chat and deepseek-reasoner map to V4 Flash compatibility modes until deprecation on 2026-07-24.
+              - paragraph [ref=f8e124]: Official DeepSeek pricing table, fetched 2026-07-04.
+            - generic [ref=f8e125]:
+              - heading "Pricing questions" [level=3] [ref=f8e126]
+              - generic [ref=f8e127]:
+                - generic [ref=f8e128]:
+                  - paragraph [ref=f8e129]: What is the cheapest DeepSeek API model in July 2026?
+                  - paragraph [ref=f8e130]: DeepSeek V4 Flash has the lowest verified DeepSeek input-token price at $0.14/M input tokens.
+                - generic [ref=f8e131]:
+                  - paragraph [ref=f8e132]: Which DeepSeek model is cheapest for generated output?
+                  - paragraph [ref=f8e133]: DeepSeek V4 Flash has the lowest verified DeepSeek output-token price at $0.28/M output tokens.
+                - generic [ref=f8e134]:
+                  - paragraph [ref=f8e135]: Where does TLDL get DeepSeek pricing data?
+                  - paragraph [ref=f8e136]: TLDL uses official DeepSeek pricing sources and records source URLs plus verification dates in the shared pricing dataset.
+            - generic [ref=f8e137]:
+              - heading "DeepSeek pricing changelog" [level=3] [ref=f8e138]
+              - generic [ref=f8e140]:
+                - paragraph [ref=f8e141]: 2026-07-04
+                - paragraph [ref=f8e142]: Verified DeepSeek V4 Flash and V4 Pro pricing from the official DeepSeek API pricing page.
+                - link "https://api-docs.deepseek.com/quick_start/pricing" [ref=f8e143] [cursor=pointer]:
+                  - /url: https://api-docs.deepseek.com/quick_start/pricing
+          - paragraph [ref=f8e144]: DeepSeek's public API now exposes V4 Flash and V4 Pro through OpenAI-compatible and Anthropic-compatible endpoints. The price table above is generated from TLDL's shared pricing data file, not copied into this article by hand.
+          - paragraph [ref=f8e145]:
+            - text: The same JSON also powers the public
+            - link "pricing API" [ref=f8e146] [cursor=pointer]:
+              - /url: /api/pricing.json
+            - text: and the
+            - link "LLM cost calculator" [ref=f8e147] [cursor=pointer]:
+              - /url: /tools/llm-cost-calculator
+            - text: . If the data changes, this page changes with it.
+          - heading "What changed" [level=2] [ref=f8e148]
+          - paragraph [ref=f8e149]:
+            - text: DeepSeek's official docs say the legacy
+            - code [ref=f8e150]: "`deepseek-chat`"
+            - text: and
+            - code [ref=f8e151]: "`deepseek-reasoner`"
+            - text: names map to DeepSeek V4 Flash compatibility modes until deprecation on July 24, 2026. New integrations should use the current V4 model identifiers.
+          - paragraph [ref=f8e152]: V4 Flash is the budget model. V4 Pro is the higher-capacity option. Both support thinking and non-thinking modes, long context, tool calls, JSON output, and the OpenAI-compatible base URL.
+          - heading "When DeepSeek makes sense" [level=2] [ref=f8e153]
+          - paragraph [ref=f8e154]: DeepSeek is strongest when cost is a hard constraint and your application can tolerate some provider-specific behavior. It is especially useful for high-volume classification, routing, extraction, and batch analysis jobs where a small per-token difference becomes material.
+          - paragraph [ref=f8e155]: For agent workflows, test tool-calling and latency before routing all traffic to DeepSeek. A cheap model that adds retries or manual review can cost more than it saves.
+          - heading "Migration notes" [level=2] [ref=f8e156]
+          - paragraph [ref=f8e157]: DeepSeek exposes an OpenAI-compatible API, so many clients only need a base URL and model-name change. Keep the model identifier configurable and log token usage before and after migration.
+          - paragraph [ref=f8e158]: If your app depends on reasoning behavior, verify whether you want thinking mode enabled for every request. Cheap reasoning can still become expensive if prompts trigger long hidden chains of thought or large outputs.
+          - heading "Related" [level=2] [ref=f8e159]
+          - list [ref=f8e160]:
+            - listitem [ref=f8e161]:
+              - link "LLM API Pricing Comparison" [ref=f8e162] [cursor=pointer]:
+                - /url: /resources/llm-api-pricing
+            - listitem [ref=f8e163]:
+              - link "LLM Cost Calculator" [ref=f8e164] [cursor=pointer]:
+                - /url: /tools/llm-cost-calculator
+            - listitem [ref=f8e165]:
+              - link "OpenAI API Pricing" [ref=f8e166] [cursor=pointer]:
+                - /url: /resources/openai-api-pricing
+            - listitem [ref=f8e167]:
+              - link "Claude API Pricing" [ref=f8e168] [cursor=pointer]:
+                - /url: /resources/anthropic-api-pricing
+        - complementary [ref=f8e169]:
+          - navigation [ref=f8e170]:
+            - paragraph [ref=f8e171]: On this page
+            - list [ref=f8e172]:
+              - listitem [ref=f8e173]:
+                - button "What changed" [ref=f8e174] [cursor=pointer]
+              - listitem [ref=f8e175]:
+                - button "When DeepSeek makes sense" [ref=f8e176] [cursor=pointer]
+              - listitem [ref=f8e177]:
+                - button "Migration notes" [ref=f8e178] [cursor=pointer]
+              - listitem [ref=f8e179]:
+                - button "Related" [ref=f8e180] [cursor=pointer]
+      - generic [ref=f8e181]:
+        - generic [ref=f8e182]:
+          - heading "Related Resources" [level=3] [ref=f8e183]
+          - generic [ref=f8e184]:
+            - link "Resource Cheapest LLM API Cheapest LLM API rankings from TLDL's verified pricing dataset. Pending providers are tracked but excluded until official pricing is verified." [ref=f8e185] [cursor=pointer]:
+              - /url: /resources/cheapest-llm-api
+              - generic [ref=f8e186]: Resource
+              - generic [ref=f8e187]: Cheapest LLM API
+              - generic [ref=f8e188]: Cheapest LLM API rankings from TLDL's verified pricing dataset. Pending providers are tracked but excluded until official pricing is verified.
+            - link "Resource LLM API Pricing Comparison Compare LLM API pricing from TLDL's verified source dataset. Pending providers are tracked but excluded until official pricing is verified." [ref=f8e189] [cursor=pointer]:
+              - /url: /resources/llm-api-pricing
+              - generic [ref=f8e190]: Resource
+              - generic [ref=f8e191]: LLM API Pricing Comparison
+              - generic [ref=f8e192]: Compare LLM API pricing from TLDL's verified source dataset. Pending providers are tracked but excluded until official pricing is verified.
+            - link "Resource Kimi K3 API Pricing Kimi K3 API pricing from verified first-party sources, including cached and uncached input, output, 1M-token context, cost examples, and API limits." [ref=f8e193] [cursor=pointer]:
+              - /url: /resources/kimi-k3-api-pricing
+              - generic [ref=f8e194]: Resource
+              - generic [ref=f8e195]: Kimi K3 API Pricing
+              - generic [ref=f8e196]: Kimi K3 API pricing from verified first-party sources, including cached and uncached input, output, 1M-token context, cost examples, and API limits.
+            - link "Resource Claude API Pricing Anthropic Claude API pricing from TLDL's verified dataset, including Claude Fable 5, Opus, Sonnet, Haiku, prompt caching, context, and source links." [ref=f8e197] [cursor=pointer]:
+              - /url: /resources/anthropic-api-pricing
+              - generic [ref=f8e198]: Resource
+              - generic [ref=f8e199]: Claude API Pricing
+              - generic [ref=f8e200]: Anthropic Claude API pricing from TLDL's verified dataset, including Claude Fable 5, Opus, Sonnet, Haiku, prompt caching, context, and source links.
+        - generic [ref=f8e202]:
+          - heading "Follow LLM pricing updates" [level=3] [ref=f8e203]
+          - paragraph [ref=f8e204]: Read website-published updates when TLDL verifies pricing changes, data refreshes, or useful cost comparisons.
+          - generic [ref=f8e205]:
+            - generic [ref=f8e206]:
+              - link "Pricing updates" [ref=f8e207] [cursor=pointer]:
+                - /url: /newsletters
+              - link "RSS" [ref=f8e210] [cursor=pointer]:
+                - /url: /newsletters/rss.xml
+            - paragraph [ref=f8e215]: Published on TLDL. Follow the newsletter RSS feed for lightweight updates.
+  - contentinfo [ref=f8e216]:
+    - generic [ref=f8e217]:
+      - generic [ref=f8e218]:
+        - generic [ref=f8e219]:
+          - heading "TLDL" [level=3] [ref=f8e220]
+          - paragraph [ref=f8e221]: AI distills top podcasts into key takeaways. Save time, supercharge your learning.
+        - generic [ref=f8e222]:
+          - paragraph [ref=f8e223]: Links
+          - list [ref=f8e224]:
+            - listitem [ref=f8e225]:
+              - link "Home" [ref=f8e226] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f8e227]:
+              - link "About" [ref=f8e228] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=f8e229]:
+              - link "All Newsletters" [ref=f8e230] [cursor=pointer]:
+                - /url: /newsletters
+            - listitem [ref=f8e231]:
+              - link "Blog" [ref=f8e232] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=f8e233]:
+              - link "Resources" [ref=f8e234] [cursor=pointer]:
+                - /url: /resources
+            - listitem [ref=f8e235]:
+              - link "RevWiser" [ref=f8e236] [cursor=pointer]:
+                - /url: https://www.revwiser.com/en
+            - listitem [ref=f8e241]:
+              - link "Vibeddit" [ref=f8e242] [cursor=pointer]:
+                - /url: https://getvibeddit.com
+            - listitem [ref=f8e247]:
+              - link "GPUPrice" [ref=f8e248] [cursor=pointer]:
+                - /url: https://www.gpuprice.fyi/
+            - listitem [ref=f8e253]:
+              - link "db0 — Memory for AI Agents" [ref=f8e254] [cursor=pointer]:
+                - /url: https://db0.ai/
+            - listitem [ref=f8e259]:
+              - link "StackDraft" [ref=f8e260] [cursor=pointer]:
+                - /url: https://www.stackdraft.app/
+        - generic [ref=f8e265]:
+          - paragraph [ref=f8e266]: Recent
+          - list [ref=f8e267]:
+            - listitem [ref=f8e268]:
+              - link "Inference Is Reshaping the AI Stack" [ref=f8e269] [cursor=pointer]:
+                - /url: /newsletters/1950177
+            - listitem [ref=f8e270]:
+              - link "Inference Is the New AI Stack" [ref=f8e271] [cursor=pointer]:
+                - /url: /newsletters/1950176
+            - listitem [ref=f8e272]:
+              - link "The AI Stack Goes Physical" [ref=f8e273] [cursor=pointer]:
+                - /url: /newsletters/1950175
+        - generic [ref=f8e274]:
+          - paragraph [ref=f8e275]: Contact
+          - button "Email" [ref=f8e277] [cursor=pointer]
+      - generic [ref=f8e281]:
+        - paragraph [ref=f8e282]: © 2026 TLDL
+        - paragraph [ref=f8e283]: Podcast intelligence, kept fresh.

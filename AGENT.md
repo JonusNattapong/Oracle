@@ -31,6 +31,7 @@ translates the neutral transcript to/from its own wire format:
 - **Anthropic** — native `tool_use` / `tool_result` blocks (`src/providers/anthropicProvider.ts`)
 - **opencode** (OpenAI-compatible) — chat-completion function calling (`src/providers/openaiProvider.ts`)
 - **codex** — uses the Codex CLI process (non-agentic; no tool-use loop)
+- **chatgpt-browser** — experimental desktop Chrome backend (consult-only via `oracle ask`; no agent tool-use loop)
 
 `oracle_agent` requires an agent-capable provider (`anthropic` or `opencode`);
 otherwise it returns `ORACLE_AGENT_UNAVAILABLE`.

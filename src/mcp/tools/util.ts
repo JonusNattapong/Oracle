@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import type { ProjectConfig } from "../../config/project.js";
 import { serializeOracleError } from "../../errors.js";
-import { checkProvider, parseProviderName } from "../../providers/factory.js";
+import { checkBackend, parseBackendName } from "../../providers/factory.js";
 
 function success(text: string, structuredContent: Record<string, unknown>) {
   return { content: [{ type: "text" as const, text }], structuredContent };
@@ -25,10 +25,11 @@ export function registerUtilTool(
     config: ProjectConfig;
     workspaceRoot: string;
     providerId: string;
-    providerChecks?: typeof checkProvider;
+    homeDir: string;
+    providerChecks?: typeof checkBackend;
   }
 ): void {
-  const providerChecks = deps.providerChecks ?? checkProvider;
+  const providerChecks = deps.providerChecks ?? checkBackend;
 
   server.registerTool(
     "oracle_doctor",
@@ -43,6 +44,8 @@ export function registerUtilTool(
         const sessionProbe = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-doctor-"));
         await fs.rm(sessionProbe, { recursive: true, force: true });
         await fs.access(deps.workspaceRoot, fs.constants.R_OK);
+        const backendName = parseBackendName(deps.providerId);
+        const configuredProfile = deps.config.browser?.profileDir;
         const checks = [
           {
             name: "node runtime",
@@ -52,7 +55,21 @@ export function registerUtilTool(
           { name: "project configuration", ok: true, detail: `${deps.providerId}/${deps.config.model}` },
           { name: "workspace readable", ok: true, detail: deps.workspaceRoot },
           { name: "session storage writable", ok: true, detail: os.tmpdir() },
-          ...(await providerChecks(parseProviderName(deps.providerId)))
+          ...(await providerChecks(backendName, {
+            homeDir: deps.homeDir,
+            experimentalBrowserMode: deps.config.experimental?.browserMode,
+            browser: {
+              ...deps.config.browser,
+              browserTimeout: deps.config.browser.timeout,
+              browserInputTimeout: deps.config.browser.inputTimeout,
+              maxConcurrentTabs: String(deps.config.browser.maxConcurrentTabs),
+              profileDir: configuredProfile
+                ? path.resolve(deps.homeDir, configuredProfile)
+                : path.join(deps.homeDir, "chrome-profile")
+            },
+            azure: deps.config.azure,
+            openrouter: deps.config.openrouter
+          }))
         ];
         return success(JSON.stringify(checks, null, 2), {
           healthy: checks.every((check) => check.ok),

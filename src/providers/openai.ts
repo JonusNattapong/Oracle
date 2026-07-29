@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import type { Provider, ProviderRequest } from "./provider.js";
 import type { ProviderResponse } from "../types.js";
 import type { AgentMessage, AgentProvider, AgentTool, AgentTurn, ToolCall, ContentBlock } from "../agent/types.js";
+import type { DoctorCheck, ExecutionBackendCapabilities } from "../backends/backend.js";
 
 /** Convert neutral ContentBlock[] to OpenAI format. */
 function toOpenAIContentBlocks(blocks: ContentBlock[]): OpenAI.Chat.ChatCompletionContentPartText[] | OpenAI.Chat.ChatCompletionContentPart[] {
@@ -67,8 +68,18 @@ function toOpenAIMessages(
   return out;
 }
 
+const OPENAI_CAPABILITIES: ExecutionBackendCapabilities = {
+  consult: true,
+  toolUse: false,
+  images: true,
+  continuation: true,
+  structuredUsage: true,
+  supportedPlatforms: ["darwin", "linux", "win32"]
+};
+
 export class OpenAIProvider implements Provider {
   readonly id = "openai";
+  readonly capabilities = OPENAI_CAPABILITIES;
   private readonly client: OpenAI;
 
   constructor(apiKey?: string, baseURL?: string) {
@@ -78,6 +89,13 @@ export class OpenAIProvider implements Provider {
       apiKey: key,
       baseURL: baseURL ?? process.env.OPENAI_API_BASE ?? undefined,
     });
+  }
+
+  async healthCheck(): Promise<DoctorCheck[]> {
+    return [
+      { name: "OPENAI_API_KEY", ok: Boolean(process.env.OPENAI_API_KEY), detail: process.env.OPENAI_API_KEY ? "set" : "not set" },
+      { name: "OPENAI_API_BASE", ok: Boolean(process.env.OPENAI_API_BASE), detail: process.env.OPENAI_API_BASE ?? "default (api.openai.com)" },
+    ];
   }
 
   async run(request: ProviderRequest): Promise<ProviderResponse> {
@@ -119,8 +137,18 @@ export class OpenAIProvider implements Provider {
  * OpenAI-compatible provider for third-party APIs (OpenRouter, Groq, local LLMs, etc.).
  * Set OPENAI_API_KEY + OPENAI_API_BASE (or pass via constructor).
  */
+const OPENCODE_CAPABILITIES: ExecutionBackendCapabilities = {
+  consult: true,
+  toolUse: true,
+  images: true,
+  continuation: false,
+  structuredUsage: true,
+  supportedPlatforms: ["darwin", "linux", "win32"]
+};
+
 export class OpenCodeProvider implements Provider, AgentProvider {
   readonly id = "opencode";
+  readonly capabilities = OPENCODE_CAPABILITIES;
   private readonly client: OpenAI;
   private readonly defaultModel: string;
 
@@ -132,6 +160,14 @@ export class OpenCodeProvider implements Provider, AgentProvider {
       baseURL: baseURL ?? process.env.OPENCODE_API_BASE ?? process.env.OPENAI_API_BASE,
     });
     this.defaultModel = defaultModel ?? process.env.OPENCODE_MODEL ?? "gpt-4o";
+  }
+
+  async healthCheck(): Promise<DoctorCheck[]> {
+    return [
+      { name: "OPENCODE_API_KEY", ok: Boolean(process.env.OPENCODE_API_KEY ?? process.env.OPENAI_API_KEY), detail: process.env.OPENCODE_API_KEY ? "set (OPENCODE_API_KEY)" : process.env.OPENAI_API_KEY ? "set (OPENAI_API_KEY)" : "not set" },
+      { name: "OPENCODE_API_BASE", ok: Boolean(process.env.OPENCODE_API_BASE), detail: process.env.OPENCODE_API_BASE ?? "not set" },
+      { name: "OPENCODE_MODEL", ok: Boolean(process.env.OPENCODE_MODEL), detail: process.env.OPENCODE_MODEL ?? "default (gpt-4o)" },
+    ];
   }
 
   async run(request: ProviderRequest): Promise<ProviderResponse> {

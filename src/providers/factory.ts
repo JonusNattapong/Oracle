@@ -1,5 +1,6 @@
 import os from "node:os";
 import path from "node:path";
+import fs from "node:fs/promises";
 import { AnthropicProvider } from "./anthropic.js";
 import { CodexCliProvider, runCommand, type CommandRunner } from "./codex.js";
 import { OpenAIProvider, OpenCodeProvider } from "./openai.js";
@@ -7,9 +8,13 @@ import { GeminiProvider, GEMINI_MODELS } from "./gemini.js";
 import { BrowserProvider, type BrowserProviderOptions } from "./browser.js";
 import { AzureOpenAIProvider, type AzureProviderOptions } from "./azure.js";
 import { OpenRouterProvider, type OpenRouterOptions } from "./openrouter.js";
+import { ChatGptBrowserBackend } from "../backends/chatgpt-browser/backend.js";
+import { findChromeExecutable } from "../backends/chatgpt-browser/chrome.js";
+import type { ChatGptBrowserConfig } from "../backends/chatgpt-browser/types.js";
 import { TokenStore } from "../auth/store.js";
 import { AnthropicOAuthClient } from "../auth/anthropic-oauth.js";
 import type { Provider } from "./provider.js";
+import type { DoctorCheck } from "../backends/backend.js";
 import type { AgentProvider } from "../agent/types.js";
 
 /** Mirrors the CLI's home-directory resolution so both read the same tokens. */
@@ -47,8 +52,10 @@ export type ProviderName =
   | "opencode"
   | "gemini"
   | "browser"
+  | "chatgpt-browser"
   | "azure"
   | "openrouter";
+export type BackendName = ProviderName;
 export type ProviderSelection = ProviderName | "auto";
 
 const PROVIDER_NAMES: readonly ProviderName[] = [
@@ -58,20 +65,31 @@ const PROVIDER_NAMES: readonly ProviderName[] = [
   "opencode",
   "gemini",
   "browser",
+  "chatgpt-browser",
   "azure",
   "openrouter",
 ];
 
-export interface DoctorCheck {
-  name: string;
-  ok: boolean;
-  detail: string;
+export interface CreateExecutionBackendOptions {
+  homeDir?: string;
+  experimentalBrowserMode?: boolean;
+  browser?: Omit<BrowserProviderOptions, "maxConcurrentTabs">
+    & Partial<Omit<ChatGptBrowserConfig, "enabled">>
+    & { maxConcurrentTabs?: string | number };
+  azure?: AzureProviderOptions;
+  openrouter?: OpenRouterOptions;
 }
 
-export function parseProviderName(value = "codex"): ProviderName {
-  if ((PROVIDER_NAMES as readonly string[]).includes(value)) return value as ProviderName;
-  throw new Error(`Unknown provider: ${value}. Expected ${PROVIDER_NAMES.join(", ")}.`);
+export interface CheckBackendOptions extends CreateExecutionBackendOptions {
+  runner?: CommandRunner;
 }
+
+export function parseBackendName(value = "codex"): BackendName {
+  if ((PROVIDER_NAMES as readonly string[]).includes(value)) return value as ProviderName;
+  throw new Error(`Unknown backend: ${value}. Expected ${PROVIDER_NAMES.join(", ")}.`);
+}
+
+export const parseProviderName = parseBackendName;
 
 export function parseProviderSelection(value = "auto"): ProviderSelection {
   return value === "auto" ? "auto" : parseProviderName(value);
@@ -95,44 +113,58 @@ function createAnthropicProvider(): AnthropicProvider {
   return new AnthropicProvider(process.env.ANTHROPIC_API_KEY, oauth);
 }
 
-export function createProvider(
-  name: ProviderName = "codex",
-  options: {
-    browser?: BrowserProviderOptions;
-    azure?: AzureProviderOptions;
-    openrouter?: OpenRouterOptions;
-  } = {}
+export function createExecutionBackend(
+  name: BackendName = "codex",
+  options: CreateExecutionBackendOptions = {}
 ): Provider {
   switch (name) {
     case "anthropic": return createAnthropicProvider();
     case "openai": return new OpenAIProvider();
     case "opencode": return new OpenCodeProvider();
     case "gemini": return new GeminiProvider();
-    case "browser": return new BrowserProvider(options.browser);
+    case "browser": return new BrowserProvider({
+      ...options.browser,
+      maxConcurrentTabs: options.browser?.maxConcurrentTabs === undefined
+        ? undefined
+        : String(options.browser.maxConcurrentTabs)
+    });
+    case "chatgpt-browser":
+      return new ChatGptBrowserBackend({
+        profileDir: options.browser?.profileDir
+          ?? path.join(options.homeDir ?? oracleHomeDir(), "chrome-profile"),
+        enabled: options.experimentalBrowserMode ?? false,
+        headed: true,
+        timeoutMs: options.browser?.timeoutMs
+      });
     case "azure": return new AzureOpenAIProvider(options.azure);
     case "openrouter": return new OpenRouterProvider(options.openrouter);
     default: return new CodexCliProvider();
   }
 }
 
+/** @deprecated Use `createExecutionBackend` instead. */
+export const createProvider = createExecutionBackend;
+
 /** Models each provider serves, for `oracle models list`. */
-export const PROVIDER_MODELS: Record<ProviderName, readonly string[]> = {
+export const BACKEND_MODELS: Record<BackendName, readonly string[]> = {
   anthropic: ["claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5"],
   openai: ["gpt-4o", "gpt-4o-mini", "o1", "o1-mini"],
   gemini: GEMINI_MODELS,
   opencode: ["(any OpenAI-compatible model via OPENCODE_MODEL)"],
   codex: ["(whatever the local codex CLI is logged into)"],
   browser: ["gpt-5.6-sol", "gpt-5.5-pro", "gemini-3.1-pro"],
+  "chatgpt-browser": ["(whatever the logged-in ChatGPT account can use)"],
   azure: ["(configured Azure OpenAI deployment)"],
   openrouter: ["(any vendor/model id supported by OpenRouter)"],
 };
+export const PROVIDER_MODELS = BACKEND_MODELS;
 
 /**
  * Which providers are usable right now, based on credentials in the environment.
  * `codex` is excluded: it depends on a CLI binary and login state, which only
  * `checkProvider` can determine, and it does so by shelling out.
  */
-export function detectAvailableProviders(env: NodeJS.ProcessEnv = process.env): ProviderName[] {
+export function detectAvailableBackends(env: NodeJS.ProcessEnv = process.env): BackendName[] {
   const available: ProviderName[] = [];
   if (env.ANTHROPIC_API_KEY) available.push("anthropic");
   if (env.OPENAI_API_KEY) available.push("openai");
@@ -148,6 +180,7 @@ export function detectAvailableProviders(env: NodeJS.ProcessEnv = process.env): 
   available.push("browser");
   return available;
 }
+export const detectAvailableProviders = detectAvailableBackends;
 
 /**
  * Route a model name to the provider that serves it.
@@ -164,9 +197,11 @@ export function providerForModel(model: string): ProviderName | null {
   if (name.startsWith("gpt") || name.startsWith("o1") || name.startsWith("o3")) return "openai";
   return null;
 }
+export const backendForModel = providerForModel;
 
 /** Providers that implement the agentic tool-use loop (read/write/bash). */
 export const AGENT_PROVIDERS: readonly ProviderName[] = ["anthropic", "opencode", "codex"];
+export const AGENT_BACKENDS = AGENT_PROVIDERS;
 
 /**
  * Create a tool-capable provider for the agentic loop. Supports:
@@ -186,16 +221,54 @@ export function createAgentProvider(name: ProviderName): AgentProvider {
       );
   }
 }
+export const createAgentBackend = createAgentProvider;
 
-export async function checkProvider(
-  name: ProviderName,
-  runner: CommandRunner = runCommand,
-  options: {
-    azure?: AzureProviderOptions;
-    openrouter?: OpenRouterOptions;
-    browser?: Pick<BrowserProviderOptions, "remoteChrome" | "remoteHost">;
-  } = {}
+async function checkChatGptBrowser(
+  homeDir: string,
+  experimentalEnabled: boolean,
+  browser: CheckBackendOptions["browser"]
 ): Promise<DoctorCheck[]> {
+  const supported: NodeJS.Platform[] = ["darwin", "linux", "win32"];
+  const chrome = await findChromeExecutable();
+  const profileDir = browser?.profileDir ?? path.join(homeDir, "chrome-profile");
+  let profileReady = false;
+  try {
+    profileReady = (await fs.stat(profileDir)).isDirectory();
+  } catch {
+    profileReady = false;
+  }
+  return [
+    {
+      name: "platform",
+      ok: supported.includes(process.platform),
+      detail: supported.includes(process.platform) ? process.platform : `unsupported platform: ${process.platform}`
+    },
+    { name: "chrome executable", ok: Boolean(chrome), detail: chrome ?? "Google Chrome not found" },
+    {
+      name: "oracle chrome profile",
+      ok: profileReady,
+      detail: profileReady ? profileDir : `run \`oracle browser setup\` to create ${profileDir}`
+    },
+    {
+      name: "experimental.browserMode",
+      ok: experimentalEnabled,
+      detail: experimentalEnabled ? "enabled" : "set experimental.browserMode to true in .oracle/config.json"
+    }
+  ];
+}
+
+export async function checkBackend(
+  name: BackendName,
+  options: CheckBackendOptions = {}
+): Promise<DoctorCheck[]> {
+  const runner = options.runner ?? runCommand;
+  if (name === "chatgpt-browser") {
+    return checkChatGptBrowser(
+      options.homeDir ?? oracleHomeDir(),
+      options.experimentalBrowserMode ?? false,
+      options.browser
+    );
+  }
   if (name === "openai") {
     return [
       { name: "OPENAI_API_KEY", ok: Boolean(process.env.OPENAI_API_KEY), detail: process.env.OPENAI_API_KEY ? "set" : "not set" },
@@ -327,4 +400,13 @@ export async function checkProvider(
       }
     ];
   }
+}
+
+/** @deprecated Use `checkBackend` instead. */
+export function checkProvider(
+  name: ProviderName,
+  runner: CommandRunner = runCommand,
+  options: CreateExecutionBackendOptions = {}
+): Promise<DoctorCheck[]> {
+  return checkBackend(name, { ...options, runner });
 }

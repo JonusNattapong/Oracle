@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import type { AgentService } from "../../agent/service.js";
 import { FileCheckpointStore } from "../../agent/checkpoint.js";

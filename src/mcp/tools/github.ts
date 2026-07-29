@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import type { ConsultService } from "../../core/consult.js";
 import type { ProjectConfig } from "../../config/project.js";

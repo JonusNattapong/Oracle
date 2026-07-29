@@ -11,6 +11,14 @@ export interface AzureProviderOptions {
 
 export class AzureOpenAIProvider implements Provider {
   readonly id = "azure";
+  readonly capabilities = {
+    consult: true,
+    toolUse: false,
+    images: false,
+    continuation: true,
+    structuredUsage: true,
+    supportedPlatforms: ["darwin", "linux", "win32"] as const
+  };
   private readonly client: AzureOpenAI;
 
   constructor(options: AzureProviderOptions = {}) {
@@ -50,5 +58,9 @@ export class AzureOpenAIProvider implements Provider {
         totalTokens: response.usage?.total_tokens
       }
     };
+  }
+
+  async healthCheck() {
+    return [{ name: "azure configuration", ok: true, detail: "configured" }];
   }
 }

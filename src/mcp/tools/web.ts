@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { serializeOracleError } from "../../errors.js";
 import { webSearchWithTrace } from "../../web/search.js";
