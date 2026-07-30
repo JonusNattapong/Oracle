@@ -53,6 +53,8 @@ export interface AgentContext {
   audit?: any; // AuditTrail type, avoid circular import
   /** Optional zero-trust policy; when absent, no policy checks are enforced. */
   policy?: import("./policy.js").OraclePolicy;
+  /** Shared command executor; Docker mode is fail-closed and never falls back to host execution. */
+  sandbox?: import("../sandbox/runner.js").SandboxRunner;
 }
 
 /** A tool the agent can call: its schema (for the model) + executor. */

@@ -269,15 +269,17 @@ coordination as different trust boundaries.
 |---|---|
 | **Workspace** | Real paths are resolved against the active workspace; traversal and escaping symlinks are rejected by guarded file paths. |
 | **Outbound context** | Selected content is constrained by file/input limits and scanned for likely secrets before transmission. |
-| **Agent mutation** | Read-only mode removes mutating tools; policy, step ceilings, checkpoints, approval modes, and audit records guard enabled actions. |
+| **Agent mutation** | Read-only mode removes mutating tools; policy, step ceilings, checkpoints, approval modes, and audit records guard enabled actions. Optional Docker mode adds a workspace-confined execution boundary. |
 | **Runtime admin** | Local `/v1/*` APIs require the owner-only Runtime token. Status output redacts it. |
 | **Remote Swarm** | Raw tokens are printed once; only SHA-256 token hashes are stored. Requests and events remain project-scoped. |
 | **Browser Mode** | Uses an isolated, visible Chrome profile and manual login. It is experimental UI automation, not the OpenAI API. |
 
+For isolated command execution, enable the [Docker execution sandbox](docs/sandbox.md) and verify it with `oracle sandbox doctor`.
+
 Important limits:
 
-- Oracle's command runner starts inside the workspace and enforces Oracle
-  policy, but it is not a kernel sandbox.
+- Docker sandboxing is optional and requires a working Docker daemon. The
+  default command runner is policy-constrained, not a kernel sandbox.
 - Web retrieval works only when a provider is configured and explicitly used.
 - Conversation continuation depends on backend support; it is not a universal
   promise that every model remembers every prior answer.
@@ -301,6 +303,7 @@ oracle daemon / schedule    persistent Runtime and cron ownership
 oracle control / approval   human oversight
 oracle identity             operator, persona, and awareness
 oracle audit / governance   evidence and policy status
+oracle sandbox doctor       execution boundary and Docker readiness
 oracle github               pull requests and issues through gh
 oracle browser              experimental ChatGPT Browser Mode
 ```
@@ -320,6 +323,7 @@ Run `oracle --help` or open the
 | Coordinate local agents | [Messaging and verified tasks](docs/MESSAGING.md) |
 | Run the daemon and API | [Runtime](docs/runtime.md) |
 | Operate approvals and oversight | [Control Center](docs/control-center.md) |
+| Configure isolated execution | [Execution sandbox](docs/sandbox.md) |
 | Connect agents across machines | [Remote Swarm](docs/remote-swarm.md) |
 | Use the experimental browser backend | [ChatGPT Browser Mode](docs/browser-mode.md) |
 | Diagnose failures | [Troubleshooting](docs/troubleshooting.md) |

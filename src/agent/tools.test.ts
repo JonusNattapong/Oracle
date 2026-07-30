@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { defaultAgentTools } from "./tools.js";
 import type { AgentContext, AgentTool } from "./types.js";
+import { SandboxRunner } from "../sandbox/runner.js";
 
 let root: string;
 let ctx: AgentContext;
@@ -11,7 +12,14 @@ let tools: Map<string, AgentTool>;
 
 beforeEach(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-agent-tools-"));
-  ctx = { workspaceRoot: root, readOnly: false };
+  ctx = {
+    workspaceRoot: root,
+    readOnly: false,
+    sandbox: new SandboxRunner({
+      workspaceRoot: root,
+      policy: { mode: "none", image: "node:24-bookworm-slim", network: "none", memoryMb: 2048, cpuCount: 2, pidsLimit: 256, environment: [] }
+    })
+  };
   tools = new Map(defaultAgentTools().map((t) => [t.name, t]));
 });
 

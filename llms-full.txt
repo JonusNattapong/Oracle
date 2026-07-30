@@ -86,7 +86,8 @@ features must be configured before use.
 ### Autonomous Agent
 
 `oracle agent` and `oracle_agent` run a multi-turn tool loop with workspace
-file tools and policy-checked command execution.
+file tools and policy-checked command execution. Agent commands and Runtime
+schedules share an execution runner that records each result in Runtime SQLite.
 
 Controls include:
 
@@ -99,8 +100,11 @@ Controls include:
 - audit evidence;
 - optional plan-first and self-review flows.
 
-The Oracle command boundary is not a kernel sandbox. Use operating-system or
-container isolation when host-level confinement is required.
+The default command boundary is policy-constrained, not a kernel sandbox.
+Set `.oracle/policy.json` `sandbox.mode` to `docker` for fail-closed Docker
+execution: only the workspace is mounted, root is read-only, network defaults
+to denied, and environment variables require an allow-list. Inspect the active
+state with `oracle sandbox doctor`; see `docs/sandbox.md` for limitations.
 
 ### Coordination
 
@@ -201,10 +205,11 @@ User-level state:
 1. Workspace paths must remain inside the active project boundary.
 2. Outbound selected context is size-limited and secret-scanned.
 3. Agent mutation is a separate, policy-controlled capability.
-4. Runtime admin tokens and Remote Swarm project tokens are distinct.
-5. Remote Swarm does not expose execution powers.
-6. Browser Mode uses an isolated visible profile and remains experimental.
-7. ACTB governance status describes built-in controls; it is not a compliance
+4. Docker sandbox mode adds isolated execution and never silently falls back to host execution.
+5. Runtime admin tokens and Remote Swarm project tokens are distinct.
+6. Remote Swarm does not expose execution powers.
+7. Browser Mode uses an isolated visible profile and remains experimental.
+8. ACTB governance status describes built-in controls; it is not a compliance
    or security certification.
 
 ## Command Map
@@ -220,6 +225,7 @@ oracle daemon / schedule    persistent Runtime and cron ownership
 oracle control / approval   human oversight
 oracle identity             operator, persona, and awareness
 oracle audit / governance   evidence and policy status
+oracle sandbox doctor       execution boundary and Docker readiness
 oracle github               pull requests and issues through gh
 oracle browser              experimental ChatGPT Browser Mode
 ```

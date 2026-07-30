@@ -8,6 +8,8 @@ import { FileCheckpointStore } from "./checkpoint.js";
 import { loadPolicy } from "./policy.js";
 import { RuntimeAgentApprovalGate } from "./approvalGate.js";
 import { ProfileStore } from "../identity/profile.js";
+import { RuntimeDatabase } from "../runtime/database.js";
+import { SandboxRunner } from "../sandbox/runner.js";
 import os from "node:os";
 import path from "node:path";
 
@@ -50,18 +52,21 @@ export class AgentService {
   async run(request: AgentRequest): Promise<AgentRunResult> {
     const readOnly = request.readOnly ?? false;
     let allTools = request.tools ?? defaultAgentTools();
+    let mcpManager: McpClientManager | undefined;
 
     // Discover MCP tools from configured external servers
     if (!request.tools) {
       try {
         const projectConfig = await loadProjectConfig(request.workspaceRoot);
         if (projectConfig.mcpServers?.length) {
-          const mgr = new McpClientManager(projectConfig.mcpServers);
+          mcpManager = new McpClientManager(projectConfig.mcpServers);
           try {
-            const mcpTools = await mgr.connectAll();
+            const mcpTools = await mcpManager.connectAll();
             if (mcpTools.length) allTools = [...allTools, ...mcpTools];
-          } finally {
-            await mgr.disconnectAll();
+          } catch (error) {
+            await mcpManager.disconnectAll();
+            mcpManager = undefined;
+            throw error;
           }
         }
       } catch {
@@ -110,20 +115,31 @@ export class AgentService {
     const approvalGate = policy.approval.mode === "off"
       ? undefined
       : new RuntimeAgentApprovalGate(oracleDir, policy);
-
-    return runAgentLoop({
-      provider: this.provider,
-      model: request.model,
-      system,
-      prompt: request.prompt,
-      tools,
-      context: { workspaceRoot: request.workspaceRoot, readOnly, policy },
-      maxSteps: request.maxSteps,
-      onStep: request.onStep,
-      checkpointStore,
-      resumeCheckpointId: request.resumeId,
-      approvalGate
-    });
+    let runtimeDatabase: RuntimeDatabase | undefined;
+    try {
+      runtimeDatabase = new RuntimeDatabase(oracleDir);
+      const sandbox = new SandboxRunner({
+        policy: policy.sandbox,
+        workspaceRoot: request.workspaceRoot,
+        recorder: runtimeDatabase
+      });
+      return await runAgentLoop({
+        provider: this.provider,
+        model: request.model,
+        system,
+        prompt: request.prompt,
+        tools,
+        context: { workspaceRoot: request.workspaceRoot, readOnly, policy, sandbox },
+        maxSteps: request.maxSteps,
+        onStep: request.onStep,
+        checkpointStore,
+        resumeCheckpointId: request.resumeId,
+        approvalGate
+      });
+    } finally {
+      runtimeDatabase?.close();
+      await mcpManager?.disconnectAll();
+    }
   }
 }
 

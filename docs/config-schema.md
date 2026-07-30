@@ -54,24 +54,29 @@ Cost is derived from a built-in price table. Local providers (Ollama) are
 free; a model absent from the table reports `$0` and says so, rather than
 inventing a price. Attribute a call with `oracle ask --agent <name>`.
 
-### Sandbox
+### Execution sandbox policy
+
+Set sandboxing in the workspace's `.oracle/policy.json` (not
+`.oracle/config.json`):
 
 ```jsonc
 {
   "sandbox": {
-    "mode": "docker",      // "docker" | "namespace" | "none"
-    "memoryMB": 512,
-    "cpus": 0.5,
-    "maxProcesses": 128,
-    "allowNetwork": false  // outbound network is denied by default
+    "mode": "docker", // "docker" | "none"; default "none"
+    "image": "node:24-bookworm-slim",
+    "network": "none", // required in the current Docker sandbox
+    "memoryMb": 512,
+    "cpuCount": 1,
+    "pidsLimit": 128,
+    "environment": ["NODE_OPTIONS"]
   }
 }
 ```
 
-`ORACLE_SANDBOX_IMAGE` overrides the container image (default `alpine:3.20`).
-Omitting `mode` auto-detects the strongest available. Naming a mode the host
-cannot provide is an error — Oracle will not quietly run your agent with no
-isolation because Docker was missing.
+Docker mode is fail-closed: naming it when Docker or its image is unavailable
+stops the command rather than running it on the host. Run `oracle sandbox
+doctor` to inspect the effective boundary. See [Execution sandbox](sandbox.md)
+for security properties and limits.
 
 ### Memory graph
 

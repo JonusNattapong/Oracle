@@ -26,7 +26,7 @@ describe("RuntimeDatabase", () => {
     }
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "8" });
+    ).get()).toEqual({ value: "9" });
   });
 
   test("persists scheduler tasks and run history in SQLite", async () => {
@@ -89,6 +89,34 @@ describe("RuntimeDatabase", () => {
     ]);
   });
 
+  test("persists sandbox execution evidence", () => {
+    database.recordSandboxRun({
+      id: "sandbox-test",
+      mode: "docker",
+      command: "npm test",
+      commandHash: "abc123",
+      workspaceRoot: "C:/workspace",
+      network: "none",
+      image: "node:24-bookworm-slim",
+      exitCode: 0,
+      durationMs: 42,
+      killed: false,
+      createdAt: "2026-07-30T00:00:00.000Z"
+    });
+    expect(database.connection.prepare(`
+      SELECT mode, command_hash, workspace_root, network, image, exit_code, duration_ms
+      FROM sandbox_runs WHERE id = 'sandbox-test'
+    `).get()).toEqual({
+      mode: "docker",
+      command_hash: "abc123",
+      workspace_root: "C:/workspace",
+      network: "none",
+      image: "node:24-bookworm-slim",
+      exit_code: 0,
+      duration_ms: 42
+    });
+  });
+
   test("migrates a 0.2 approval database without losing pending requests", async () => {
     database.close();
     await fs.rm(home, { recursive: true, force: true });
@@ -137,7 +165,7 @@ describe("RuntimeDatabase", () => {
     database = new RuntimeDatabase(home);
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "8" });
+    ).get()).toEqual({ value: "9" });
     expect(database.connection.prepare(`
       SELECT status, version, required_approvals, authorized_reviewers_json
       FROM approval_requests WHERE id = 'approval-legacy'

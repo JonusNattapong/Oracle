@@ -68,8 +68,8 @@ export class OracleDaemon {
     );
     this.events = new RuntimeEventBus(this.database);
     this.swarm = new RemoteSwarmService(this.database, this.events);
-    this.scheduler = new SchedulerService(this.database, this.events);
     const workspaceRoot = path.resolve(this.options.workspaceRoot ?? process.cwd());
+    this.scheduler = new SchedulerService(this.database, this.events, workspaceRoot);
     this.control = new ControlCenterService(
       this.database,
       this.events,

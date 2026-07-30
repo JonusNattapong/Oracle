@@ -31,7 +31,7 @@ stores and does not replace their existing sources of truth.
 | **Control Center** | Web dashboard, Ink TUI, quorum/expiry approvals, execute-once gate, optional Telegram callbacks | `src/control/` |
 | **ConsultService** | Core loop: build a validated file bundle → select execution backend → record answer | `src/core/consult.ts`, `src/context/bundleService.ts` |
 | **Execution backends** | Codex CLI, Anthropic, OpenAI, Gemini, OpenCode, and experimental ChatGPT Browser Mode | `src/backends/`, `src/providers/` |
-| **Agent sandbox** | Autonomous file read/write/edit loop with a bash tool for shell commands. Every mutation hashed and logged to an audit trail. | `src/agent/` |
+| **Execution sandbox** | Shared policy-only or fail-closed Docker runner for agent and scheduler commands, with per-run SQLite evidence. | `src/sandbox/`, `src/agent/`, `src/runtime/schedulerService.ts` |
 | **Memory system** | BM25 + vector search + entity knowledge graph + auto-consolidation + background maintenance | `src/memory/` |
 | **Messaging bus** | Transactional SQLite message store, presence registry, real-time watcher, Stop-hook wake-up | `src/messaging/` |
 | **Task tracker** | Plan/assign/verify/report on top of the messaging bus; checklist-gated review | `src/tasks/` |
@@ -143,9 +143,12 @@ The legacy `provider` config key remains accepted and is normalized to
 
 ## Security model
 
-The agent sandbox has a **bash tool** that starts commands in the workspace,
-applies command policy and human approval gates, and records a timeout-backed audit trail.
-Use OS or container isolation when host-level shell confinement is required.
+The agent and Runtime scheduler share a command runner that starts in the active
+workspace, applies command policy and human approval gates, and records
+timeout-backed evidence. Its default `none` mode is policy-constrained only.
+Optional Docker mode binds only the workspace, uses a read-only root filesystem,
+disables networking by default, drops Linux capabilities, and fails closed if
+Docker cannot start. See [Execution sandbox](sandbox.md).
 Every mutation is logged with a timestamp,
 agent name, SHA-256 content hash, and diff summary, so file changes and commands can be
 audited or reverted after the fact. The bash tool is disabled in readOnly mode.

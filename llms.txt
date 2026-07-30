@@ -14,6 +14,7 @@
 - [MCP standards](docs/MCP-STANDARDS.md): MCP server conventions and Oracle tool categories.
 - [Messaging and tasks](docs/MESSAGING.md): Local agent registration, messages, verified tasks, and wake-up patterns.
 - [ACTB governance specification](docs/superpowers/specs/2026-07-30-actb-governance-framework.md): Awareness, Control, Transform, and Boundary design.
+- [Execution sandbox](docs/sandbox.md): Docker execution boundary, policy, evidence, and limits.
 
 ## Operations
 

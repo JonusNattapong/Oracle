@@ -1,7 +1,6 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type {
@@ -11,6 +10,7 @@ import type {
   CronTaskStatus,
   UpdateTaskInput
 } from "../scheduler/taskStore.js";
+import type { SandboxRunRecord } from "../sandbox/runner.js";
 
 export interface RuntimeEvent {
   id: number;
@@ -59,24 +59,6 @@ export class RuntimeDatabase {
       // checkpoint may fail if already closed; ignore
     }
     this.connection.close();
-    // Windows: SQLite may not release file handles immediately after close().
-    // Retry deletion of WAL/SHM/main files with backoff.
-    if (os.platform() === "win32") {
-      const dir = path.dirname(this.filePath);
-      const base = path.basename(this.filePath);
-      for (const file of [base + "-wal", base + "-shm", base]) {
-        const fullPath = path.join(dir, file);
-        for (let attempt = 0; attempt < 30; attempt++) {
-          try {
-            fsSync.unlinkSync(fullPath);
-            break;
-          } catch {
-            if (attempt === 29) break;
-            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
-          }
-        }
-      }
-    }
   }
 
   recordEvent(type: string, payload: Record<string, unknown>): RuntimeEvent {
@@ -90,6 +72,28 @@ export class RuntimeDatabase {
       payload,
       createdAt
     };
+  }
+
+  recordSandboxRun(record: SandboxRunRecord): void {
+    this.connection.prepare(`
+      INSERT INTO sandbox_runs (
+        id, mode, command, command_hash, workspace_root, network, image,
+        exit_code, duration_ms, killed, error, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      record.id,
+      record.mode,
+      record.command,
+      record.commandHash,
+      record.workspaceRoot,
+      record.network,
+      record.image ?? null,
+      record.exitCode,
+      record.durationMs,
+      record.killed ? 1 : 0,
+      record.error ?? null,
+      record.createdAt
+    );
   }
 
   listEvents(afterId = 0, limit = 100): RuntimeEvent[] {
@@ -513,8 +517,20 @@ export class RuntimeDatabase {
       version = 8;
     }
 
-    if (version > 8) {
-      throw new Error(`Runtime database schema ${version} is newer than supported schema 8.`);
+    if (version < 9) {
+      this.applyMigration(9, `
+        ALTER TABLE sandbox_runs ADD COLUMN command_hash TEXT;
+        ALTER TABLE sandbox_runs ADD COLUMN workspace_root TEXT NOT NULL DEFAULT '';
+        ALTER TABLE sandbox_runs ADD COLUMN network TEXT NOT NULL DEFAULT 'none';
+        ALTER TABLE sandbox_runs ADD COLUMN image TEXT;
+        CREATE INDEX sandbox_runs_workspace_created_idx
+          ON sandbox_runs(workspace_root, created_at DESC);
+      `);
+      version = 9;
+    }
+
+    if (version > 9) {
+      throw new Error(`Runtime database schema ${version} is newer than supported schema 9.`);
     }
   }
 

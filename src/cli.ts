@@ -2447,6 +2447,47 @@ swarmCmd
 // ── audit ───────────────────────────────────────────────────────
 const auditCmd = program.command("audit").description("View agent audit trail and policy violations");
 
+const sandboxCmd = program.command("sandbox").description("Inspect Oracle command-execution boundaries");
+
+sandboxCmd
+  .command("doctor")
+  .description("Show the active sandbox policy and whether Docker is available")
+  .option("--cwd <path>", "Workspace root", process.cwd())
+  .option("--json", "Print machine-readable output", false)
+  .action(async (options: { cwd?: string; json?: boolean }) => {
+    const workspaceRoot = path.resolve(options.cwd ?? process.cwd());
+    const { loadPolicy } = await import("./agent/policy.js");
+    const policy = await loadPolicy(workspaceRoot);
+    const docker = await new Promise<{ available: boolean; detail: string }>((resolve) => {
+      import("node:child_process").then(({ execFile }) => {
+        execFile("docker", ["version", "--format", "{{.Server.Version}}"], { windowsHide: true }, (error, stdout, stderr) => {
+          resolve(error
+            ? { available: false, detail: (stderr || error.message).trim() }
+            : { available: true, detail: stdout.trim() || "available" });
+        });
+      }).catch((error) => resolve({ available: false, detail: error instanceof Error ? error.message : String(error) }));
+    });
+    const isolated = policy.sandbox.mode === "docker" && docker.available;
+    const report = {
+      workspaceRoot,
+      sandbox: policy.sandbox,
+      docker,
+      executionBoundary: isolated ? "sandbox-isolated" : "policy-constrained",
+      failClosed: policy.sandbox.mode === "docker"
+    };
+    if (options.json) {
+      console.log(JSON.stringify(report, null, 2));
+      return;
+    }
+    console.log(`Execution boundary: ${report.executionBoundary}`);
+    console.log(`  mode:       ${policy.sandbox.mode}`);
+    console.log(`  network:    ${policy.sandbox.network}`);
+    console.log(`  workspace:  ${workspaceRoot}`);
+    console.log(`  image:      ${policy.sandbox.image}`);
+    console.log(`  Docker:     ${docker.available ? `available (${docker.detail})` : `unavailable (${docker.detail})`}`);
+    console.log(`  fallback:   ${report.failClosed ? "disabled" : "not applicable (policy-only mode)"}`);
+  });
+
 auditCmd
   .command("verify")
   .description("Verify the tamper-evident audit hash chain")
@@ -2532,6 +2573,15 @@ initCmd
         mode: "risky",
         expiryMinutes: 30,
         allowTelegramHighRisk: false
+      },
+      sandbox: {
+        mode: "none",
+        image: "node:24-bookworm-slim",
+        network: "none",
+        memoryMb: 2048,
+        cpuCount: 2,
+        pidsLimit: 256,
+        environment: []
       }
     };
     const defaultConfig = {

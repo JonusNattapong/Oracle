@@ -13,6 +13,7 @@ export interface CronEngineOptions {
   store?: CronTaskRepository;
   onTaskStart?: (task: CronTask) => void;
   onTaskComplete?: (task: CronTask, result: "success" | "error", output: string) => void;
+  runCommand?: (task: CronTask, command: string) => Promise<string>;
 }
 
 export class CronEngine {
@@ -117,7 +118,9 @@ export class CronEngine {
   private async executeTask(task: CronTask): Promise<{ result: "success" | "error"; output: string }> {
     this.options.onTaskStart?.(task);
     try {
-      const output = await this.runCommand(task.command);
+      const output = this.options.runCommand
+        ? await this.options.runCommand(task, task.command)
+        : await this.runCommand(task.command);
       await this.store.recordRun(task.id, "success", output);
       this.options.onTaskComplete?.(task, "success", output);
       return { result: "success", output };

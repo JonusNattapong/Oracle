@@ -45,4 +45,32 @@ describe("OraclePolicy Enforcement", () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+  it("loads Docker sandbox policy with a network-deny default", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-policy-sandbox-"));
+    try {
+      await fs.mkdir(path.join(root, ".oracle"));
+      await fs.writeFile(path.join(root, ".oracle", "policy.json"), JSON.stringify({
+        sandbox: { mode: "docker", memoryMb: 512, environment: ["NODE_ENV"] }
+      }), "utf8");
+      await expect(loadPolicy(root)).resolves.toMatchObject({
+        sandbox: { mode: "docker", network: "none", memoryMb: 512, environment: ["NODE_ENV"] }
+      });
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects network-enabled sandbox policy until an egress broker exists", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-policy-sandbox-network-"));
+    try {
+      await fs.mkdir(path.join(root, ".oracle"));
+      await fs.writeFile(path.join(root, ".oracle", "policy.json"), JSON.stringify({
+        sandbox: { mode: "docker", network: "restricted" }
+      }), "utf8");
+      await expect(loadPolicy(root)).rejects.toThrow("sandbox.network must be none");
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });

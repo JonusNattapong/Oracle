@@ -3,14 +3,17 @@ import { CronEngine } from "../scheduler/cronEngine.js";
 import type { CreateTaskInput, CronTask, UpdateTaskInput } from "../scheduler/taskStore.js";
 import { RuntimeDatabase, SqliteCronTaskStore } from "./database.js";
 import { RuntimeEventBus } from "./events.js";
+import { loadPolicy, validateCommand } from "../agent/policy.js";
+import { SandboxRunner } from "../sandbox/runner.js";
 
 export class SchedulerService {
   readonly store: SqliteCronTaskStore;
   readonly engine: CronEngine;
 
   constructor(
-    database: RuntimeDatabase,
-    private readonly events: RuntimeEventBus
+    private readonly database: RuntimeDatabase,
+    private readonly events: RuntimeEventBus,
+    private readonly workspaceRoot = process.cwd()
   ) {
     this.store = new SqliteCronTaskStore(database);
     this.engine = new CronEngine({
@@ -25,6 +28,17 @@ export class SchedulerService {
           result,
           output: output.slice(0, 4000)
         });
+      },
+      runCommand: async (_task, command) => {
+        const policy = await loadPolicy(this.workspaceRoot);
+        validateCommand(command, policy);
+        const runner = new SandboxRunner({
+          policy: policy.sandbox,
+          workspaceRoot: this.workspaceRoot,
+          recorder: this.database
+        });
+        const result = await runner.run(command, 300_000);
+        return [result.stdout, result.stderr].filter(Boolean).join("\n") || "(no output)";
       }
     });
   }
@@ -58,6 +72,7 @@ export class SchedulerService {
 
   async create(input: CreateTaskInput): Promise<CronTask> {
     this.validate(input.cron);
+    validateCommand(input.command, await loadPolicy(this.workspaceRoot));
     const task = await this.engine.addTask(input);
     this.events.publish("scheduler.task.created", { task });
     return task;
@@ -65,6 +80,7 @@ export class SchedulerService {
 
   async update(id: string, input: UpdateTaskInput): Promise<CronTask | null> {
     if (input.cron !== undefined) this.validate(input.cron);
+    if (input.command !== undefined) validateCommand(input.command, await loadPolicy(this.workspaceRoot));
     const task = await this.engine.updateTask(id, input);
     if (task) this.events.publish("scheduler.task.updated", { task });
     return task;

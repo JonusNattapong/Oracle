@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { logSandbox } from "../observability/log.js";
+import { DEFAULT_SANDBOX_POLICY, type SandboxPolicy } from "../sandbox/runner.js";
 
 export interface OracleApprovalPolicy {
   mode: "off" | "risky" | "all-mutations";
@@ -21,6 +22,8 @@ export interface OraclePolicy {
   maxMutationsPerSession: number;
   /** Human approval settings for mutating or high-risk tools. */
   approval: OracleApprovalPolicy;
+  /** Execution isolation for shell commands. `none` is policy-only and explicit. */
+  sandbox: SandboxPolicy;
 }
 
 export const DEFAULT_POLICY: Readonly<OraclePolicy> = Object.freeze<OraclePolicy>({
@@ -46,7 +49,8 @@ export const DEFAULT_POLICY: Readonly<OraclePolicy> = Object.freeze<OraclePolicy
     mode: "risky",
     expiryMinutes: 30,
     allowTelegramHighRisk: false
-  }
+  },
+  sandbox: { ...DEFAULT_SANDBOX_POLICY }
 });
 
 export class PolicyViolationError extends Error {
@@ -63,7 +67,10 @@ export async function loadPolicy(workspaceRoot: string): Promise<OraclePolicy> {
   const policyFile = path.join(workspaceRoot, ".oracle", "policy.json");
   try {
     const raw = JSON.parse(await fs.readFile(policyFile, "utf8")) as
-      Omit<Partial<OraclePolicy>, "approval"> & { approval?: Partial<OracleApprovalPolicy> };
+      Omit<Partial<OraclePolicy>, "approval" | "sandbox"> & {
+        approval?: Partial<OracleApprovalPolicy>;
+        sandbox?: Partial<SandboxPolicy>;
+      };
     const rawApproval = raw.approval ?? {};
     const mode = rawApproval.mode ?? DEFAULT_POLICY.approval.mode;
     if (!["off", "risky", "all-mutations"].includes(mode)) {
@@ -78,6 +85,25 @@ export async function loadPolicy(workspaceRoot: string): Promise<OraclePolicy> {
     if (!Number.isFinite(expiryMinutes) || expiryMinutes <= 0) {
       throw new Error("approval.expiryMinutes must be greater than zero.");
     }
+    const sandbox = { ...DEFAULT_SANDBOX_POLICY, ...(raw.sandbox ?? {}) };
+    if (!['none', 'docker'].includes(sandbox.mode)) {
+      throw new Error("sandbox.mode must be none or docker.");
+    }
+    if (sandbox.network !== "none") {
+      throw new Error("sandbox.network must be none in the current Docker sandbox.");
+    }
+    if (!Number.isInteger(sandbox.memoryMb) || sandbox.memoryMb < 128) {
+      throw new Error("sandbox.memoryMb must be an integer of at least 128.");
+    }
+    if (!Number.isFinite(sandbox.cpuCount) || sandbox.cpuCount <= 0) {
+      throw new Error("sandbox.cpuCount must be greater than zero.");
+    }
+    if (!Number.isInteger(sandbox.pidsLimit) || sandbox.pidsLimit < 16) {
+      throw new Error("sandbox.pidsLimit must be an integer of at least 16.");
+    }
+    if (!Array.isArray(sandbox.environment) || sandbox.environment.some((name) => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(name))) {
+      throw new Error("sandbox.environment must contain valid environment variable names.");
+    }
     return {
       forbiddenGlobs: [...DEFAULT_POLICY.forbiddenGlobs, ...(raw.forbiddenGlobs ?? [])],
       allowedCommands: raw.allowedCommands,
@@ -90,13 +116,15 @@ export async function loadPolicy(workspaceRoot: string): Promise<OraclePolicy> {
         expiryMinutes,
         allowTelegramHighRisk: rawApproval.allowTelegramHighRisk
           ?? DEFAULT_POLICY.approval.allowTelegramHighRisk
-      }
+      },
+      sandbox
     };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return {
         ...DEFAULT_POLICY,
-        approval: { ...DEFAULT_POLICY.approval }
+        approval: { ...DEFAULT_POLICY.approval },
+        sandbox: { ...DEFAULT_POLICY.sandbox }
       };
     }
     throw new Error(

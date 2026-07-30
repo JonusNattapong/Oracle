@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { exec } from "node:child_process";
 import type { AgentContext, AgentTool, ContentBlock } from "./types.js";
 import { logSandbox } from "../observability/log.js";
 import { validateCommand, validateFilePath } from "./policy.js";
+import { redactCommand } from "../sandbox/runner.js";
 
 /** Cap on how much text any single tool returns to the model. */
 const MAX_OUTPUT_CHARS = 30_000;
@@ -313,24 +313,16 @@ export function defaultAgentTools(): AgentTool[] {
         const command = str(input, "command");
         if (ctx.policy) validateCommand(command, ctx.policy);
         const timeout = Math.min(Math.max(Number(input.timeout) || 60000, 1000), 300000);
-        const shell = process.env.SHELL || undefined; // respect user's shell when set
-        const stdout = await new Promise<string>((resolve, reject) => {
-          exec(command, { cwd: ctx.workspaceRoot, timeout, maxBuffer: 10 * 1024 * 1024, shell }, (err, out, stderr) => {
-            let output = out || "";
-            if (stderr) {
-              if (output) output += "\n";
-              output += stderr;
-            }
-            if (err) {
-              if (err.killed) reject(new ToolError(`Command timed out after ${timeout}ms`));
-              else reject(new ToolError(output || err.message));
-            } else {
-              resolve(output || "(no output)");
-            }
-          });
-        });
+        let stdout: string;
+        try {
+          if (!ctx.sandbox) throw new Error("Sandbox context is unavailable; refusing command execution.");
+          const result = await ctx.sandbox.run(command, timeout);
+          stdout = [result.stdout, result.stderr].filter(Boolean).join("\n") || "(no output)";
+        } catch (error) {
+          throw new ToolError(error instanceof Error ? error.message : String(error));
+        }
         if (ctx.audit) {
-          ctx.audit.record("bash", command.slice(0, 200), { timeout });
+          ctx.audit.record("bash", redactCommand(command).slice(0, 200), { timeout, sandbox: ctx.sandbox.mode });
         }
         return truncate(stdout);
       },
