@@ -39,6 +39,8 @@
     "dist",
     "README.md",
     "CHANGELOG.md",
+    "llms.txt",
+    "llms-full.txt",
     "docs"
   ],
   "publishConfig": {

@@ -1,0 +1,256 @@
+# Oracle: Consolidated Agent Context
+
+> Oracle is a persistent context, guarded action, and durable coordination layer for AI coding agents.
+
+## Purpose
+
+Oracle is not a generic chat shell. It assembles selected workspace context,
+injects an explicit operating identity and boundary, routes work to a
+configured execution backend, and records the result. Its autonomous agent,
+messaging, task, Runtime, Control Center, and Remote Swarm surfaces extend the
+same model into guarded action and durable coordination.
+
+Repository: https://github.com/OraclePersonal/Oracle
+Package: @oraclepersonal/oracle
+License: MIT
+Runtime requirement: Node.js >= 24
+
+## First Run
+
+```bash
+npm install -g @oraclepersonal/oracle
+codex login
+oracle doctor
+oracle ask "Map the error-handling path and identify one missing test" -f "src/**/*.ts"
+```
+
+The default execution backend is the locally authenticated Codex CLI.
+
+To connect Oracle to an MCP host:
+
+```bash
+oracle setup-mcp --client codex
+oracle setup-mcp --client claude-code
+```
+
+## Interfaces
+
+- `oracle`: human- and script-facing CLI.
+- `oracle-mcp`: full stdio MCP server.
+- `oracle-msg-mcp`: coordination-only stdio MCP server.
+- `oracle-daemon`: persistent Runtime service.
+
+The full MCP server exposes consultation, agent, memory, docs, web, identity,
+session, diagnostics, messaging, task, coordination, history, and GitHub
+tools. Connected clients receive instructions for agent registration,
+inbox handling, and verified task flow.
+
+## Core Capabilities
+
+### Awareness
+
+Oracle derives its live operating context from:
+
+- Oracle persona and functional role;
+- configured operator identity;
+- current interface (`cli`, `mcp`, `runtime`, or `agent`);
+- workspace label;
+- selected execution backend;
+- read-only state when relevant;
+- capabilities available on that interface;
+- explicit operating boundaries.
+
+Prompt-bound awareness uses the workspace label instead of sending the
+absolute local workspace path to an external backend.
+
+### Consultation
+
+`oracle ask` and `oracle_ask`:
+
+- accept a question plus selected paths or globs;
+- resolve files inside the active workspace;
+- apply file-size and aggregate-input limits;
+- detect likely secrets before outbound transmission;
+- optionally retrieve project memory and `.oracle/docs/`;
+- route through a configured backend;
+- store sessions under `~/.oracle/sessions/<id>/`;
+- support logical conversation continuation when the backend can resume.
+
+### Memory and Local Knowledge
+
+Oracle supports project/global facts, insights, chunks, working entries,
+ranked retrieval, local docs search, entity relationships, optional embedding
+providers, maintenance, and topic wiki compilation. Provider-dependent
+features must be configured before use.
+
+### Autonomous Agent
+
+`oracle agent` and `oracle_agent` run a multi-turn tool loop with workspace
+file tools and policy-checked command execution.
+
+Controls include:
+
+- read-only mode that removes mutating tools;
+- maximum turn ceilings;
+- workspace path confinement;
+- policy and risk assessment;
+- human approval modes (`off`, `risky`, `all-mutations`);
+- checkpoints and resume;
+- audit evidence;
+- optional plan-first and self-review flows.
+
+The Oracle command boundary is not a kernel sandbox. Use operating-system or
+container isolation when host-level confinement is required.
+
+### Coordination
+
+Local coordination uses a shared SQLite store and includes:
+
+- named agent presence;
+- direct and broadcast messages;
+- inbox wait and acknowledgement;
+- durable task assignment;
+- checklist-gated submission;
+- creator review and rejection;
+- consensus proposals and votes;
+- recovery of interrupted task-to-message delivery.
+
+Task submission is blocked while any required checklist item remains
+unchecked.
+
+### Runtime and Control
+
+The Runtime owns:
+
+- SQLite state at `~/.oracle/runtime/oracle.db`;
+- long-lived schedules and run history;
+- authenticated loopback HTTP APIs;
+- replayable WebSocket events;
+- approval requests, votes, expiry, and execution claims;
+- Control Center data;
+- Remote Swarm endpoints.
+
+Default endpoint: `http://127.0.0.1:4777`.
+
+```bash
+oracle daemon start
+oracle daemon status
+oracle control
+```
+
+### Remote Swarm
+
+Remote Swarm provides project-scoped presence, messages, tasks, and event
+replay across machines. It is a coordination plane, not a remote execution
+plane.
+
+Remote tokens do not grant:
+
+- shell or filesystem access;
+- Scheduler access;
+- approval authority;
+- Runtime administration.
+
+Raw agent tokens are printed once. Oracle stores SHA-256 token hashes. The
+built-in server is HTTP; non-loopback deployments require TLS termination or
+an encrypted private network.
+
+## Execution Backends
+
+- `codex`: consultation and agent loop; uses local Codex CLI login.
+- `anthropic`: consultation and agent loop; API key or Oracle OAuth login.
+- `openai`: consultation; OpenAI API credentials.
+- `gemini`: consultation; Gemini/Google API credentials.
+- `opencode`: consultation and agent loop; OpenAI-compatible endpoint.
+- `azure`: consultation; Azure OpenAI configuration.
+- `openrouter`: consultation; OpenRouter configuration.
+- `chatgpt-browser`: experimental consultation through a visible, isolated
+  Chrome profile and manual ChatGPT login.
+
+Browser Mode is local-interactive UI automation, not the OpenAI API. It does
+not support the autonomous agent loop and should not be presented as an
+unattended production backend.
+
+## Project State
+
+Project-local state:
+
+```text
+<workspace>/.oracle/
+  config.json
+  policy.json
+  docs/
+  skills/
+  audit.jsonl
+```
+
+User-level state:
+
+```text
+~/.oracle/
+  runtime/oracle.db
+  sessions/
+  memory/
+  souls/
+  oracles/
+  remote.json
+```
+
+## Trust Boundaries
+
+1. Workspace paths must remain inside the active project boundary.
+2. Outbound selected context is size-limited and secret-scanned.
+3. Agent mutation is a separate, policy-controlled capability.
+4. Runtime admin tokens and Remote Swarm project tokens are distinct.
+5. Remote Swarm does not expose execution powers.
+6. Browser Mode uses an isolated visible profile and remains experimental.
+7. ACTB governance status describes built-in controls; it is not a compliance
+   or security certification.
+
+## Command Map
+
+```text
+oracle ask                  grounded consultation
+oracle agent                autonomous or read-only coding loop
+oracle memory / wiki        memory inspection and compilation
+oracle docs / web           local knowledge and configured retrieval
+oracle msg / task           local coordination and verification
+oracle team / swarm         remote and consensus workflows
+oracle daemon / schedule    persistent Runtime and cron ownership
+oracle control / approval   human oversight
+oracle identity             operator, persona, and awareness
+oracle audit / governance   evidence and policy status
+oracle github               pull requests and issues through gh
+oracle browser              experimental ChatGPT Browser Mode
+```
+
+## Development and Verification
+
+```bash
+npm install
+npm run build
+npm test
+npm run test:cli
+npm run test:runtime
+```
+
+The release gate is:
+
+```bash
+npm run verify
+```
+
+## Documentation Map
+
+- `README.md`: developer-facing overview and first-run path.
+- `docs/getting-started.md`: installation and initial setup.
+- `docs/architecture.md`: component and storage model.
+- `docs/config-schema.md`: project configuration.
+- `docs/cli-reference.md`: full CLI syntax.
+- `docs/MCP-STANDARDS.md`: MCP surface and conventions.
+- `docs/MESSAGING.md`: local agent coordination.
+- `docs/runtime.md`: daemon and APIs.
+- `docs/control-center.md`: human oversight.
+- `docs/remote-swarm.md`: cross-machine coordination.
+- `docs/browser-mode.md`: experimental browser backend.
+- `docs/troubleshooting.md`: diagnostics.

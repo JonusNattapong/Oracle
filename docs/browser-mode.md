@@ -51,7 +51,7 @@ oracle browser login
 oracle browser status
 oracle browser status --live # also verify the authenticated account session
 oracle ask "Review this code" -f "src/**/*.ts" --backend chatgpt-browser
-oracle ask "Describe this diagram" -f "docs/assets/arch_flow.png" --backend chatgpt-browser
+oracle ask "Describe this diagram" -f "docs/assets/system-map.png" --backend chatgpt-browser
 
 # Reuse the same native ChatGPT conversation
 oracle ask "Propose an architecture" --conversation architecture-1 --backend chatgpt-browser
@@ -117,7 +117,7 @@ to ChatGPT's composer before sending the prompt:
 ```json
 {
   "question": "Explain this architecture diagram",
-  "files": ["docs/assets/arch_flow.png"],
+  "files": ["docs/assets/system-map.png"],
   "backend": "chatgpt-browser"
 }
 ```

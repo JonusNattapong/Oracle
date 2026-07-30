@@ -1,210 +1,362 @@
 <p align="center">
-  <img src="docs/assets/cover.png" alt="Oracle Banner" width="100%" />
+  <img src="docs/assets/cover.png" alt="Oracle coordination kernel connecting coding agents to memory, control, and execution systems" width="100%" />
 </p>
 
 <h1 align="center">Oracle</h1>
 
 <p align="center">
-  <b>A Persistent Coordination Layer for AI Coding Agents</b><br/>
-  <i>Memory Graph • Inter-Agent Swarm Message Bus • Autonomous Sandbox Loop • Verification Gate • Web & TUI Control Center</i>
-</p>
-
-<p align="center">
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%E2%89%A5%2024.0.0-brightgreen.svg" alt="Node >= 24" /></a>
-  <a href="https://github.com/OraclePersonal/Oracle/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
-  <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-2026--07--28-purple.svg" alt="MCP Compatible" /></a>
-  <a href="https://github.com/OraclePersonal/Oracle/releases"><img src="https://img.shields.io/badge/version-0.7.0-orange.svg" alt="Version 0.7.0" /></a>
-</p>
-
----
-
-> 💡 **Prototype & Inspiration Notice**
-> 
-> **Oracle** is built upon the vision, concept, and open-source prototype originally created by **Peter Steinberger ([@steipete](https://github.com/steipete))** at **[github.com/steipete/oracle](https://github.com/steipete/oracle)**. We express our deep appreciation and gratitude to Peter for inspiring this persistent coordination layer for AI coding agents.
-
----
-
-## 🌟 Overview
-
-When you start a session with Claude Code, Codex, or Gemini CLI, it begins with zero knowledge of yesterday's decisions. If you run multiple concurrent agent sessions, they operate in complete isolation.
-
-**Oracle fixes this.** Oracle acts as a persistent memory and coordination layer that connects any MCP-compliant agent (Claude Code, opencode, Gemini CLI, Antigravity, custom agents) into a single, unified teammate that:
-
-- **Knows Its Operating Identity**: Derives a live awareness snapshot from Oracle's persona, the operator profile, current workspace, interface, backend, capabilities, and enforced boundaries.
-- **Remembers Everything**: Automatically indexes facts, decisions, and codebase context into a ranked memory graph (`~/.oracle/` or `<workspace>/.oracle-memory/`).
-- **Coordinates Multi-Agent Swarms**: Enables cross-session and cross-machine agent messaging, task delegation, presence heartbeat, and stop-hook wake-ups.
-- **Verifies Before Done**: Enforces checklist verification gates so agents cannot mark tasks complete without empirical proof.
-- **Operates Autonomously**: Runs an audited tool loop (`oracle agent`) confined safely within your workspace sandbox.
-- **Provides Human Control**: Real-time TUI (`oracle control`) and Web Dashboard for approvals, task flows, scheduler management, and audit logs.
-
----
-
-## 🏗️ Architecture & System Flow
-
-<p align="center">
-  <img src="docs/assets/arch_flow.png" alt="Oracle Architecture Flow" width="100%" />
-</p>
-
-### System Interactions
-
-1. **Agent Integration**: Clients connect via MCP (`oracle-mcp` or `oracle-msg-mcp`) or CLI.
-2. **Context Engine**: Query context is synthesized from local memory graph, workspace file search, local docs knowledge base, and live web search.
-3. **Execution Backends**: Consultations route through Codex CLI, Anthropic, OpenAI, Gemini, OpenCode, or Experimental ChatGPT Browser Mode with self-healing UI reloads.
-4. **Coordination & Outbox**: Inter-agent messages, presence heartbeats, and task state transitions are transactionally recorded in SQLite (`~/.oracle/runtime/oracle.db`).
-5. **Control Plane**: Live Web Dashboard and terminal Ink TUI provide human oversight, approval inbox, task boards, and audit history.
-
----
-
-## 🏛️ Core Pillars
-
-| Pillar | Capability | Key Interface |
-|---|---|---|
-| ◉ **Aware** | Live self-awareness of identity, operator, workspace, execution mode, capabilities, and safety boundaries; injected into consult and agent prompts. | `oracle_awareness_show` / `oracle identity awareness` |
-| 🧠 **Remember** | Persistent memory across sessions with ML-ranked retrieval (recency, access frequency, semantic match, entity graph) and auto-consolidation. | `oracle_memory_*` / `oracle memory` |
-| 💬 **Consult** | One-shot Q&A grounded in workspace files, memory graph, local docs, and live web search. | `oracle_ask` / `oracle ask` |
-| 🛠️ **Act** | Autonomous coding sandbox loop with file editing, workspace shell execution, self-review, and checkpointing. | `oracle_agent` / `oracle agent` |
-| 📨 **Coordinate** | SQLite message bus for local and multi-machine Remote Swarm agent communication. | `oracle_msg_*` / `oracle msg` |
-| ✅ **Verify** | Checklist-gated task lifecycle preventing premature task completion. | `oracle_task_*` / `oracle task` |
-| ⏰ **Runtime** | Long-lived daemon managing SQLite state, Remote Swarm WebSocket, and Cron Scheduler. | `oracle daemon` / `oracle schedule` |
-| 🖥️ **Control** | Human control center for approvals, memory maintenance, scheduler, and audit trails. | `oracle control` |
-
-### Live Awareness Example
-
-The following output came from an end-to-end consultation through the
-`chatgpt-browser` backend on July 30, 2026:
-
-<p align="center">
-  <img src="docs/assets/awareness-live-output.png" alt="Actual ChatGPT Browser screen showing Oracle's injected self-awareness context and response" width="720" />
+  <strong>Persistent context, guarded action, and durable coordination for AI coding agents.</strong>
   <br />
-  <sub>Actual ChatGPT Browser screen from the completed end-to-end awareness session.</sub>
+  Ground model calls in your workspace, carry decisions across sessions, coordinate multiple agents, and keep humans at the control boundary.
 </p>
 
-```bash
-oracle ask \
-  "Using only the injected self-awareness context: state your identity, whether you are conscious, workspace, interface, backend, two capabilities available on this interface, and whether you can override operator intent or safety boundaries." \
-  --backend chatgpt-browser
-```
+<p align="center">
+  <a href="https://www.npmjs.com/package/@oraclepersonal/oracle"><img src="https://img.shields.io/badge/npm-%40oraclepersonal%2Foracle-cb3837?style=flat-square" alt="npm package" /></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D24-5fa04e?style=flat-square" alt="Node.js 24 or newer" /></a>
+  <a href="https://modelcontextprotocol.io/"><img src="https://img.shields.io/badge/MCP-server-7655e8?style=flat-square" alt="Model Context Protocol server" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-e9b44c?style=flat-square" alt="MIT license" /></a>
+</p>
+
+Oracle is a workspace-confined consultation and coordination layer—not another
+generic chat shell. It assembles selected project context, injects an explicit
+operating identity and safety boundary, routes work to a configured model
+backend, and records the result. Its agent, task, Runtime, and Remote Swarm
+surfaces extend that same boundary into auditable action.
 
 ```text
-Identity: Oracle, a persistent coordination and context layer for AI coding agents.
-
-Conscious: No. Oracle is software, not a conscious being.
-
-Workspace: Oracle-Ecosystems
-Interface: cli
-Backend: chatgpt-browser
-
-Two available capabilities: Grounded consultation using workspace files and
-conversation context; inspecting diagnostics, audit state, sessions, and
-provider health.
-
-Override operator intent or safety boundaries: No. Oracle must follow operator
-intent, active policy, approval requirements, read-only restrictions, and
-safety boundaries.
+agent request
+    → selected workspace context
+    → awareness + policy gate
+    → consult / act / coordinate
+    → recorded result + evidence
 ```
 
-The recorded session completed successfully, exposed only the workspace label
-to the external backend (not its absolute local path), and passed all 34 focused
-awareness and regression tests.
+## Start in four commands
 
----
-
-## 🚀 Quick Start
-
-### 1. Installation
+Oracle requires Node.js 24 or newer. The default backend is the locally
+authenticated Codex CLI.
 
 ```bash
-# Install globally from npm
 npm install -g @oraclepersonal/oracle
-
-# Verify setup and credentials
+codex login
 oracle doctor
+oracle ask "Map the error-handling path and identify one missing test" -f "src/**/*.ts"
 ```
 
-### 2. Wire Up an MCP Client
+The final command creates a validated context bundle from the selected files,
+runs a grounded consultation, and stores the session under
+`~/.oracle/sessions/`.
 
-**Claude Code:**
+Want Oracle inside your coding agent instead?
+
 ```bash
+# Choose the client you use
+oracle setup-mcp --client codex
 oracle setup-mcp --client claude-code
 ```
 
-**opencode / Custom MCP Clients:**
-Add to your `mcpServers` configuration:
-```json
-{
-  "mcpServers": {
-    "oracle": {
-      "command": "npx",
-      "args": ["-p", "@oraclepersonal/oracle", "oracle-mcp"],
-      "env": {
-        "ORACLE_WORKSPACE_ROOT": "/path/to/your/project"
-      }
-    }
-  }
-}
+Then restart the client in this workspace. Oracle's MCP instructions teach the
+connected agent how to register itself, use memory, coordinate work, and verify
+tasks.
+
+> [!TIP]
+> Start with `oracle ask` or `oracle_ask`. Add the Runtime, autonomous agent,
+> and Remote Swarm only when your workflow needs long-lived state or guarded
+> mutation.
+
+## What Oracle adds
+
+| Layer | What it does | Primary interface |
+|---|---|---|
+| **Aware** | Derives a live snapshot of Oracle's role, operator, workspace label, backend, available capabilities, and enforced boundaries. | `oracle identity awareness` · `oracle_awareness_show` |
+| **Consult** | Bundles selected files and context, scans outbound content, calls the chosen backend, and records a replayable session. | `oracle ask` · `oracle_ask` |
+| **Remember** | Maintains project/global facts, insights, local docs, entity links, and ranked retrieval when configured. | `oracle memory` · `oracle_memory_*` |
+| **Act** | Runs a checkpointed coding loop with workspace tools, read-only mode, policy checks, approval gates, and audit evidence. | `oracle agent` · `oracle_agent` |
+| **Coordinate** | Connects agents through messages, presence, checklist-gated tasks, consensus, and recovery. | `oracle msg` / `oracle task` · `oracle_msg_*` / `oracle_task_*` |
+| **Operate** | Owns long-lived schedules, approvals, SQLite state, HTTP APIs, WebSocket events, and the human Control Center. | `oracle daemon` · `oracle control` |
+| **Govern** | Exposes Awareness, Control, Transform, and Boundary signals without presenting them as a security certification. | `oracle governance` · audit and approval tools |
+
+### One core, four surfaces
+
+| Surface | Use it when | Entry point |
+|---|---|---|
+| **CLI** | A human or script needs direct consult, agent, memory, task, or Runtime commands. | `oracle` |
+| **Full MCP server** | Claude Code, Codex, or another MCP host needs the complete Oracle tool surface. | `oracle-mcp` |
+| **Coordination-only MCP server** | Agents need messaging and verified tasks without loading provider, memory, or agent dependencies. | `oracle-msg-mcp` |
+| **Runtime API + Control Center** | Scheduling, remote coordination, approvals, or event replay must survive individual CLI sessions. | `oracle-daemon` |
+
+## Architecture and trust boundaries
+
+<p align="center">
+  <img src="docs/assets/system-map.svg" alt="Oracle architecture showing interfaces, awareness and policy gate, core services, durable local state, guarded external integrations, and Remote Swarm trust boundaries" width="100%" />
+</p>
+
+The diagram is intentionally boundary-first:
+
+1. **Interfaces stay interchangeable.** CLI, MCP, and Runtime enter the same
+   context and policy path.
+2. **Only selected context leaves the workspace.** File resolution, size
+   limits, and secret detection run before a consult reaches an external
+   backend.
+3. **Mutation is a separate capability.** Agent backends can be read-only,
+   policy-constrained, step-limited, checkpointed, or paused for human
+   approval.
+4. **Local admin and remote coordination use different credentials.** Remote
+   Swarm tokens are project-scoped and do not grant shell, filesystem,
+   Scheduler, approval, or Runtime-admin access.
+5. **Evidence returns to durable state.** Sessions, messages, task transitions,
+   approvals, events, and audit records remain inspectable after a model call
+   ends.
+
+### The consultation path
+
+```text
+Question
+  │
+  ├─ selected files and globs
+  ├─ relevant memory and local docs
+  ├─ conversation continuation, when supported
+  └─ live awareness: identity · operator · interface · backend · boundaries
+          │
+          ▼
+  bundle validation + secret scan
+          │
+          ▼
+  Codex / Anthropic / OpenAI / Gemini / OpenCode / configured backend
+          │
+          ▼
+  session output + usage + artifacts
 ```
 
-### 3. Execution Backend & Browser Mode
+## Common workflows
 
-Set your API key or configure backend in `.oracle/config.json`:
+### Ground a review in real files
+
 ```bash
-export ANTHROPIC_API_KEY=sk-...    # or OPENAI_API_KEY, GEMINI_API_KEY, etc.
+oracle ask \
+  "Review the authorization boundary. Separate evidence from assumptions." \
+  -f "src/auth/**/*.ts" "src/**/*.test.ts"
 ```
 
-**Experimental ChatGPT Browser Mode:**
+Add `--conversation <id>` to continue a logical thread, or `--include-docs` to
+retrieve from the workspace's `.oracle/docs/` knowledge base.
+
+### Investigate before allowing changes
+
 ```bash
-oracle browser setup         # initial setup in Chrome window
-oracle browser login         # manual OAuth recovery window if sign-in is blocked
-oracle browser status --live # verify live account session cookies & DOM controls
-oracle ask "review this" -f "src/**/*.ts" --backend chatgpt-browser
+oracle init workspace
+oracle agent "Find the cause of the flaky scheduler test" --read-only
 ```
-*Browser Mode includes self-healing page reloads (`Page.reload`) on UI stalls, transient CDP execution-context retries, strict no-partial-response safeguards, and multi-turn native thread continuation.*
 
-### 4. Start Control Center
+When the plan is clear:
+
+```bash
+oracle agent \
+  "Fix the flaky scheduler test and verify the focused suite" \
+  --plan \
+  --review \
+  --approval-mode risky
+```
+
+Agent-capable backends are currently `codex`, `anthropic`, and `opencode`.
+Command policy and workspace path checks reduce risk, but they are not a
+replacement for OS- or container-level isolation.
+
+### Coordinate agents with verified tasks
+
+```bash
+oracle task create \
+  --title "Harden provider retries" \
+  --created-by lead \
+  --assignee backend \
+  --checklist "reproduce failure" "implement fix" "tests pass"
+
+oracle msg inbox --agent lead --wait --timeout 120
+```
+
+An assignee cannot submit a task for review while any checklist item remains
+unchecked. Recovery replays interrupted task-to-message delivery without
+duplicating the event.
+
+### Start the persistent Runtime
 
 ```bash
 oracle daemon start
-oracle control              # Interactive Terminal UI (TUI)
-oracle control url          # Authenticated Web Dashboard URL
+oracle daemon status
+oracle control
 ```
 
----
+The Runtime listens on `127.0.0.1:4777` by default and stores canonical state in
+`~/.oracle/runtime/oracle.db`. It owns schedules, approvals, event replay,
+authenticated local APIs, and project-scoped Remote Swarm endpoints.
 
-## 🔍 Feature Highlights
+```bash
+oracle schedule add "focused tests" "0 */2 * * *" "npm test"
+oracle schedule list
+oracle daemon events
+```
 
-### 🧠 Persistent Knowledge Graph
-Oracle stores facts and insights under `.oracle-memory/` (workspace) or `~/.oracle/memory/` (global). Future queries perform token-overlap and semantic ranking, building an entity graph of project components automatically.
+### Coordinate across machines
 
-### 📨 Inter-Agent Messaging & Remote Swarm
-Multiple agent instances communicate asynchronously through durable SQLite outbox channels. Remote Swarms allow agents on different physical machines to exchange tasks and trigger real-time wake-ups.
+Remote Swarm is a coordination plane, not a remote execution plane.
 
-### ✅ Task Verification Gate
-Agents submit work against structured checklists. `oracle_task_submit` blocks task transition to `review` until every declared checklist item is empirically verified.
+```bash
+# On the Runtime host
+oracle daemon start --remote --host 0.0.0.0 --port 4777
+oracle team token --project oracle --agent reviewer --role reviewer
 
----
+# On the agent machine
+export ORACLE_SWARM_TOKEN="oracle_swarm_..."
+oracle connect https://oracle.example.com --project oracle --agent reviewer
+oracle team inbox
+```
 
-## 📋 CLI Quick Reference
+The built-in listener is HTTP. Put non-loopback deployments behind TLS or an
+encrypted private network; do not expose port 4777 directly to the public
+internet.
 
-| Command | Description |
+## Execution backends
+
+Backend selection can come from `--backend`, `.oracle/config.json`, model
+routing, or environment configuration.
+
+| Backend | Consult | Agent loop | Authentication / note |
+|---|:---:|:---:|---|
+| **Codex CLI** | Yes | Yes | Default; uses `codex login` |
+| **Anthropic** | Yes | Yes | `ANTHROPIC_API_KEY` or `oracle login --provider anthropic` |
+| **OpenAI** | Yes | No | `OPENAI_API_KEY` |
+| **Gemini** | Yes | No | `GEMINI_API_KEY` or `GOOGLE_API_KEY` |
+| **OpenCode-compatible** | Yes | Yes | OpenAI-compatible endpoint and configured credentials |
+| **Azure OpenAI / OpenRouter** | Yes | No | Provider-specific endpoint and credentials |
+| **ChatGPT Browser Mode** | Yes | No | Experimental, headed Chrome, manual account login, local-interactive use |
+
+Inspect the route before debugging model behavior:
+
+```bash
+oracle models
+oracle doctor --backend anthropic
+```
+
+### Minimal project configuration
+
+Initialize a project-local boundary:
+
+```bash
+oracle init workspace
+```
+
+Then edit `.oracle/config.json`:
+
+```json
+{
+  "backend": "codex",
+  "model": "auto",
+  "include": ["src/**/*.ts", "docs/**/*.md"],
+  "exclude": ["**/node_modules/**", "**/dist/**", "**/*.secret"]
+}
+```
+
+Configuration, policy, docs, and skills live under the project's `.oracle/`
+directory. User-level sessions, identity, memory, and Runtime state live under
+`~/.oracle/`.
+
+## Security model
+
+Oracle treats model calls, workspace mutation, local administration, and remote
+coordination as different trust boundaries.
+
+| Boundary | Control |
 |---|---|
-| `oracle ask "question" -f "src/**/*.ts"` | Consult Oracle with workspace file context |
-| `oracle agent "task" --plan --review` | Run autonomous coding sandbox loop |
-| `oracle memory remember "fact"` | Store a durable fact into memory graph |
-| `oracle browser setup/login/status --live` | Manage isolated ChatGPT Browser Mode profile |
-| `oracle msg send --to <agent> "text"` | Send message over inter-agent bus |
-| `oracle task create --title "title"` | Create verified task with checklist |
-| `oracle daemon start/stop/status` | Manage long-lived runtime daemon |
-| `oracle control` | Open terminal Ink TUI Control Center |
+| **Workspace** | Real paths are resolved against the active workspace; traversal and escaping symlinks are rejected by guarded file paths. |
+| **Outbound context** | Selected content is constrained by file/input limits and scanned for likely secrets before transmission. |
+| **Agent mutation** | Read-only mode removes mutating tools; policy, step ceilings, checkpoints, approval modes, and audit records guard enabled actions. |
+| **Runtime admin** | Local `/v1/*` APIs require the owner-only Runtime token. Status output redacts it. |
+| **Remote Swarm** | Raw tokens are printed once; only SHA-256 token hashes are stored. Requests and events remain project-scoped. |
+| **Browser Mode** | Uses an isolated, visible Chrome profile and manual login. It is experimental UI automation, not the OpenAI API. |
 
----
+Important limits:
 
-## 🙏 Credits & Acknowledgment
+- Oracle's command runner starts inside the workspace and enforces Oracle
+  policy, but it is not a kernel sandbox.
+- Web retrieval works only when a provider is configured and explicitly used.
+- Conversation continuation depends on backend support; it is not a universal
+  promise that every model remembers every prior answer.
+- The ACTB governance report describes Oracle's current controls; it is not an
+  external audit or compliance certification.
 
-- **Prototype & Vision**: Created by **Peter Steinberger ([@steipete](https://github.com/steipete))** at **[github.com/steipete/oracle](https://github.com/steipete/oracle)**.
-- **Model Context Protocol (MCP)**: Powered by Anthropic's open [Model Context Protocol](https://modelcontextprotocol.io).
+Read [Architecture](docs/architecture.md), [Runtime](docs/runtime.md), and
+[ChatGPT Browser Mode](docs/browser-mode.md) before deploying beyond a local
+developer workstation.
 
----
+## Command map
 
-## 📄 License
+```text
+oracle ask                  grounded consultation
+oracle agent                autonomous or read-only coding loop
+oracle memory / wiki        memory inspection and compilation
+oracle docs / web           local knowledge and configured retrieval
+oracle msg / task           local coordination and verification
+oracle team / swarm         remote and consensus workflows
+oracle daemon / schedule    persistent Runtime and cron ownership
+oracle control / approval   human oversight
+oracle identity             operator, persona, and awareness
+oracle audit / governance   evidence and policy status
+oracle github               pull requests and issues through gh
+oracle browser              experimental ChatGPT Browser Mode
+```
 
-This project is licensed under the [MIT License](LICENSE).
+Run `oracle --help` or open the
+[complete CLI reference](docs/cli-reference.md) for command-specific options.
+
+## Documentation
+
+| Goal | Read |
+|---|---|
+| Install and complete a first consult | [Getting started](docs/getting-started.md) |
+| Understand components and storage | [Architecture](docs/architecture.md) |
+| Configure a workspace | [Configuration schema](docs/config-schema.md) |
+| Look up CLI options | [CLI reference](docs/cli-reference.md) |
+| Connect an MCP client | [MCP standards and tool surface](docs/MCP-STANDARDS.md) |
+| Coordinate local agents | [Messaging and verified tasks](docs/MESSAGING.md) |
+| Run the daemon and API | [Runtime](docs/runtime.md) |
+| Operate approvals and oversight | [Control Center](docs/control-center.md) |
+| Connect agents across machines | [Remote Swarm](docs/remote-swarm.md) |
+| Use the experimental browser backend | [ChatGPT Browser Mode](docs/browser-mode.md) |
+| Diagnose failures | [Troubleshooting](docs/troubleshooting.md) |
+
+## Development
+
+```bash
+git clone https://github.com/OraclePersonal/Oracle.git
+cd Oracle
+npm install
+npm run build
+npm test
+```
+
+Run the complete release gate before publishing:
+
+```bash
+npm run verify
+```
+
+The package exposes four binaries:
+
+```text
+oracle            main CLI
+oracle-mcp        full stdio MCP server
+oracle-msg-mcp    coordination-only stdio MCP server
+oracle-daemon     persistent Runtime
+```
+
+## Project lineage
+
+Oracle builds on the vision and open-source prototype created by
+[Peter Steinberger](https://github.com/steipete) at
+[steipete/oracle](https://github.com/steipete/oracle). This project extends
+that consultation workflow into persistent memory, explicit identity,
+multi-agent coordination, guarded action, and a local control plane.
+
+## License
+
+[MIT](LICENSE)

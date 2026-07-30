@@ -1,0 +1,30 @@
+# Oracle
+
+> Oracle is a workspace-confined consultation and coordination layer for AI coding agents. It grounds model calls in selected project context, persists local state, coordinates agents, and gates mutation through explicit policy and human control.
+
+## Start
+
+- [Project overview](README.md): Positioning, first-run path, capabilities, security model, and documentation map.
+- [Getting started](docs/getting-started.md): Installation, backend setup, first consultation, and MCP wiring.
+- [Configuration schema](docs/config-schema.md): Project config, backend routing, file limits, and Browser Mode settings.
+
+## Architecture
+
+- [Architecture](docs/architecture.md): Components, storage, coordination flow, task verification, and trust boundaries.
+- [MCP standards](docs/MCP-STANDARDS.md): MCP server conventions and Oracle tool categories.
+- [Messaging and tasks](docs/MESSAGING.md): Local agent registration, messages, verified tasks, and wake-up patterns.
+- [ACTB governance specification](docs/superpowers/specs/2026-07-30-actb-governance-framework.md): Awareness, Control, Transform, and Boundary design.
+
+## Operations
+
+- [Runtime](docs/runtime.md): Daemon, authenticated local API, SQLite state, schedules, and WebSocket events.
+- [Control Center](docs/control-center.md): Human approvals, audit visibility, and operational control.
+- [Remote Swarm](docs/remote-swarm.md): Project-scoped cross-machine coordination.
+- [Scheduler](docs/scheduler.md): Cron task lifecycle and persistence.
+- [ChatGPT Browser Mode](docs/browser-mode.md): Experimental local-interactive browser backend and its limitations.
+
+## Reference
+
+- [CLI reference](docs/cli-reference.md): Complete Oracle command surface.
+- [Troubleshooting](docs/troubleshooting.md): Backend, Runtime, MCP, and Browser Mode diagnostics.
+- [Full agent context](llms-full.txt): Consolidated operational context for AI agents.

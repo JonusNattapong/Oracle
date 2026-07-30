@@ -1,0 +1,236 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+  <title id="title">Oracle system architecture and trust boundaries</title>
+  <desc id="desc">MCP hosts, CLI, and Runtime enter a local Oracle trust boundary through an awareness and policy gate. Context assembly, consult, agent, and coordination services use local state and guarded outbound connections to model backends, configured integrations, and Remote Swarm peers.</desc>
+
+  <defs>
+    <linearGradient id="canvas" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07090d"/>
+      <stop offset="1" stop-color="#10151d"/>
+    </linearGradient>
+    <linearGradient id="kernel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a2020"/>
+      <stop offset="1" stop-color="#171b23"/>
+    </linearGradient>
+    <pattern id="grain" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="3" r=".7" fill="#ede6d6" opacity=".09"/>
+      <circle cx="12" cy="9" r=".55" fill="#ede6d6" opacity=".06"/>
+      <circle cx="7" cy="16" r=".45" fill="#e76f51" opacity=".08"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity=".38"/>
+    </filter>
+    <marker id="arrowIvory" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d9cfba"/>
+    </marker>
+    <marker id="arrowCoral" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e76f51"/>
+    </marker>
+    <style>
+      .sans { font-family: Inter, "Segoe UI", Arial, sans-serif; }
+      .mono { font-family: "Cascadia Mono", Consolas, monospace; }
+      .label { fill: #8d98a8; font-size: 18px; letter-spacing: 2px; font-weight: 700; }
+      .title { fill: #f2eadb; font-size: 52px; font-weight: 760; letter-spacing: 1px; }
+      .subtitle { fill: #9aa5b4; font-size: 23px; }
+      .nodeTitle { fill: #f2eadb; font-size: 25px; font-weight: 700; }
+      .nodeBody { fill: #aeb8c4; font-size: 18px; }
+      .mini { fill: #8793a3; font-size: 16px; }
+      .pill { fill: #0d1219; stroke: #344153; stroke-width: 1.5; }
+      .node { fill: #111720; stroke: #354254; stroke-width: 2; }
+      .nodeWarm { fill: url(#kernel); stroke: #e76f51; stroke-width: 2.5; }
+      .nodeCyan { fill: #101a20; stroke: #59b8c9; stroke-width: 2; }
+      .nodeAmber { fill: #1b1811; stroke: #e9b44c; stroke-width: 2; }
+      .flow { fill: none; stroke: #d9cfba; stroke-width: 2.5; opacity: .78; marker-end: url(#arrowIvory); }
+      .flowSoft { fill: none; stroke: #607084; stroke-width: 2; opacity: .68; marker-end: url(#arrowIvory); }
+      .flowCoral { fill: none; stroke: #e76f51; stroke-width: 3; opacity: .88; marker-end: url(#arrowCoral); }
+      .dash { stroke-dasharray: 10 10; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1120" fill="url(#canvas)"/>
+  <rect width="1800" height="1120" fill="url(#grain)"/>
+  <circle cx="1420" cy="-80" r="430" fill="#e76f51" opacity=".045"/>
+  <circle cx="50" cy="1080" r="390" fill="#59b8c9" opacity=".035"/>
+
+  <text x="72" y="78" class="sans title">ORACLE SYSTEM MAP</text>
+  <text x="74" y="116" class="sans subtitle">Persistent context, guarded action, and durable coordination for coding agents.</text>
+
+  <!-- Local trust boundary -->
+  <rect x="294" y="166" width="1188" height="864" rx="34" fill="#0a0e14" fill-opacity=".72"
+        stroke="#e76f51" stroke-width="2.5" stroke-dasharray="13 10"/>
+  <rect x="326" y="145" width="285" height="42" rx="21" fill="#e76f51"/>
+  <text x="468" y="173" text-anchor="middle" class="sans" fill="#090b0f" font-size="17" font-weight="800" letter-spacing="1.6">
+    LOCAL TRUST BOUNDARY
+  </text>
+
+  <!-- Interfaces -->
+  <text x="72" y="204" class="sans label">INTERFACES</text>
+
+  <g filter="url(#shadow)">
+    <rect x="64" y="232" width="188" height="126" rx="20" class="node"/>
+    <circle cx="101" cy="271" r="12" fill="#59b8c9"/>
+    <text x="126" y="280" class="sans nodeTitle">MCP hosts</text>
+    <text x="92" y="318" class="sans nodeBody">Claude Code</text>
+    <text x="92" y="343" class="sans nodeBody">Codex · clients</text>
+
+    <rect x="64" y="414" width="188" height="112" rx="20" class="node"/>
+    <rect x="89" y="447" width="24" height="18" rx="3" fill="none" stroke="#e9b44c" stroke-width="2"/>
+    <path d="M94 453 l5 4 -5 4 M103 462 h6" fill="none" stroke="#e9b44c" stroke-width="2"/>
+    <text x="126" y="465" class="sans nodeTitle">CLI</text>
+    <text x="92" y="500" class="mono nodeBody">oracle *</text>
+
+    <rect x="64" y="582" width="188" height="134" rx="20" class="node"/>
+    <circle cx="101" cy="621" r="12" fill="#e76f51"/>
+    <path d="M95 621 h12 M101 615 v12" stroke="#090b0f" stroke-width="2"/>
+    <text x="126" y="630" class="sans nodeTitle">Runtime</text>
+    <text x="92" y="667" class="sans nodeBody">HTTP · WS</text>
+    <text x="92" y="692" class="sans nodeBody">Control Center</text>
+  </g>
+
+  <!-- Entry gate -->
+  <g filter="url(#shadow)">
+    <rect x="340" y="228" width="246" height="692" rx="28" class="nodeWarm"/>
+    <circle cx="463" cy="315" r="73" fill="none" stroke="#e76f51" stroke-width="19" opacity=".88"/>
+    <circle cx="463" cy="315" r="45" fill="none" stroke="#d9cfba" stroke-width="2" opacity=".8"/>
+    <circle cx="463" cy="242" r="7" fill="#e9b44c"/>
+    <circle cx="526" cy="352" r="7" fill="#59b8c9"/>
+    <circle cx="401" cy="352" r="7" fill="#e76f51"/>
+    <text x="463" y="428" text-anchor="middle" class="sans nodeTitle">Awareness &amp;</text>
+    <text x="463" y="459" text-anchor="middle" class="sans nodeTitle">policy gate</text>
+    <text x="374" y="510" class="sans nodeBody">identity + operator</text>
+    <text x="374" y="542" class="sans nodeBody">workspace scope</text>
+    <text x="374" y="574" class="sans nodeBody">backend + mode</text>
+    <text x="374" y="606" class="sans nodeBody">capabilities</text>
+    <text x="374" y="638" class="sans nodeBody">boundaries</text>
+    <rect x="374" y="682" width="178" height="40" rx="20" class="pill"/>
+    <text x="463" y="708" text-anchor="middle" class="mono mini">minimum context</text>
+    <rect x="374" y="738" width="178" height="40" rx="20" class="pill"/>
+    <text x="463" y="764" text-anchor="middle" class="mono mini">secret scan</text>
+    <rect x="374" y="794" width="178" height="40" rx="20" class="pill"/>
+    <text x="463" y="820" text-anchor="middle" class="mono mini">path confinement</text>
+    <rect x="374" y="850" width="178" height="40" rx="20" class="pill"/>
+    <text x="463" y="876" text-anchor="middle" class="mono mini">approval policy</text>
+  </g>
+
+  <!-- Core services -->
+  <text x="652" y="204" class="sans label">CORE SERVICES</text>
+
+  <g filter="url(#shadow)">
+    <rect x="640" y="232" width="322" height="132" rx="22" class="nodeCyan"/>
+    <text x="674" y="274" class="sans nodeTitle">Context assembly</text>
+    <text x="674" y="309" class="sans nodeBody">selected files · docs · memory</text>
+    <text x="674" y="338" class="sans nodeBody">configured web retrieval</text>
+
+    <rect x="640" y="398" width="322" height="132" rx="22" class="node"/>
+    <circle cx="680" cy="438" r="10" fill="#59b8c9"/>
+    <text x="706" y="447" class="sans nodeTitle">Consult</text>
+    <text x="674" y="482" class="sans nodeBody">grounded model calls</text>
+    <text x="674" y="511" class="sans nodeBody">sessions · continuation</text>
+
+    <rect x="640" y="564" width="322" height="148" rx="22" class="nodeAmber"/>
+    <circle cx="680" cy="604" r="10" fill="#e9b44c"/>
+    <text x="706" y="613" class="sans nodeTitle">Agent</text>
+    <text x="674" y="648" class="sans nodeBody">read · write · edit · command</text>
+    <text x="674" y="677" class="sans nodeBody">checkpoint · audit · resume</text>
+
+    <rect x="640" y="746" width="322" height="148" rx="22" class="node"/>
+    <circle cx="680" cy="786" r="10" fill="#e76f51"/>
+    <text x="706" y="795" class="sans nodeTitle">Coordinate</text>
+    <text x="674" y="830" class="sans nodeBody">messages · verified tasks</text>
+    <text x="674" y="859" class="sans nodeBody">consensus · recovery</text>
+  </g>
+
+  <!-- State and control -->
+  <text x="1036" y="204" class="sans label">DURABLE STATE &amp; CONTROL</text>
+
+  <g filter="url(#shadow)">
+    <rect x="1024" y="232" width="404" height="160" rx="22" class="node"/>
+    <text x="1060" y="274" class="sans nodeTitle">Project context</text>
+    <text x="1060" y="312" class="mono nodeBody">.oracle/config.json</text>
+    <text x="1060" y="342" class="sans nodeBody">policy · docs · skills</text>
+    <rect x="1304" y="260" width="84" height="84" rx="18" fill="#161d27" stroke="#59b8c9"/>
+    <path d="M1328 281 h36 v42 h-36z M1336 290 h20 M1336 301 h20 M1336 312 h14" fill="none" stroke="#59b8c9" stroke-width="2"/>
+
+    <rect x="1024" y="426" width="404" height="160" rx="22" class="node"/>
+    <text x="1060" y="468" class="sans nodeTitle">Runtime database</text>
+    <text x="1060" y="506" class="mono nodeBody">~/.oracle/runtime/oracle.db</text>
+    <text x="1060" y="536" class="sans nodeBody">memory · tasks · events · approvals</text>
+    <ellipse cx="1350" cy="480" rx="34" ry="13" fill="none" stroke="#e76f51" stroke-width="2"/>
+    <path d="M1316 480 v43 c0 7 15 13 34 13s34-6 34-13v-43 M1316 501 c0 7 15 13 34 13s34-6 34-13" fill="none" stroke="#e76f51" stroke-width="2"/>
+
+    <rect x="1024" y="620" width="404" height="126" rx="22" class="node"/>
+    <text x="1060" y="662" class="sans nodeTitle">Sessions &amp; artifacts</text>
+    <text x="1060" y="700" class="mono nodeBody">~/.oracle/sessions/&lt;id&gt;</text>
+
+    <rect x="1024" y="780" width="404" height="114" rx="22" class="nodeWarm"/>
+    <text x="1060" y="822" class="sans nodeTitle">Verification &amp; audit</text>
+    <text x="1060" y="858" class="sans nodeBody">checklists · approvals · evidence</text>
+  </g>
+
+  <!-- External systems -->
+  <text x="1530" y="204" class="sans label">EXTERNAL</text>
+
+  <g filter="url(#shadow)">
+    <rect x="1520" y="232" width="224" height="172" rx="22" class="node"/>
+    <text x="1552" y="275" class="sans nodeTitle">Backends</text>
+    <text x="1552" y="312" class="sans nodeBody">Codex · Anthropic</text>
+    <text x="1552" y="340" class="sans nodeBody">OpenAI · Gemini</text>
+    <text x="1552" y="368" class="sans nodeBody">OpenCode · Browser*</text>
+
+    <rect x="1520" y="452" width="224" height="154" rx="22" class="node"/>
+    <text x="1552" y="495" class="sans nodeTitle">Integrations</text>
+    <text x="1552" y="532" class="sans nodeBody">web providers</text>
+    <text x="1552" y="560" class="sans nodeBody">GitHub · MCP tools</text>
+
+    <rect x="1520" y="654" width="224" height="172" rx="22" class="node"/>
+    <text x="1552" y="697" class="sans nodeTitle">Remote Swarm</text>
+    <text x="1552" y="734" class="sans nodeBody">project-scoped peers</text>
+    <text x="1552" y="762" class="sans nodeBody">messages · tasks</text>
+    <text x="1552" y="790" class="sans nodeBody">presence · replay</text>
+  </g>
+
+  <!-- Interface flows -->
+  <path d="M252 295 H310 Q326 295 340 310" class="flow"/>
+  <path d="M252 470 H310 Q326 470 340 470" class="flow"/>
+  <path d="M252 649 H310 Q326 649 340 630" class="flow"/>
+
+  <!-- Gate to services -->
+  <path d="M586 298 H640" class="flowCoral"/>
+  <path d="M586 454 H640" class="flowCoral"/>
+  <path d="M586 630 H640" class="flowCoral"/>
+  <path d="M586 814 H640" class="flowCoral"/>
+
+  <!-- State connections -->
+  <path d="M1024 298 H962" class="flowSoft"/>
+  <path d="M1024 506 H996 Q978 506 962 464" class="flowSoft"/>
+  <path d="M1024 683 H992 Q978 683 962 647" class="flowSoft"/>
+  <path d="M1024 837 H980 Q968 837 962 822" class="flowSoft"/>
+  <path d="M1226 392 V426" class="flowSoft"/>
+  <path d="M1226 586 V620" class="flowSoft"/>
+  <path d="M1226 746 V780" class="flowSoft"/>
+
+  <!-- Guarded outbound flows -->
+  <path d="M962 464 H980 Q994 464 994 412 H1458 Q1488 412 1520 318" class="flow"/>
+  <rect x="1438" y="396" width="62" height="31" rx="15" fill="#0d1219" stroke="#e76f51"/>
+  <text x="1469" y="417" text-anchor="middle" class="mono" fill="#e76f51" font-size="13">SCAN</text>
+
+  <path d="M962 638 H980 Q994 638 994 604 H1458 Q1488 604 1520 529" class="flow"/>
+  <rect x="1436" y="588" width="70" height="31" rx="15" fill="#0d1219" stroke="#e9b44c"/>
+  <text x="1471" y="609" text-anchor="middle" class="mono" fill="#e9b44c" font-size="13">POLICY</text>
+
+  <path d="M962 820 H980 Q994 820 994 763 H1458 Q1488 763 1520 740" class="flow"/>
+  <rect x="1436" y="747" width="70" height="31" rx="15" fill="#0d1219" stroke="#59b8c9"/>
+  <text x="1471" y="768" text-anchor="middle" class="mono" fill="#59b8c9" font-size="13">TOKEN</text>
+
+  <!-- Footer legend -->
+  <line x1="72" y1="1070" x2="118" y2="1070" stroke="#e76f51" stroke-width="3" stroke-dasharray="10 8"/>
+  <text x="132" y="1077" class="sans mini">local boundary</text>
+  <line x1="300" y1="1070" x2="346" y2="1070" stroke="#d9cfba" stroke-width="3"/>
+  <text x="360" y="1077" class="sans mini">data / control flow</text>
+  <circle cx="566" cy="1070" r="7" fill="#59b8c9"/>
+  <text x="582" y="1077" class="sans mini">context</text>
+  <circle cx="694" cy="1070" r="7" fill="#e9b44c"/>
+  <text x="710" y="1077" class="sans mini">guarded action</text>
+  <circle cx="894" cy="1070" r="7" fill="#e76f51"/>
+  <text x="910" y="1077" class="sans mini">coordination / policy</text>
+  <text x="1744" y="1077" text-anchor="end" class="sans mini">* ChatGPT Browser Mode is experimental and local-interactive.</text>
+</svg>

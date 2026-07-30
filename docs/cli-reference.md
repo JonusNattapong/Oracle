@@ -22,7 +22,7 @@ oracle ask "review this" -f "src/**/*.ts"
 oracle ask "what's in our latest PR?" --include-gh
 oracle ask "review" --soul engineer
 oracle ask "review this" --remember "I prefer concise reviews" --backend chatgpt-browser
-oracle ask "describe this image" -f "docs/assets/arch_flow.png" --backend chatgpt-browser
+oracle ask "describe this image" -f "docs/assets/system-map.png" --backend chatgpt-browser
 ```
 
 | Flag | Purpose |
