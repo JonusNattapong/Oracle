@@ -220,7 +220,12 @@ program
 
     // Build system prompt — use specific soul if --soul given, otherwise auto-detect mood
     const soulPrompt = options.soul ? await loadSoul(options.soul, soulsDir) : undefined;
-    const systemPrompt = buildOracleSystemPrompt(soulPrompt);
+    const awarenessContext = await new ProfileStore(homeDir()).buildAwarenessContext({
+      workspaceRoot: cwd,
+      interface: "cli",
+      backend: route.provider
+    });
+    const systemPrompt = buildOracleSystemPrompt(soulPrompt, awarenessContext);
 
     const orchestrator = new OrchestratorFactory(cwd, homeDir());
     const memory = await orchestrator.createMemoryAdapter();
@@ -2567,6 +2572,28 @@ identityCmd
     const persona = await store.getPersona();
     console.log("Persona:", JSON.stringify(persona, null, 2));
     console.log("Identity:", JSON.stringify(identity ?? "not set", null, 2));
+  });
+
+identityCmd
+  .command("awareness")
+  .description("Show Oracle's current identity, operating context, capabilities, and boundaries")
+  .action(async () => {
+    const cwd = process.cwd();
+    const config = await loadProjectConfig(cwd);
+    const requestedModel =
+      config.provider === "browser" ? config.browser.model : config.model;
+    const route = resolveProviderRoute({
+      model: requestedModel,
+      selection: config.provider,
+      selectionSource: "project-config",
+      config
+    });
+    const awareness = await new ProfileStore(homeDir()).getAwareness({
+      workspaceRoot: cwd,
+      interface: "cli",
+      backend: route.provider
+    });
+    console.log(JSON.stringify(awareness, null, 2));
   });
 
 identityCmd

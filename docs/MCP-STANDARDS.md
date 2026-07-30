@@ -173,16 +173,17 @@ cache.invalidatePattern("skill-.*");
 - Results truncated to 50KB
 - Timeout 30s per fetch
 
-### 7. Identity (3 tools)
-- `oracle_identity_show` — View saved profile
+### 7. Identity and Awareness (4 tools)
+- `oracle_identity_show` — View the saved profile, persona, and derived awareness
 - `oracle_identity_setup` — Create profile
+- `oracle_awareness_show` — Inspect Oracle's identity, environment, capabilities, and boundaries
 - `oracle_persona_set` — Set Oracle's tone/style
 
 **Standards:**
-- Auto-injected into all consults
+- Awareness is auto-injected into MCP, CLI, Runtime, and autonomous-agent prompts
+- Awareness is derived on demand from persisted profile plus current execution context
 - Preferences/habits/goals split on `,;` or newline
 - Tones: professional | casual | friendly | witty
-- Cached for session lifetime
 
 ### 8. Oracle Profiles (3 tools)
 - `oracle_oracle_list` — List registered profiles

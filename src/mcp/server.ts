@@ -83,7 +83,15 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
   registerAgentTools(server, { config, workspaceRoot, skills, agent, agentUnavailableReason });
 
   // Consult tool (oracle_ask)
-  registerConsultTool(server, { service, config, workspaceRoot, providerId, memory, soulsDir: SOULS_DIR });
+  registerConsultTool(server, {
+    service,
+    config,
+    workspaceRoot,
+    providerId,
+    memory,
+    soulsDir: SOULS_DIR,
+    profile
+  });
 
   // Memory tools (oracle_memory_*)
   registerMemoryTools(server, { memory, globalMemory, workspaceRoot });
@@ -95,7 +103,11 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
   registerWebTools(server);
 
   // Identity tools (oracle_identity_*)
-  registerIdentityTools(server, profile);
+  registerIdentityTools(server, profile, {
+    workspaceRoot,
+    interface: "mcp",
+    backend: providerId
+  });
 
   // Oracle profile tools (oracle_oracle_*)
   registerOracleProfileTools(server, oracles);

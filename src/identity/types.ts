@@ -17,6 +17,25 @@ export interface Persona {
   systemPrompt?: string;
 }
 
+export type AwarenessInterface = "mcp" | "cli" | "runtime" | "agent";
+
+export interface AwarenessEnvironment {
+  workspaceRoot: string;
+  interface: AwarenessInterface;
+  backend?: string;
+  readOnly?: boolean;
+}
+
+export interface AwarenessSnapshot {
+  self: Persona & {
+    role: string;
+  };
+  operator: Identity | null;
+  environment: AwarenessEnvironment;
+  capabilities: string[];
+  boundaries: string[];
+}
+
 export const DEFAULT_PERSONA: Persona = {
   name: "Oracle",
   greeting: "I'm Oracle, your personal AI consultant.",

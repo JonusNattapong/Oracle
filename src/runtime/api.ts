@@ -30,6 +30,8 @@ import {
   type CreateExecutionBackendOptions
 } from "../providers/factory.js";
 import type { ExecutionBackend } from "../backends/backend.js";
+import { buildOracleSystemPrompt } from "../core/systemPrompt.js";
+import { ProfileStore } from "../identity/profile.js";
 
 export interface LocalApiServerOptions {
   host: string;
@@ -225,7 +227,7 @@ export class LocalApiServer {
         const backendName = parseBackendName(rawBackend);
         const files = this.optionalStringArray(body.files, "files");
         const model = this.optionalString(body.model, "model") ?? config.model;
-        const systemPrompt = this.optionalString(body.systemPrompt, "systemPrompt");
+        const customSystemPrompt = this.optionalString(body.systemPrompt, "systemPrompt");
         const conversationId = this.optionalString(body.conversationId, "conversationId");
         const previousResponseId = this.optionalString(body.previousResponseId, "previousResponseId");
         const accountMemory = this.optionalString(body.accountMemory, "accountMemory");
@@ -252,6 +254,12 @@ export class LocalApiServer {
         );
         const sessions = new FileSessionStore(this.options.homeDir);
         const service = new ConsultService(backend, sessions);
+        const awarenessContext = await new ProfileStore(this.options.homeDir).buildAwarenessContext({
+          workspaceRoot: cwd,
+          interface: "runtime",
+          backend: backendName
+        });
+        const systemPrompt = buildOracleSystemPrompt(customSystemPrompt, awarenessContext);
 
         const result = await service.consult({
           prompt: question,

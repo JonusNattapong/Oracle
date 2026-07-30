@@ -22,6 +22,7 @@ afterEach(async () => {
 
 describe("OracleDaemon", () => {
   test("serves scheduler API from SQLite and removes state on stop", async () => {
+    let runtimeSystemPrompt = "";
     daemon = new OracleDaemon({
       homeDir: home,
       workspaceRoot: home,
@@ -39,10 +40,13 @@ describe("OracleDaemon", () => {
           supportedPlatforms: ["darwin", "linux", "win32"]
         },
         healthCheck: async () => [],
-        run: async (request) => ({
-          text: `API ANSWER: ${request.userPrompt}`,
-          usage: {}
-        })
+        run: async (request) => {
+          runtimeSystemPrompt = request.systemPrompt;
+          return {
+            text: `API ANSWER: ${request.userPrompt}`,
+            usage: {}
+          };
+        }
       })
     });
     const state = await daemon.start();
@@ -76,6 +80,12 @@ describe("OracleDaemon", () => {
     });
     expect(consultRes.status).toBe("completed");
     expect(consultRes.sessionId).toBeDefined();
+    expect(runtimeSystemPrompt).toContain("## Self-awareness");
+    expect(runtimeSystemPrompt).toContain("Current interface: runtime.");
+    expect(runtimeSystemPrompt).toContain(`Current workspace: ${path.basename(home)}.`);
+    expect(runtimeSystemPrompt).not.toContain(`Current workspace: ${home}.`);
+    expect(runtimeSystemPrompt).toContain("Manage persistent schedules, approvals");
+    expect(runtimeSystemPrompt).not.toContain("project and global memory");
 
     const fetchedSession = await client!.getConsultSession(consultRes.sessionId);
     expect(fetchedSession.sessionId).toBe(consultRes.sessionId);

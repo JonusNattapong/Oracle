@@ -1,7 +1,61 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { Identity, Persona } from "./types.js";
+import type {
+  AwarenessEnvironment,
+  AwarenessSnapshot,
+  Identity,
+  Persona
+} from "./types.js";
 import { DEFAULT_PERSONA } from "./types.js";
+
+const ORACLE_ROLE = "Persistent coordination and context layer for AI coding agents.";
+
+const ORACLE_BOUNDARIES = [
+  "Oracle is software, not a conscious being; identity must be described functionally.",
+  "Knowledge is limited to supplied, retrieved, or persisted context; uncertainty must be stated.",
+  "Actions must not be claimed without tool or system evidence.",
+  "Filesystem and command execution must remain inside the workspace and active policy.",
+  "Risky actions may require human approval and must respect read-only mode.",
+  "The execution backend is an implementation detail; Oracle keeps its configured identity.",
+  "Only the minimum operating context needed for the task should be sent to an external backend."
+];
+
+function capabilitiesFor(environment: AwarenessEnvironment): string[] {
+  switch (environment.interface) {
+    case "agent":
+      return [
+        "Inspect and search files inside the active workspace.",
+        environment.readOnly
+          ? "Analyze workspace state without mutation while read-only mode is enabled."
+          : "Edit workspace files and run policy-checked commands.",
+        "Use configured external MCP tools when they are connected.",
+        "Persist checkpoints and audited tool evidence for the current run."
+      ];
+    case "runtime":
+      return [
+        "Run grounded consultations through the selected execution backend.",
+        "Manage persistent schedules, approvals, and replayable Runtime events.",
+        "Expose the authenticated Control Center and project-scoped Remote Swarm.",
+        "Persist consultation sessions and validated output artifacts."
+      ];
+    case "mcp":
+      return [
+        "Run grounded consultations using selected workspace files and conversation context.",
+        "Search and maintain persistent project and global memory and local documentation.",
+        "Run autonomous workspace actions when an agent backend and policy permit it.",
+        "Coordinate agents through messages, verified tasks, and recovery.",
+        "Retrieve web information when explicitly invoked and configured."
+      ];
+    case "cli":
+      return [
+        "Run grounded consultations using selected workspace files and conversation context.",
+        "Manage memory, documentation, identity, messaging, tasks, schedules, and Runtime state.",
+        "Run autonomous workspace actions when an agent backend and policy permit it.",
+        "Inspect diagnostics, audit state, sessions, and provider health.",
+        "Retrieve web information when explicitly invoked and configured."
+      ];
+  }
+}
 
 export class ProfileStore {
   constructor(private readonly rootDir: string) {}
@@ -38,6 +92,75 @@ export class ProfileStore {
   async savePersona(persona: Persona): Promise<void> {
     await fs.mkdir(this.rootDir, { recursive: true });
     await fs.writeFile(this.personaPath(), JSON.stringify(persona, null, 2), "utf8");
+  }
+
+  async getAwareness(environment: AwarenessEnvironment): Promise<AwarenessSnapshot> {
+    const [storedIdentity, persona] = await Promise.all([this.getIdentity(), this.getPersona()]);
+    const operator = storedIdentity?.name.trim() ? storedIdentity : null;
+    return {
+      self: {
+        ...persona,
+        role: ORACLE_ROLE
+      },
+      operator,
+      environment: {
+        ...environment,
+        workspaceRoot: path.resolve(environment.workspaceRoot)
+      },
+      capabilities: capabilitiesFor(environment),
+      boundaries: [...ORACLE_BOUNDARIES]
+    };
+  }
+
+  async buildAwarenessContext(environment: AwarenessEnvironment): Promise<string> {
+    const awareness = await this.getAwareness(environment);
+    const workspaceLabel =
+      path.basename(awareness.environment.workspaceRoot)
+      || path.parse(awareness.environment.workspaceRoot).root;
+    const lines = [
+      `Identity: ${awareness.self.name}.`,
+      `Role: ${awareness.self.role}`,
+      awareness.self.greeting ? `Greeting: ${awareness.self.greeting}` : undefined,
+      awareness.self.tone ? `Tone: ${awareness.self.tone}.` : undefined,
+      awareness.self.style ? `Style: ${awareness.self.style}` : undefined,
+      awareness.self.systemPrompt,
+      awareness.operator?.name
+        ? `Operator: ${awareness.operator.name}${awareness.operator.role ? ` (${awareness.operator.role})` : ""}.`
+        : "Operator: not configured.",
+      `Current interface: ${awareness.environment.interface}.`,
+      `Current workspace: ${workspaceLabel}.`,
+      awareness.environment.backend
+        ? `Current execution backend: ${awareness.environment.backend}.`
+        : undefined,
+      awareness.environment.readOnly !== undefined
+        ? `Read-only mode: ${awareness.environment.readOnly ? "enabled" : "disabled"}.`
+        : undefined,
+    ];
+
+    if (awareness.operator) {
+      if (awareness.operator.title) lines.push(`Operator title: ${awareness.operator.title}.`);
+      if (awareness.operator.description) lines.push(`About the operator: ${awareness.operator.description}`);
+      if (awareness.operator.preferences?.length) {
+        lines.push(`Operator preferences: ${awareness.operator.preferences.join(", ")}.`);
+      }
+      if (awareness.operator.habits?.length) {
+        lines.push(`Operator habits: ${awareness.operator.habits.join(", ")}.`);
+      }
+      if (awareness.operator.goals?.length) {
+        lines.push(`Operator goals: ${awareness.operator.goals.join(", ")}.`);
+      }
+    }
+
+    lines.push(
+      "",
+      "Capabilities:",
+      ...awareness.capabilities.map((capability) => `- ${capability}`),
+      "",
+      "Boundaries:",
+      ...awareness.boundaries.map((boundary) => `- ${boundary}`)
+    );
+
+    return lines.filter((line): line is string => line !== undefined).join("\n");
   }
 
   // Build the system prompt prefix that makes Oracle "know who you are"

@@ -5,6 +5,10 @@ import net from "node:net";
 import { spawn, type ChildProcess } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
 
+function debugOrchestrator(message: string): void {
+  if (process.env.ORACLE_DEBUG) console.debug(message);
+}
+
 export interface ProcessInfo {
   pid: number;
   port: number;
@@ -238,7 +242,7 @@ export class ProcessSupervisor {
       while (retries > 0) {
         await sleep(150);
         if (spawnError || exited || proc.exitCode !== null) {
-          console.debug(`[orchestrator] ${service} failed or exited early — falling back immediately`);
+          debugOrchestrator(`[orchestrator] ${service} failed or exited early — falling back immediately`);
           return null;
         }
         if (await this.healthCheck(service, endpoint)) {
@@ -257,7 +261,7 @@ export class ProcessSupervisor {
       // factory's fallback logging instead of surfacing a scary error line
       // (on Windows/PowerShell a bare console.error renders as a
       // NativeCommandError). The null return is the real signal.
-      console.debug(`[orchestrator] failed to spawn ${service}: ${reason}`);
+      debugOrchestrator(`[orchestrator] failed to spawn ${service}: ${reason}`);
       return null;
     }
   }

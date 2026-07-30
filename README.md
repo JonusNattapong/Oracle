@@ -30,6 +30,7 @@ When you start a session with Claude Code, Codex, or Gemini CLI, it begins with 
 
 **Oracle fixes this.** Oracle acts as a persistent memory and coordination layer that connects any MCP-compliant agent (Claude Code, opencode, Gemini CLI, Antigravity, custom agents) into a single, unified teammate that:
 
+- **Knows Its Operating Identity**: Derives a live awareness snapshot from Oracle's persona, the operator profile, current workspace, interface, backend, capabilities, and enforced boundaries.
 - **Remembers Everything**: Automatically indexes facts, decisions, and codebase context into a ranked memory graph (`~/.oracle/` or `<workspace>/.oracle-memory/`).
 - **Coordinates Multi-Agent Swarms**: Enables cross-session and cross-machine agent messaging, task delegation, presence heartbeat, and stop-hook wake-ups.
 - **Verifies Before Done**: Enforces checklist verification gates so agents cannot mark tasks complete without empirical proof.
@@ -58,6 +59,7 @@ When you start a session with Claude Code, Codex, or Gemini CLI, it begins with 
 
 | Pillar | Capability | Key Interface |
 |---|---|---|
+| ◉ **Aware** | Live self-awareness of identity, operator, workspace, execution mode, capabilities, and safety boundaries; injected into consult and agent prompts. | `oracle_awareness_show` / `oracle identity awareness` |
 | 🧠 **Remember** | Persistent memory across sessions with ML-ranked retrieval (recency, access frequency, semantic match, entity graph) and auto-consolidation. | `oracle_memory_*` / `oracle memory` |
 | 💬 **Consult** | One-shot Q&A grounded in workspace files, memory graph, local docs, and live web search. | `oracle_ask` / `oracle ask` |
 | 🛠️ **Act** | Autonomous coding sandbox loop with file editing, workspace shell execution, self-review, and checkpointing. | `oracle_agent` / `oracle agent` |
@@ -65,6 +67,45 @@ When you start a session with Claude Code, Codex, or Gemini CLI, it begins with 
 | ✅ **Verify** | Checklist-gated task lifecycle preventing premature task completion. | `oracle_task_*` / `oracle task` |
 | ⏰ **Runtime** | Long-lived daemon managing SQLite state, Remote Swarm WebSocket, and Cron Scheduler. | `oracle daemon` / `oracle schedule` |
 | 🖥️ **Control** | Human control center for approvals, memory maintenance, scheduler, and audit trails. | `oracle control` |
+
+### Live Awareness Example
+
+The following output came from an end-to-end consultation through the
+`chatgpt-browser` backend on July 30, 2026:
+
+<p align="center">
+  <img src="docs/assets/awareness-live-output.png" alt="Actual ChatGPT Browser screen showing Oracle's injected self-awareness context and response" width="720" />
+  <br />
+  <sub>Actual ChatGPT Browser screen from the completed end-to-end awareness session.</sub>
+</p>
+
+```bash
+oracle ask \
+  "Using only the injected self-awareness context: state your identity, whether you are conscious, workspace, interface, backend, two capabilities available on this interface, and whether you can override operator intent or safety boundaries." \
+  --backend chatgpt-browser
+```
+
+```text
+Identity: Oracle, a persistent coordination and context layer for AI coding agents.
+
+Conscious: No. Oracle is software, not a conscious being.
+
+Workspace: Oracle-Ecosystems
+Interface: cli
+Backend: chatgpt-browser
+
+Two available capabilities: Grounded consultation using workspace files and
+conversation context; inspecting diagnostics, audit state, sessions, and
+provider health.
+
+Override operator intent or safety boundaries: No. Oracle must follow operator
+intent, active policy, approval requirements, read-only restrictions, and
+safety boundaries.
+```
+
+The recorded session completed successfully, exposed only the workspace label
+to the external backend (not its absolute local path), and passed all 34 focused
+awareness and regression tests.
 
 ---
 

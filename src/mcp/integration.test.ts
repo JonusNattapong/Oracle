@@ -29,10 +29,12 @@ const provider: Provider = {
   },
   healthCheck: async () => [],
   async run(request) {
+    lastSystemPrompt = request.systemPrompt;
     return { text: `ANSWER: ${request.userPrompt}`, usage: {} };
   }
 };
 
+let lastSystemPrompt = "";
 let lastBrowserImageCount = 0;
 const browserProvider: Provider = {
   ...provider,
@@ -139,6 +141,7 @@ describe("Oracle MCP tools", () => {
     expect(tools).toContain("oracle_memory_clear");
     expect(tools).toContain("oracle_identity_show");
     expect(tools).toContain("oracle_identity_setup");
+    expect(tools).toContain("oracle_awareness_show");
     expect(tools).toContain("oracle_persona_set");
     expect(tools).toContain("oracle_msg_send");
     expect(tools).toContain("oracle_msg_inbox");
@@ -392,6 +395,48 @@ describe("Oracle MCP tools", () => {
       "ship feature X",
       "fix bug Y"
     ]);
+  });
+
+  test("exposes and injects the current self-awareness snapshot", async () => {
+    await client.callTool({
+      name: "oracle_identity_setup",
+      arguments: {
+        name: "awareness-operator",
+        role: "maintainer",
+        preferences: ["evidence first"]
+      }
+    });
+
+    const shown = await client.callTool({ name: "oracle_awareness_show", arguments: {} });
+    expect(shown.isError).not.toBe(true);
+    expect(shown.structuredContent).toMatchObject({
+      self: {
+        name: "Oracle",
+        role: expect.stringContaining("coordination")
+      },
+      operator: {
+        name: "awareness-operator",
+        role: "maintainer"
+      },
+      environment: {
+        workspaceRoot: root,
+        interface: "mcp",
+        backend: "codex"
+      }
+    });
+
+    const consultation = await client.callTool({
+      name: "oracle_ask",
+      arguments: { question: "Who are you operating for?" }
+    });
+    expect(consultation.isError).not.toBe(true);
+    expect(lastSystemPrompt).toContain("## Self-awareness");
+    expect(lastSystemPrompt).toContain("Identity: Oracle.");
+    expect(lastSystemPrompt).toContain("Operator: awareness-operator (maintainer).");
+    expect(lastSystemPrompt).toContain(`Current workspace: ${path.basename(root)}.`);
+    expect(lastSystemPrompt).not.toContain(`Current workspace: ${root}.`);
+    expect(lastSystemPrompt).toContain("not a conscious being");
+    expect(lastSystemPrompt).toContain("Boundaries:");
   });
 
   test("full task lifecycle: create -> progress -> checklist gate -> submit -> review -> close", async () => {

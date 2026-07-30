@@ -7,6 +7,7 @@ import { SkillRegistry } from "../skills/registry.js";
 import { FileCheckpointStore } from "./checkpoint.js";
 import { loadPolicy } from "./policy.js";
 import { RuntimeAgentApprovalGate } from "./approvalGate.js";
+import { ProfileStore } from "../identity/profile.js";
 import os from "node:os";
 import path from "node:path";
 
@@ -70,6 +71,7 @@ export class AgentService {
 
     // In read-only mode, drop mutating tools entirely so the model can't even try.
     const tools = readOnly ? allTools.filter((t) => !t.mutating) : allTools;
+    const oracleDir = process.env.ORACLE_HOME_DIR ?? path.join(os.homedir(), ".oracle");
 
     let system = request.systemPrefix
       ? `${request.systemPrefix}\n\n${DEFAULT_AGENT_SYSTEM}`
@@ -86,7 +88,14 @@ export class AgentService {
       }
     }
 
-    const oracleDir = process.env.ORACLE_HOME_DIR ?? path.join(os.homedir(), ".oracle");
+    const awarenessContext = await new ProfileStore(oracleDir).buildAwarenessContext({
+      workspaceRoot: request.workspaceRoot,
+      interface: "agent",
+      backend: this.provider.id,
+      readOnly
+    });
+    system = `${system}\n\n## Self-awareness\n${awarenessContext}`;
+
     const checkpointStore = new FileCheckpointStore(oracleDir);
 
     // Policy loading is fail-closed: an invalid policy must never silently

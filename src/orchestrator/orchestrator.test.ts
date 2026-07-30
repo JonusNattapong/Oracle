@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { ProcessSupervisor } from "./supervisor.js";
 import { OrchestratorFactory } from "./factory.js";
 import path from "node:path";
@@ -16,6 +16,8 @@ describe("ProcessSupervisor", () => {
   });
 
   afterEach(async () => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
     try {
       await fs.rm(tempDir, { recursive: true, force: true });
     } catch {
@@ -75,6 +77,17 @@ describe("OrchestratorFactory", () => {
     const status = factory.getStatus();
     expect(status).toBeDefined();
     expect(status?.transport).toBe("fallback");
+  });
+
+  it("keeps an expected optional-sidecar fallback quiet outside debug mode", async () => {
+    vi.stubEnv("ORACLE_DEBUG", "");
+    const debug = vi.spyOn(console, "debug").mockImplementation(() => undefined);
+
+    const memAdapter = await factory.createMemoryAdapter();
+
+    expect(memAdapter).toBeDefined();
+    expect(factory.getStatus()?.transport).toBe("fallback");
+    expect(debug).not.toHaveBeenCalled();
   });
 
   it("file-based adapters should work correctly", async () => {

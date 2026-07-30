@@ -9,6 +9,7 @@ import { getConversationContext, recordSelfLog } from "../../core/selfMemory.js"
 import { loadSoul } from "../../core/souls.js";
 import { buildOracleSystemPrompt } from "../../core/systemPrompt.js";
 import { searchDocs } from "../../docs/reader.js";
+import type { ProfileStore } from "../../identity/profile.js";
 
 async function success(
   text: string,
@@ -48,6 +49,7 @@ export function registerConsultTool(
     providerId: string;
     memory: MemoryPort;
     soulsDir: string;
+    profile: ProfileStore;
   }
 ): void {
   server.registerTool(
@@ -81,7 +83,13 @@ export function registerConsultTool(
         } else {
           soulName = "auto";
         }
-        const systemPrompt = buildOracleSystemPrompt(soulPrompt);
+        const targetBackend = backend ?? deps.providerId;
+        const awarenessContext = await deps.profile.buildAwarenessContext({
+          workspaceRoot: deps.workspaceRoot,
+          interface: "mcp",
+          backend: targetBackend
+        });
+        const systemPrompt = buildOracleSystemPrompt(soulPrompt, awarenessContext);
         let ctxBlock = context ? `\n\n## Context from the asking agent\n${context}` : "";
 
         if (conversationId) {
@@ -101,7 +109,6 @@ export function registerConsultTool(
 
         const prompt = `${ctxBlock}\n\n## Question\n${question}`;
         const hasFiles = files !== undefined && files.length > 0;
-        const targetBackend = backend ?? deps.providerId;
         const result = await deps.service.consult({
           prompt,
           preset: "review",

@@ -5,6 +5,10 @@ import { McpMemoryAdapter } from "./mcp-clients.js";
 import { ProcessSupervisor } from "./supervisor.js";
 import type { MemoryPort, ProcessStatus } from "./ports.js";
 
+function debugOrchestrator(message: string): void {
+  if (process.env.ORACLE_DEBUG) console.debug(message);
+}
+
 /**
  * OrchestratorFactory creates memory adapters, preferring an MCP-backed server
  * and falling back to direct file storage when the server is unavailable.
@@ -34,17 +38,17 @@ export class OrchestratorFactory {
           pid: info.pid,
           port: info.port,
         });
-        console.debug(`[orchestrator] memory: MCP backend ready at ${info.endpoint}`);
+        debugOrchestrator(`[orchestrator] memory: MCP backend ready at ${info.endpoint}`);
         try {
           return new McpMemoryAdapter(info.endpoint);
         } catch (err) {
           const reason = err instanceof Error ? err.message : String(err);
-          console.debug(`[orchestrator] memory MCP client init failed: ${reason} — falling back to file adapter`);
+          debugOrchestrator(`[orchestrator] memory MCP client init failed: ${reason} — falling back to file adapter`);
         }
       }
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
-      console.debug(`[orchestrator] memory MCP spawn failed: ${reason}`);
+      debugOrchestrator(`[orchestrator] memory MCP spawn failed: ${reason}`);
     }
 
     // Fallback to file-based
@@ -52,7 +56,7 @@ export class OrchestratorFactory {
       transport: "fallback",
       reason: "MCP server unavailable",
     });
-    console.debug(`[orchestrator] memory: falling back to file adapter`);
+    debugOrchestrator(`[orchestrator] memory: falling back to file adapter`);
     return new MemoryAdapter(this.rootDir);
   }
 

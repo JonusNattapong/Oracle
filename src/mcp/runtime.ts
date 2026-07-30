@@ -65,7 +65,7 @@ export async function createOracleMcpServer(
     "oracle_web_search and oracle_web_fetch let you search and read web pages when the task needs external API docs, troubleshooting, or live data.",
     "",
     // ── Identity ──
-    "Use oracle_identity_setup to configure your profile; oracle_identity_show to view it. The identity is auto-injected into consults.",
+    "Use oracle_identity_setup to configure the operator profile; oracle_identity_show or oracle_awareness_show to inspect Oracle's identity, environment, capabilities, and boundaries. Awareness is auto-injected into consults and agent runs.",
     "",
     // ── Init ──
     "oracle_init bootstraps .oracle/ in a new project with policy.json (zero-trust rules), config.json, docs/, and skills/.",

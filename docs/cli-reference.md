@@ -346,7 +346,12 @@ Manage your personal identity profile.
 ```bash
 oracle identity setup
 oracle identity show
+oracle identity awareness
 ```
+
+`oracle identity awareness` prints Oracle's derived self-awareness snapshot:
+its persona and role, configured operator, active workspace and backend,
+available capability classes, and the boundaries it must respect.
 
 ---
 

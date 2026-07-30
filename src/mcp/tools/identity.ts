@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { serializeOracleError } from "../../errors.js";
 import { ProfileStore } from "../../identity/profile.js";
+import type { AwarenessEnvironment } from "../../identity/types.js";
 
 function stringOrStringArray() {
   return z
@@ -30,7 +31,11 @@ function failure(error: unknown) {
   };
 }
 
-export function registerIdentityTools(server: McpServer, profile: ProfileStore): void {
+export function registerIdentityTools(
+  server: McpServer,
+  profile: ProfileStore,
+  environment: AwarenessEnvironment
+): void {
   server.registerTool(
     "oracle_identity_show",
     {
@@ -42,7 +47,26 @@ export function registerIdentityTools(server: McpServer, profile: ProfileStore):
       try {
         const identity = await profile.getIdentity();
         const persona = await profile.getPersona();
-        return success(JSON.stringify({ identity, persona }, null, 2), { identity, persona });
+        const awareness = await profile.getAwareness(environment);
+        return success(
+          JSON.stringify({ identity, persona, awareness }, null, 2),
+          { identity, persona, awareness }
+        );
+      } catch (error) { return failure(error); }
+    }
+  );
+
+  server.registerTool(
+    "oracle_awareness_show",
+    {
+      title: "Show Self-Awareness",
+      description: "Show Oracle's derived identity, operator context, current environment, capabilities, and boundaries.",
+      inputSchema: {}
+    },
+    async () => {
+      try {
+        const awareness = await profile.getAwareness(environment);
+        return success(JSON.stringify(awareness, null, 2), awareness as unknown as Record<string, unknown>);
       } catch (error) { return failure(error); }
     }
   );
