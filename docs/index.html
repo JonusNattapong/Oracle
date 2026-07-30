@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oracle — Persistent Coordination Layer for AI Coding Agents</title>
+  <meta name="description" content="Oracle is an MCP-powered persistent memory graph, inter-agent message bus, autonomous sandbox loop, and verification gate for Claude Code, opencode, Codex, and Gemini CLI.">
+  
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="assets/css/style.css">
+  
+  <!-- Favicon / Meta -->
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+</head>
+<body>
+
+  <!-- Header / Navigation -->
+  <header>
+    <div class="container">
+      <nav>
+        <a href="#" class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+          Oracle <span class="logo-badge">v0.7.0</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#architecture">Architecture</a></li>
+          <li><a href="#quickstart">Quick Start</a></li>
+          <li><a href="#docs">Documentation</a></li>
+          <li>
+            <a href="https://github.com/OraclePersonal/Oracle" target="_blank" class="btn-github">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              GitHub
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-tag">
+        <span>🧠 Persistent Coordination Layer for AI Agents</span>
+      </div>
+      <h1>
+        Give Your AI Coding Agents<br/>
+        <span class="gradient-text">Persistent Memory & Teamwork</span>
+      </h1>
+      <p>
+        Oracle connects Claude Code, opencode, Gemini CLI, Codex, and custom AI agents into a single, cohesive teammate that remembers past context, coordinates multi-agent swarms, and verifies work.
+      </p>
+      
+      <div class="hero-actions">
+        <a href="#quickstart" class="btn-primary">Get Started</a>
+        <a href="https://github.com/OraclePersonal/Oracle" target="_blank" class="btn-secondary">View Repository</a>
+      </div>
+
+      <!-- Hand-Drawn Cover Sketch Banner -->
+      <img src="assets/cover.png" alt="Oracle Hand-Drawn Cover Sketch" class="hero-banner-img">
+    </div>
+  </section>
+
+  <div class="container">
+    <!-- Prototype & Inspiration Notice -->
+    <div class="notice-box">
+      <div class="notice-icon">💡</div>
+      <div class="notice-content">
+        <h3>Prototype & Inspiration Acknowledgment</h3>
+        <p>
+          <strong>Oracle</strong> is built upon the foundational vision, architecture concept, and open-source prototype created by <strong>Peter Steinberger (<a href="https://github.com/steipete" target="_blank">@steipete</a>)</strong> at <strong><a href="https://github.com/steipete/oracle" target="_blank">github.com/steipete/oracle</a></strong>. We express our deep appreciation and gratitude to Peter for inspiring this persistent coordination layer for AI coding agents.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Architecture Section -->
+  <section id="architecture" class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>System Architecture & Interaction Flow</h2>
+        <p>How agents, persistent stores, backends, outbox messaging, and human control connect.</p>
+      </div>
+
+      <div class="arch-container">
+        <!-- Hand-Drawn Architecture Sketch Diagram -->
+        <img src="assets/arch_flow.png" alt="Oracle System Architecture Diagram" class="arch-img">
+
+        <div class="arch-grid">
+          <div class="arch-step">
+            <h4>1. Agent MCP Connectivity</h4>
+            <p>Agents (Claude Code, opencode, Gemini) wire into Oracle via MCP stdio servers (`oracle-mcp` / `oracle-msg-mcp`).</p>
+          </div>
+          <div class="arch-step">
+            <h4>2. Context & Knowledge Graph</h4>
+            <p>Queries dynamically synthesize context from local memory graph, workspace files, local docs, and live web search.</p>
+          </div>
+          <div class="arch-step">
+            <h4>3. Multi-Backend Execution</h4>
+            <p>Consultations route to Codex CLI, Anthropic, OpenAI, Gemini, or Experimental ChatGPT Browser Mode with self-healing reload.</p>
+          </div>
+          <div class="arch-step">
+            <h4>4. Durable Outbox & Swarm</h4>
+            <p>SQLite outbox records messages, heartbeats, and task state transitions, ensuring safe recovery and remote agent sync.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Pillars Section -->
+  <section id="features" class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>The 7 Core Pillars of Oracle</h2>
+        <p>A unified layer engineered for agent autonomy, persistence, and safe human oversight.</p>
+      </div>
+
+      <div class="pillars-grid">
+        <!-- Pillar 1 -->
+        <div class="pillar-card">
+          <div class="pillar-icon">🧠</div>
+          <h3>Remember</h3>
+          <p>Persistent memory graph across sessions with ML-ranked retrieval (recency, access frequency, semantic match) and background tag consolidation.</p>
+          <span class="pillar-interface">oracle_memory_*</span>
+        </div>
+
+        <!-- Pillar 2 -->
+        <div class="pillar-card">
+          <div class="pillar-icon">💬</div>
+          <h3>Consult</h3>
+          <p>One-shot Q&A engine grounded in workspace code files, memory graph, local knowledge base, and real-time web search with citations.</p>
+          <span class="pillar-interface">oracle_ask</span>
+        </div>
+
+        <!-- Pillar 3 -->
+        <div class="pillar-card">
+          <div class="pillar-icon">🛠️</div>
+          <h3>Act</h3>
+          <p>Autonomous coding sandbox loop (`oracle agent`) that reads/writes files and runs policy-checked workspace shell commands with full audit logging.</p>
+          <span class="pillar-interface">oracle_agent</span>
+        </div>
+
+        <!-- Pillar 4 -->
+        <div class="pillar-card">
+          <div class="pillar-icon">📨</div>
+          <h3>Coordinate</h3>
+          <p>Transactional SQLite message bus for local and multi-machine Remote Swarm agent communication with real-time wake-up triggers.</p>
+          <span class="pillar-interface">oracle_msg_*</span>
+        </div>
+
+        <!-- Pillar 5 -->
+        <div class="pillar-card">
+          <div class="pillar-icon">✅</div>
+          <h3>Verify</h3>
+          <p>Checklist-gated task lifecycle. Agents cannot mark tasks "done" until every declared checklist item is empirically verified.</p>
+          <span class="pillar-interface">oracle_task_*</span>
+        </div>
+
+        <!-- Pillar 6 -->
+        <div class="pillar-card">
+          <div class="pillar-icon">⏰</div>
+          <h3>Runtime</h3>
+          <p>Persistent background daemon managing SQLite state, authenticated APIs, Remote Swarm WebSocket relay, and Cron Scheduler.</p>
+          <span class="pillar-interface">oracle daemon</span>
+        </div>
+
+        <!-- Pillar 7 -->
+        <div class="pillar-card">
+          <div class="pillar-icon">🖥️</div>
+          <h3>Control</h3>
+          <p>Human control center featuring real-time Web Dashboard and terminal Ink TUI for approval inbox, task boards, and audit history.</p>
+          <span class="pillar-interface">oracle control</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start Section -->
+  <section id="quickstart" class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Quick Start Guide</h2>
+        <p>Get up and running with Oracle in less than two minutes.</p>
+      </div>
+
+      <div class="code-window">
+        <div class="code-header">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <span class="code-title">Terminal — Bash</span>
+        </div>
+        <div class="code-body">
+<span class="comment"># 1. Install globally from npm</span>
+<span class="command">npm install -g</span> @oraclepersonal/oracle
+
+<span class="comment"># 2. Verify setup and provider credentials</span>
+<span class="command">oracle doctor</span>
+
+<span class="comment"># 3. Wire up MCP client (e.g. Claude Code)</span>
+<span class="command">oracle setup-mcp</span> <span class="flag">--client</span> claude-code
+
+<span class="comment"># 4. Optional: Enable Experimental ChatGPT Browser Mode with Self-Healing UI Reload</span>
+<span class="command">oracle browser setup</span>         <span class="comment"># initial setup</span>
+<span class="command">oracle browser login</span>         <span class="comment"># manual OAuth recovery window</span>
+<span class="command">oracle browser status</span> <span class="flag">--live</span> <span class="comment"># verify live account session</span>
+<span class="command">oracle ask</span> <span class="flag">"review code"</span> <span class="flag">-f</span> <span class="flag">"src/**/*.ts"</span> <span class="flag">--backend</span> chatgpt-browser
+
+<span class="comment"># 5. Start the Daemon & Open Control Center</span>
+<span class="command">oracle daemon start</span>
+<span class="command">oracle control</span>              <span class="comment"># Terminal Ink TUI</span>
+<span class="command">oracle control url</span>          <span class="comment"># Authenticated Web Dashboard</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Documentation Matrix Section -->
+  <section id="docs" class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Documentation Index</h2>
+        <p>Detailed guides covering every aspect of the Oracle ecosystem.</p>
+      </div>
+
+      <div class="docs-table-wrapper">
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Document</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="getting-started.md">Getting Started</a></td>
+              <td>Installation, configuration, and environment setup checklist.</td>
+            </tr>
+            <tr>
+              <td><a href="cli-reference.md">CLI Reference</a></td>
+              <td>Single-page reference for every `oracle` subcommand and flag.</td>
+            </tr>
+            <tr>
+              <td><a href="browser-mode.md">Browser Mode</a></td>
+              <td>Setup, self-healing UI reload, CDP retries, and native continuation.</td>
+            </tr>
+            <tr>
+              <td><a href="architecture.md">Architecture</a></td>
+              <td>System components, execution backends, SQLite outbox, and data flow.</td>
+            </tr>
+            <tr>
+              <td><a href="AGENT.md">Agent & Sandbox</a></td>
+              <td>Autonomous coding loop, toolset, sandbox hardening, and audit trail.</td>
+            </tr>
+            <tr>
+              <td><a href="MESSAGING.md">Messaging & Task Tracker</a></td>
+              <td>Inter-agent bus, presence heartbeats, wake-up tiers, and verification gates.</td>
+            </tr>
+            <tr>
+              <td><a href="runtime.md">Runtime Daemon</a></td>
+              <td>Long-lived daemon, SQLite outbox, local API, and WebSocket events.</td>
+            </tr>
+            <tr>
+              <td><a href="remote-swarm.md">Remote Swarm</a></td>
+              <td>Cross-machine agent coordination, scoped tokens, and replay logs.</td>
+            </tr>
+            <tr>
+              <td><a href="control-center.md">Control Center</a></td>
+              <td>Web Dashboard, Ink TUI, approval inbox, and scheduler management.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>
+        <strong>Oracle Assistant</strong> — MIT Licensed. Built with ❤️ for AI Agent Autonomy.
+      </p>
+      <p>
+        Original Prototype & Inspiration: <a href="https://github.com/steipete/oracle" target="_blank">steipete/oracle</a> by Peter Steinberger (<a href="https://github.com/steipete" target="_blank">@steipete</a>).
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
