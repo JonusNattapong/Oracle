@@ -87,8 +87,16 @@ before starting work — no human has to explain the flow.
 `oracle_task_submit` (and its CLI equivalent) refuses to move a task to
 `review` if any checklist item created with the task is still unchecked. This
 turns "I'm done" from a claim into something that's actually been verified
-before the task creator is notified — see [MESSAGING.md](MESSAGING.md#task-planning--tracking-built-on-top-of-messaging)
-for the full lifecycle.
+## Governance & Alignment (ACTB Framework)
+
+Oracle employs the **ACTB Governance Framework** (Awareness, Control, Transform, Boundary) to ensure safe, transparent, and aligned AI agent operations:
+
+- **Awareness**: Audit trails for all mutations (`sandbox_runs`), token cost accounting (`CostTracker`), presence heartbeats, and live event monitoring.
+- **Control**: Human approval inbox (`oracle control`), execution step ceilings (`maxSteps`), budget limits, and risk policies (`off`, `risky`, `all-mutations`).
+- **Transform**: Memory auto-consolidation (Jaccard tag similarity deduplication & decay), topic Wiki compilation, soul persona routing, and response stabilization.
+- **Boundary**: Strict workspace path containment (`resolveInWorkspace`), isolated Chrome automation profile, Remote Swarm token scoping, and checklist verification gates (`oracle_task_submit`).
+
+See [2026-07-30-actb-governance-framework.md](superpowers/specs/2026-07-30-actb-governance-framework.md) for the full architecture specification.
 
 ## Execution backend routing
 

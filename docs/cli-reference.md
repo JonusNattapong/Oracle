@@ -105,6 +105,17 @@ Related: `oracle agent-checkpoints` — list or delete checkpoints.
 
 ---
 
+### oracle governance (or oracle actb)
+
+Display real-time ACTB Governance Framework (Awareness, Control, Transform, Boundary) status and policy metrics.
+
+```bash
+oracle governance
+oracle actb --json
+```
+
+---
+
 ### oracle memory
 
 Persistent memory management.

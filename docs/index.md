@@ -65,6 +65,7 @@ npx -p @oraclepersonal/oracle oracle ask "review this" -f "src/**/*.ts"
 | 18 | [Init](getting-started.md#initialize-the-workspace) | Bootstrap `.oracle/` for a new project |
 | 19 | [Roadmap v0.6.0](roadmap-0.6.0.md) | Memory Engine foundation and agent coordination |
 | 20 | [Roadmap v0.7.0](roadmap-0.7.0.md) | Cost tracking, provider expansion, sandbox hardening, graph visualization |
+| 21 | [ACTB Governance Framework](superpowers/specs/2026-07-30-actb-governance-framework.md) | Awareness, Control, Transform, Boundary agent alignment architecture |
 
 ## MCP Tools
 

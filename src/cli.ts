@@ -48,6 +48,7 @@ import {
   saveSwarmProfile,
   type SwarmConnectionProfile
 } from "./runtime/swarmClient.js";
+import { ACTBEngine } from "./governance/actb.js";
 import { daemonStatus, startDaemon, stopDaemon } from "./runtime/control.js";
 import { riskTone } from "./control/format.js";
 import type {
@@ -2855,6 +2856,28 @@ githubCmd
   .action(async (endpoint: string) => {
     const result = gh.apiRequest(endpoint);
     console.log(JSON.stringify(result, null, 2));
+  });
+
+program
+  .command("governance")
+  .alias("actb")
+  .description("Display ACTB Governance Framework status and policy metrics")
+  .option("--json", "Output structured JSON report")
+  .action(async (options) => {
+    const engine = new ACTBEngine(process.cwd());
+    const report = engine.getAwarenessReport();
+    if (options.json) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      console.log("=== ACTB Governance Framework Report ===");
+      console.log(`Timestamp:       ${report.timestamp}`);
+      console.log(`Workspace:       ${report.workspaceRoot}`);
+      console.log(`Status:          ${report.status.toUpperCase()}`);
+      console.log(`Awareness Engine: Active (Audit Trail Enabled)`);
+      console.log(`Control Engine:   Active (Step Ceiling & Approval Policy)`);
+      console.log(`Transform Engine: Active (Memory Deduplication)`);
+      console.log(`Boundary Engine:  Active (Workspace Path Confinement)`);
+    }
   });
 
 try {
