@@ -1,4 +1,3 @@
-title: Oracle Assistant
-description: Persistent MCP-native AI assistant with memory, web, and multi-agent coordination
-theme: jekyll-theme-cayman
+title: Oracle Assistant — Persistent Coordination Layer for AI Coding Agents
+description: Persistent MCP-native AI assistant with memory graph, web access, and multi-agent coordination for Claude Code, opencode, Codex, and Gemini CLI.
 markdown: GFM
