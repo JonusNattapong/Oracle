@@ -256,6 +256,26 @@ See [Bridge](bridge.md) for the full flow.
 
 ---
 
+### oracle panel
+
+Ask several backends the same question and record a manifest of the answers.
+
+```bash
+oracle panel ask "Should we migrate the session store?" \
+  --member anthropic --member openai:gpt-4o --member reviewer=gemini \
+  [-f src/**/*.ts] [--concurrency 3] [--require-all] [--json]
+oracle panel list [--limit 20] [--json]
+oracle panel show <id> [--json]
+```
+
+A member that fails never stops the others: the manifest reports who answered
+and who did not. `complete` and `partial` exit 0, `failed` exits 1, and
+`--require-all` makes anything short of `complete` exit 1.
+
+See [Advisory panels](panel.md) for seat syntax, exit codes, and manifest shape.
+
+---
+
 ### oracle schedule
 
 Runtime-backed cron task scheduler.

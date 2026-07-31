@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Advisory panels with partial-success manifests**
+  - `oracle panel ask` puts one question to several backends at once;
+    `--member <backend>[:<model>]` or `--member <label>=<backend>[:<model>]`
+    declares each seat, and duplicate seat ids are rejected rather than
+    silently collapsed
+  - A member that fails — missing credential, rate limit, timeout, thrown
+    error — never stops the others and never fails the panel. The manifest
+    records per-member status, output or failure reason, usage, and duration
+  - Panel status is `complete`, `partial`, or `failed`. `partial` exits 0 with a
+    stderr warning because a partial answer is still an answer; `--require-all`
+    makes anything short of `complete` exit 1
+  - Members are reported in declaration order regardless of completion order,
+    so two runs of the same panel are diffable
+  - Manifests persist to `.oracle/panels/<id>.json`; `oracle panel list` and
+    `oracle panel show` read them back, and a corrupt manifest is skipped by
+    `list` rather than breaking it
+  - `--concurrency` caps parallel members (default 3)
+
 - **Bridge — one signed-in browser, many machines**
   - `oracle bridge host` generates a token, writes an owner-only (`0600`)
     connection artifact to `.oracle/bridge.json`, and starts the browser service

@@ -68,6 +68,7 @@ npx -p @oraclepersonal/oracle oracle ask "review this" -f "src/**/*.ts"
 | 21 | [ACTB Governance Framework](superpowers/specs/2026-07-30-actb-governance-framework.md) | Awareness, Control, Transform, Boundary agent alignment architecture |
 | 22 | [Situated Companion](companion.md) | Semantic presence, self-initiated intents, silence gates, and privacy controls |
 | 23 | [Bridge](bridge.md) | Share one signed-in browser across machines over an SSH tunnel |
+| 24 | [Advisory panels](panel.md) | Ask several backends one question; partial-success manifests |
 
 ## MCP Tools
 

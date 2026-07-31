@@ -20,8 +20,9 @@ architecture while delegating ChatGPT UI automation to the pinned
 - `oracle bridge host|client|doctor` with owner-only SSH tunnel connection
   artifacts, token redaction, and ssh-option injection guards. See
   [Bridge](bridge.md).
+- `oracle panel ask|list|show` — multi-model advisory panels with
+  partial-success manifests, per-member failure reasons, and deterministic
+  member ordering. See [Advisory panels](panel.md).
 
 ## Remaining upstream work
-
-- Multi-model advisory panels and partial-success manifests.
 - Native browser artifact transfer metadata in Oracle's own session model.

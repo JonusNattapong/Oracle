@@ -12,8 +12,10 @@ import {
   createExecutionBackend,
   createAgentBackend,
   AGENT_BACKENDS,
+  BACKEND_MODELS,
   parseBackendName,
-  parseProviderSelection
+  parseProviderSelection,
+  type BackendName
 } from "./providers/factory.js";
 import { loadProjectConfig, type ProjectConfig } from "./config/project.js";
 import { resolveProviderRoute } from "./providers/router.js";
@@ -40,6 +42,13 @@ import {
   runSshTunnel
 } from "./bridge/tunnel.js";
 import { runBridgeDoctor } from "./bridge/doctor.js";
+import {
+  DEFAULT_PANEL_CONCURRENCY,
+  formatPanelManifest,
+  parsePanelMembers,
+  runPanel
+} from "./panel/service.js";
+import { PanelStore } from "./panel/store.js";
 import { AgentService } from "./agent/service.js";
 import { FileSessionStore } from "./session/store.js";
 import {
@@ -1152,6 +1161,151 @@ bridgeCmd
       console.log(`${check.ok ? "OK" : "FAIL"}  ${check.name}: ${check.detail}`);
     }
     process.exitCode = checks.every((check) => check.ok) ? 0 : 1;
+  });
+
+// ── panel ────────────────────────────────────────────────────────
+const panelCmd = program
+  .command("panel")
+  .description("Ask several backends the same question and collect a manifest");
+
+/**
+ * A member that named no model gets the backend's own first real model.
+ * Several entries in BACKEND_MODELS are parenthesised descriptions rather than
+ * model ids ("(whatever the local codex CLI is logged into)"); those fall back
+ * to the project's configured model instead of being sent as a model name.
+ */
+function parsePositiveInteger(value: string, label: string): number {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error(`${label} must be a positive integer.`);
+  }
+  return parsed;
+}
+
+function defaultPanelModel(backend: BackendName, config: ProjectConfig): string {
+  if (backend === "browser" || backend === "chatgpt-browser") return config.browser.model;
+  const first = BACKEND_MODELS[backend]?.[0];
+  return first && !first.startsWith("(") ? first : config.model;
+}
+
+panelCmd
+  .command("ask")
+  .description("Put one question to every member of the panel")
+  .argument("<question>", "Your question")
+  .option(
+    "--member <spec...>",
+    "Panel seat: <backend>[:<model>] or <label>=<backend>[:<model>]"
+  )
+  .option("-f, --file <pattern...>", "File paths or glob patterns to include")
+  .option("--soul <name>", "Soul prompt name (~/.oracle/souls/<name>.md)")
+  .option("--concurrency <number>", "How many members to ask at once")
+  .option("--require-all", "Exit non-zero unless every member answers")
+  .option("--json", "Print the manifest as JSON")
+  .option("--cwd <path>", "Working directory", process.cwd())
+  .option("--agent <name>", "Attribute these calls to an agent for cost accounting")
+  .action(async (question, options) => {
+    const cwd = path.resolve(options.cwd);
+    const config = await loadProjectConfig(cwd);
+    const members = parsePanelMembers(options.member ?? [], (value) => parseBackendName(value));
+    const concurrency = options.concurrency
+      ? parsePositiveInteger(options.concurrency, "--concurrency")
+      : DEFAULT_PANEL_CONCURRENCY;
+
+    const runtimeOptions = backendRuntimeOptions(config);
+    const { sink: costSink, close: closeCostSink } = await createCostSink();
+    const soulsDir = path.join(homeDir(), "souls");
+    const soulPrompt = options.soul ? await loadSoul(options.soul, soulsDir) : undefined;
+    const profiles = new ProfileStore(homeDir());
+    const hasFiles = Boolean(options.file?.length);
+
+    let manifest;
+    try {
+      manifest = await runPanel({ prompt: question, cwd, members, concurrency }, async (member) => {
+        const backend = member.backend as BackendName;
+        const model = member.model ?? defaultPanelModel(backend, config);
+        const awarenessContext = await profiles.buildAwarenessContext({
+          workspaceRoot: cwd,
+          interface: "cli",
+          backend
+        });
+        const service = new ConsultService(
+          createExecutionBackend(backend, runtimeOptions),
+          undefined,
+          costSink
+        );
+        return await service.consult({
+          prompt: `## Question\n${question}`,
+          preset: "review",
+          provider: backend,
+          files: hasFiles ? options.file : [],
+          model,
+          cwd,
+          systemPrompt: buildOracleSystemPrompt(soulPrompt, awarenessContext),
+          allowEmptyFiles: !hasFiles,
+          agent: options.agent
+        });
+      });
+    } finally {
+      closeCostSink();
+    }
+
+    const manifestPath = await new PanelStore(cwd).write(manifest);
+
+    if (options.json) {
+      console.log(JSON.stringify(manifest, null, 2));
+    } else {
+      console.log(formatPanelManifest(manifest));
+      console.log(`\nManifest: ${manifestPath}`);
+    }
+
+    // A partial panel is a success by default — you asked several advisors and
+    // some answered. --require-all is for callers that need the full set.
+    if (manifest.status === "failed" || (options.requireAll && manifest.status !== "complete")) {
+      console.error(
+        `Panel ${manifest.status}: ${manifest.succeeded} of ${manifest.requested} members answered.`
+      );
+      process.exitCode = 1;
+    } else if (manifest.status === "partial") {
+      console.error(
+        `Warning: ${manifest.failed} of ${manifest.requested} members did not answer.`
+      );
+    }
+  });
+
+panelCmd
+  .command("list")
+  .description("List recorded panel manifests, newest first")
+  .option("--limit <number>", "How many to show", "20")
+  .option("--json", "Print as JSON")
+  .option("--cwd <path>", "Working directory", process.cwd())
+  .action(async (options) => {
+    const cwd = path.resolve(options.cwd);
+    const manifests = await new PanelStore(cwd).list(Number(options.limit) || 20);
+    if (options.json) {
+      console.log(JSON.stringify(manifests, null, 2));
+      return;
+    }
+    if (manifests.length === 0) {
+      console.log("No panels recorded yet. Run `oracle panel ask`.");
+      return;
+    }
+    for (const manifest of manifests) {
+      console.log(
+        `${manifest.id}  ${manifest.status.padEnd(8)} ${manifest.succeeded}/${manifest.requested}  ${manifest.createdAt}  ${manifest.prompt.slice(0, 60)}`
+      );
+    }
+  });
+
+panelCmd
+  .command("show")
+  .description("Show one panel manifest")
+  .argument("<id>", "Panel id")
+  .option("--json", "Print as JSON")
+  .option("--cwd <path>", "Working directory", process.cwd())
+  .action(async (id, options) => {
+    const cwd = path.resolve(options.cwd);
+    const manifest = await new PanelStore(cwd).read(id);
+    console.log(options.json ? JSON.stringify(manifest, null, 2) : formatPanelManifest(manifest));
   });
 
 program

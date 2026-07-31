@@ -77,6 +77,7 @@ tasks.
 | **Companion** | Turns fresh semantic presence into an explainable `speak` or `silence` intent without storing raw coordinates. | `oracle companion` · Runtime API |
 | **Govern** | Exposes Awareness, Control, Transform, and Boundary signals without presenting them as a security certification. | `oracle governance` · audit and approval tools |
 | **Bridge** | Shares one signed-in browser across machines over an SSH tunnel, carrying the address and token in an owner-only artifact. | `oracle bridge` · [Bridge](docs/bridge.md) |
+| **Panel** | Puts one question to several backends at once and records a manifest; a member that fails costs you that answer, not the panel. | `oracle panel` · [Advisory panels](docs/panel.md) |
 
 ### One core, four surfaces
 

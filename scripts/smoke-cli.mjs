@@ -185,6 +185,63 @@ try {
     throw new Error("Bridge host accepted an ssh target that could inject an ssh option.");
   }
 
+  const panelRoot = path.join(temporaryRoot, "panel");
+  await fs.mkdir(panelRoot, { recursive: true });
+
+  const emptyPanel = execute(["panel", "ask", "q", "--cwd", panelRoot]);
+  if (emptyPanel.status === 0 || !`${emptyPanel.stderr}`.includes("at least one member")) {
+    throw new Error(`Panel accepted a request with no members:\n${emptyPanel.stderr}`);
+  }
+  const duplicatePanel = execute([
+    "panel", "ask", "q", "--member", "anthropic", "--member", "anthropic", "--cwd", panelRoot
+  ]);
+  if (duplicatePanel.status === 0 || !`${duplicatePanel.stderr}`.includes("Duplicate panel member")) {
+    throw new Error(`Panel accepted duplicate seats:\n${duplicatePanel.stderr}`);
+  }
+
+  // No credentials in the smoke environment, so every member fails. That is
+  // the manifest's total-failure path: each member reports its own reason, the
+  // manifest is still written, and the command exits non-zero.
+  const failedPanel = execute([
+    "panel", "ask", "Should we ship?",
+    "--member", "anthropic",
+    "--member", "reviewer=gemini",
+    "--cwd", panelRoot
+  ]);
+  const failedPanelOutput = `${failedPanel.stdout}${failedPanel.stderr}`;
+  if (failedPanel.status === 0) {
+    throw new Error(`Panel with no answering member exited 0:\n${failedPanelOutput}`);
+  }
+  if (!failedPanelOutput.includes("No member answered (2 failed).")) {
+    throw new Error(`Panel did not report a total failure:\n${failedPanelOutput}`);
+  }
+  if (!failedPanelOutput.includes("- reviewer (gemini):")) {
+    throw new Error(`Panel lost a member's individual failure reason:\n${failedPanelOutput}`);
+  }
+
+  const panelListResult = execute(["panel", "list", "--cwd", panelRoot, "--json"]);
+  if (panelListResult.status !== 0) {
+    throw new Error(`oracle panel list failed:\n${panelListResult.stderr}`);
+  }
+  const panelList = panelListResult.stdout;
+  const recorded = JSON.parse(panelList);
+  if (recorded.length !== 1 || recorded[0].status !== "failed" || recorded[0].requested !== 2) {
+    throw new Error(`Unexpected panel manifest listing:\n${panelList}`);
+  }
+  const panelShow = run(["panel", "show", recorded[0].id, "--cwd", panelRoot]);
+  if (!panelShow.includes(recorded[0].id)) {
+    throw new Error(`Panel show did not read back its manifest:\n${panelShow}`);
+  }
+
+  const missingPanel = execute(["panel", "show", "panel-absent", "--cwd", panelRoot]);
+  if (missingPanel.status === 0) {
+    throw new Error("Panel show exited 0 for a manifest that does not exist.");
+  }
+  const traversalPanel = execute(["panel", "show", "../escape", "--cwd", panelRoot]);
+  if (traversalPanel.status === 0) {
+    throw new Error("Panel show accepted an id that escapes the panels directory.");
+  }
+
   console.log("CLI smoke tests passed.");
 } finally {
   await fs.rm(temporaryRoot, { recursive: true, force: true });
