@@ -529,8 +529,55 @@ export class RuntimeDatabase {
       version = 9;
     }
 
-    if (version > 9) {
-      throw new Error(`Runtime database schema ${version} is newer than supported schema 9.`);
+    if (version < 10) {
+      this.applyMigration(10, `
+        CREATE TABLE companion_presence (
+          sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+          id TEXT NOT NULL UNIQUE,
+          state TEXT NOT NULL CHECK (
+            state IN ('home', 'work', 'transit', 'focus', 'available', 'away', 'unknown')
+          ),
+          source TEXT NOT NULL CHECK (
+            source IN ('manual', 'device', 'calendar', 'geofence')
+          ),
+          confidence REAL NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
+          observed_at TEXT NOT NULL,
+          expires_at TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX companion_presence_observed_idx
+          ON companion_presence(observed_at DESC, created_at DESC);
+
+        CREATE TABLE companion_intents (
+          sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+          id TEXT NOT NULL UNIQUE,
+          presence_id TEXT,
+          trigger TEXT NOT NULL CHECK (trigger IN ('presence_update', 'manual')),
+          candidate TEXT NOT NULL CHECK (
+            candidate IN ('welcome_home', 'check_in', 'open_conversation', 'stay_silent')
+          ),
+          action TEXT NOT NULL CHECK (action IN ('speak', 'silence')),
+          message TEXT,
+          reason TEXT NOT NULL,
+          score_json TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX companion_intents_created_idx
+          ON companion_intents(created_at DESC);
+
+        CREATE TABLE companion_settings (
+          key TEXT PRIMARY KEY,
+          value_json TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        ) STRICT;
+      `);
+      version = 10;
+    }
+
+    if (version > 10) {
+      throw new Error(`Runtime database schema ${version} is newer than supported schema 10.`);
     }
   }
 

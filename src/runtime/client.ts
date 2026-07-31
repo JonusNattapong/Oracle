@@ -1,5 +1,12 @@
 import type { CreateTaskInput, CronTask, UpdateTaskInput } from "../scheduler/taskStore.js";
 import type {
+  CompanionIntent,
+  CompanionPauseState,
+  CompanionStateSnapshot,
+  PresenceUpdateResult,
+  UpdatePresenceInput
+} from "../companion/types.js";
+import type {
   ApprovalExecution,
   ApprovalDecision,
   ApprovalRequest,
@@ -103,6 +110,66 @@ export class RuntimeClient {
 
   runSchedule(id: string): Promise<{ result: "success" | "error"; output: string }> {
     return this.request("POST", `/v1/schedules/${id}/run`, undefined, true, 300_000);
+  }
+
+  getCompanionState(limit = 20): Promise<CompanionStateSnapshot> {
+    return this.request(
+      "GET",
+      `/v1/companion/state?limit=${encodeURIComponent(String(limit))}`,
+      undefined,
+      true,
+      10_000
+    );
+  }
+
+  updateCompanionPresence(input: UpdatePresenceInput): Promise<PresenceUpdateResult> {
+    return this.request(
+      "POST",
+      "/v1/companion/presence",
+      input,
+      true,
+      10_000
+    );
+  }
+
+  async evaluateCompanion(): Promise<CompanionIntent> {
+    return (await this.request<{ intent: CompanionIntent }>(
+      "POST",
+      "/v1/companion/evaluate",
+      {},
+      true,
+      10_000
+    )).intent;
+  }
+
+  async pauseCompanion(minutes?: number): Promise<CompanionPauseState> {
+    return (await this.request<{ pause: CompanionPauseState }>(
+      "POST",
+      "/v1/companion/pause",
+      minutes === undefined ? {} : { minutes },
+      true,
+      10_000
+    )).pause;
+  }
+
+  async resumeCompanion(): Promise<CompanionPauseState> {
+    return (await this.request<{ pause: CompanionPauseState }>(
+      "POST",
+      "/v1/companion/resume",
+      {},
+      true,
+      10_000
+    )).pause;
+  }
+
+  forgetCompanionPresence(): Promise<{ forgotten: number }> {
+    return this.request(
+      "DELETE",
+      "/v1/companion/presence",
+      undefined,
+      true,
+      10_000
+    );
   }
 
   requestStop(): Promise<{ stopping: boolean }> {

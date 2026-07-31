@@ -74,6 +74,7 @@ tasks.
 | **Act** | Runs a checkpointed coding loop with workspace tools, read-only mode, policy checks, approval gates, and audit evidence. | `oracle agent` · `oracle_agent` |
 | **Coordinate** | Connects agents through messages, presence, checklist-gated tasks, consensus, and recovery. | `oracle msg` / `oracle task` · `oracle_msg_*` / `oracle_task_*` |
 | **Operate** | Owns long-lived schedules, approvals, SQLite state, HTTP APIs, WebSocket events, and the human Control Center. | `oracle daemon` · `oracle control` |
+| **Companion** | Turns fresh semantic presence into an explainable `speak` or `silence` intent without storing raw coordinates. | `oracle companion` · Runtime API |
 | **Govern** | Exposes Awareness, Control, Transform, and Boundary signals without presenting them as a security certification. | `oracle governance` · audit and approval tools |
 
 ### One core, four surfaces
@@ -195,6 +196,23 @@ oracle schedule add "focused tests" "0 */2 * * *" "npm test"
 oracle schedule list
 oracle daemon events
 ```
+
+### Let Oracle consider starting a conversation
+
+Situated Companion runs inside the local Runtime. It accepts semantic context,
+never coordinates, and records why it chose to speak or remain silent.
+
+```bash
+oracle companion presence away --source device --ttl 30
+oracle companion presence home --source geofence --confidence 0.9 --ttl 180
+oracle companion status
+```
+
+`focus`, `transit`, expired context, quiet hours, and a paused Companion fail
+closed to silence. Use `oracle companion pause`, `resume`, or `forget` for
+immediate control. The MVP emits an auditable intent for a future notification
+or voice adapter; it does not contact an external channel by itself. See
+[Situated Companion](docs/companion.md).
 
 ### Coordinate across machines
 

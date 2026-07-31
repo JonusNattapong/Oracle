@@ -51,6 +51,36 @@ try {
     throw new Error("Daemon status leaked the API token.");
   }
 
+  const companionPresence = JSON.parse(run([
+    "companion", "presence", "focus",
+    "--source", "manual",
+    "--ttl", "30",
+    "--json"
+  ]));
+  if (
+    companionPresence.presence?.state !== "focus"
+    || companionPresence.intent?.action !== "silence"
+  ) {
+    throw new Error(
+      `Unexpected Companion decision: ${JSON.stringify(companionPresence)}`
+    );
+  }
+  run(["companion", "pause", "--minutes", "5"]);
+  const companionStatus = JSON.parse(run(["companion", "status", "--json"]));
+  if (
+    companionStatus.settings?.pause?.paused !== true
+    || companionStatus.presence?.state !== "focus"
+  ) {
+    throw new Error(
+      `Unexpected Companion status: ${JSON.stringify(companionStatus)}`
+    );
+  }
+  run(["companion", "resume"]);
+  const forgotten = run(["companion", "forget"]);
+  if (!forgotten.includes("Forgot 1 semantic presence record")) {
+    throw new Error(`Companion forget failed:\n${forgotten}`);
+  }
+
   const issued = run([
     "team", "token",
     "--project", "runtime-smoke",

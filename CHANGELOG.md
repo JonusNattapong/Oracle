@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Situated Companion MVP**
+  - Semantic-only presence for `home`, `work`, `transit`, `focus`, `available`,
+    `away`, and `unknown`; raw coordinate fields are rejected.
+  - Persistent, explainable `speak` or `silence` intents with freshness,
+    confidence, provenance, quiet-hour, interruption, privacy, and pause gates.
+  - `oracle companion status|presence|evaluate|pause|resume|forget`, authenticated
+    Runtime APIs, replayable events, and SQLite schema v10.
+
 - **ChatGPT Browser Mode (experimental desktop backend; macOS-first with Windows/Linux compatibility)**
   - Automated Chrome automation via Chrome DevTools Protocol (`--remote-debugging-port`) using Oracle's isolated profile.
   - Commands: `oracle browser setup`, `oracle browser login` (manual OAuth recovery flow), `oracle browser status`, `oracle browser status --live` (live session verification), `oracle browser open`.

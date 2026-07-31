@@ -74,6 +74,63 @@ describe("OracleDaemon", () => {
       approvals: { pending: 0 }
     });
 
+    const unauthorizedCompanion = await fetch(
+      `http://${state.host}:${state.port}/v1/companion/state`
+    );
+    expect(unauthorizedCompanion.status).toBe(401);
+    const queryTokenCompanion = await fetch(
+      `http://${state.host}:${state.port}/v1/companion/state?token=test-token`
+    );
+    expect(queryTokenCompanion.status).toBe(401);
+    const presenceResult = await client!.updateCompanionPresence({
+      state: "available",
+      source: "device",
+      confidence: 0.9,
+      ttlMinutes: 60
+    });
+    expect(presenceResult).toMatchObject({
+      presence: {
+        state: "available",
+        source: "device",
+        confidence: 0.9
+      },
+      intent: {
+        trigger: "presence_update"
+      }
+    });
+    expect(await client!.getCompanionState()).toMatchObject({
+      presence: { id: presenceResult.presence.id },
+      presenceActive: true
+    });
+    expect(await client!.pauseCompanion(10)).toMatchObject({ paused: true });
+    expect(await client!.evaluateCompanion()).toMatchObject({
+      action: "silence",
+      reason: expect.stringMatching(/paused/i)
+    });
+    expect(await client!.resumeCompanion()).toEqual({ paused: false });
+
+    const coordinateResponse = await fetch(
+      `http://${state.host}:${state.port}/v1/companion/presence`,
+      {
+        method: "POST",
+        headers: {
+          authorization: "Bearer test-token",
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          state: "home",
+          latitude: 13.7563,
+          longitude: 100.5018
+        })
+      }
+    );
+    expect(coordinateResponse.status).toBe(400);
+    expect(await coordinateResponse.json()).toMatchObject({
+      error: expect.stringMatching(/raw location/i)
+    });
+    expect(await client!.forgetCompanionPresence()).toEqual({ forgotten: 1 });
+    expect((await client!.getCompanionState()).presence).toBeNull();
+
     const consultRes = await client!.consult({
       question: "Hello daemon API",
       backend: "codex"

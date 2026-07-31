@@ -211,6 +211,26 @@ delivery.
 
 ---
 
+### oracle companion
+
+Local-first semantic presence and explainable self-initiated conversation.
+Requires Oracle Runtime to be running.
+
+```bash
+oracle companion status [--json] [--limit 5]
+oracle companion presence home --source geofence --confidence 0.9 --ttl 180
+oracle companion evaluate [--json]
+oracle companion pause [--minutes 60]
+oracle companion resume
+oracle companion forget
+```
+
+Only semantic states are accepted; raw coordinate fields are forbidden. See
+[Situated Companion](companion.md) for scoring, quiet hours, TTL, and privacy
+boundaries.
+
+---
+
 ### oracle schedule
 
 Runtime-backed cron task scheduler.

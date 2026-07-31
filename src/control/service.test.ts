@@ -15,10 +15,12 @@ let home: string;
 let workspace: string;
 let database: RuntimeDatabase;
 let service: ControlCenterService;
+let disposables: Array<{ dispose(): void }>;
 
 beforeEach(async () => {
   home = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-control-home-"));
   workspace = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-control-workspace-"));
+  disposables = [];
   database = new RuntimeDatabase(home);
   const events = new RuntimeEventBus(database);
   service = new ControlCenterService(
@@ -34,6 +36,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  for (const disposable of disposables) disposable.dispose();
   service.dispose();
   database.close();
   await fs.rm(home, { recursive: true, force: true });
@@ -43,6 +46,7 @@ afterEach(async () => {
 describe("ControlCenterService", () => {
   test("turns task review into an approval and closes through CoordinationService", async () => {
     const tasks = new TaskStore(home);
+    disposables.push(tasks);
     const task = await tasks.create({
       title: "Implement dashboard",
       createdBy: "lead",
@@ -85,7 +89,9 @@ describe("ControlCenterService", () => {
       target: ".env",
       agentId: "worker"
     });
-    await new TaskStore(home).create({
+    const tasks = new TaskStore(home);
+    disposables.push(tasks);
+    await tasks.create({
       title: "Visualize memory",
       createdBy: "lead",
       assignee: "worker"
@@ -118,6 +124,7 @@ describe("ControlCenterService", () => {
         })
       }
     );
+    disposables.push(telegramService);
     const approval = await telegramService.createApproval({
       title: "Approve release",
       requestedBy: "worker",

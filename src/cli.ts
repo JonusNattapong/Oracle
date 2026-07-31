@@ -43,6 +43,13 @@ import { CoordinationService } from "./coordination/service.js";
 import { SwarmStore } from "./orchestrator/swarmStore.js";
 import { RuntimeClient } from "./runtime/client.js";
 import {
+  PRESENCE_SOURCES,
+  PRESENCE_STATES,
+  type CompanionIntent,
+  type PresenceSource,
+  type PresenceState
+} from "./companion/types.js";
+import {
   SwarmClient,
   removeSwarmProfile,
   saveSwarmProfile,
@@ -2174,6 +2181,156 @@ for (const decision of ["approve", "reject"] as const) {
 }
 
 // ── schedule ────────────────────────────────────────────
+// ── situated companion ──────────────────────────────────────────────────────
+const companionCmd = program
+  .command("companion")
+  .description("Manage local-first presence and self-initiated conversation");
+
+function printCompanionIntent(intent: CompanionIntent): void {
+  const color = intent.action === "speak" ? "\x1b[32m" : "\x1b[2m";
+  console.log(`${color}${intent.action.toUpperCase()}\x1b[0m ${intent.candidate}`);
+  if (intent.message) console.log(`  ${intent.message}`);
+  console.log(`  reason: ${intent.reason}`);
+  console.log(
+    `  score: ${intent.score.total.toFixed(2)} / ${intent.score.threshold.toFixed(2)}`
+  );
+  console.log(`  intent: ${intent.id}`);
+}
+
+companionCmd
+  .command("status")
+  .description("Show current semantic presence, controls, and recent intents")
+  .option("--json", "Print machine-readable status", false)
+  .option("--limit <n>", "Number of recent intents", "5")
+  .action(async (options) => {
+    const limit = Number(options.limit);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      throw new Error("--limit must be an integer between 1 and 100.");
+    }
+    const state = await (await requireRuntimeClient()).getCompanionState(limit);
+    if (options.json) {
+      console.log(JSON.stringify(state, null, 2));
+      return;
+    }
+    console.log("Oracle Companion");
+    if (state.presence) {
+      console.log(
+        `  presence: ${state.presence.state} via ${state.presence.source}`
+        + ` (${Math.round(state.presence.confidence * 100)}% confidence)`
+      );
+      console.log(
+        `  freshness: ${state.presenceActive ? "active" : "expired"}`
+        + ` until ${state.presence.expiresAt}`
+      );
+    } else {
+      console.log("  presence: unknown (no semantic context stored)");
+    }
+    const pause = state.settings.pause;
+    console.log(
+      `  companion: ${pause.paused ? "paused" : "active"}`
+      + (pause.pausedUntil ? ` until ${pause.pausedUntil}` : "")
+    );
+    console.log(
+      `  quiet hours: ${state.settings.quietHours.startHour}:00-`
+      + `${state.settings.quietHours.endHour}:00 local`
+    );
+    if (state.recentIntents[0]) {
+      console.log("Latest decision:");
+      printCompanionIntent(state.recentIntents[0]);
+    }
+  });
+
+companionCmd
+  .command("presence")
+  .description("Submit semantic presence; raw coordinates are never accepted")
+  .argument("<state>", PRESENCE_STATES.join(" | "))
+  .option("--source <source>", PRESENCE_SOURCES.join(" | "), "manual")
+  .option("--confidence <0..1>", "Context confidence", "1")
+  .option("--ttl <minutes>", "Freshness lifetime in minutes", "120")
+  .option("--observed-at <iso>", "ISO-8601 observation time")
+  .option("--json", "Print machine-readable result", false)
+  .action(async (stateValue, options) => {
+    if (!PRESENCE_STATES.includes(stateValue as PresenceState)) {
+      throw new Error(`state must be one of: ${PRESENCE_STATES.join(", ")}.`);
+    }
+    if (!PRESENCE_SOURCES.includes(options.source as PresenceSource)) {
+      throw new Error(`source must be one of: ${PRESENCE_SOURCES.join(", ")}.`);
+    }
+    const confidence = Number(options.confidence);
+    if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
+      throw new Error("--confidence must be a number between 0 and 1.");
+    }
+    const ttlMinutes = Number(options.ttl);
+    if (!Number.isInteger(ttlMinutes) || ttlMinutes < 1 || ttlMinutes > 1440) {
+      throw new Error("--ttl must be an integer between 1 and 1440.");
+    }
+    const result = await (await requireRuntimeClient()).updateCompanionPresence({
+      state: stateValue as PresenceState,
+      source: options.source as PresenceSource,
+      confidence,
+      ttlMinutes,
+      observedAt: options.observedAt
+    });
+    if (options.json) {
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+    console.log(
+      `Presence updated: ${result.presence.state} via ${result.presence.source}`
+      + ` until ${result.presence.expiresAt}`
+    );
+    printCompanionIntent(result.intent);
+  });
+
+companionCmd
+  .command("evaluate")
+  .description("Run the companion decision loop against current context")
+  .option("--json", "Print machine-readable intent", false)
+  .action(async (options) => {
+    const intent = await (await requireRuntimeClient()).evaluateCompanion();
+    if (options.json) {
+      console.log(JSON.stringify(intent, null, 2));
+      return;
+    }
+    printCompanionIntent(intent);
+  });
+
+companionCmd
+  .command("pause")
+  .description("Suppress companion speech until resumed or a timer elapses")
+  .option("--minutes <n>", "Automatically resume after this many minutes")
+  .action(async (options) => {
+    const minutes = options.minutes === undefined ? undefined : Number(options.minutes);
+    if (
+      minutes !== undefined
+      && (!Number.isInteger(minutes) || minutes < 1 || minutes > 10_080)
+    ) {
+      throw new Error("--minutes must be an integer between 1 and 10080.");
+    }
+    const pause = await (await requireRuntimeClient()).pauseCompanion(minutes);
+    console.log(
+      pause.pausedUntil
+        ? `Oracle Companion paused until ${pause.pausedUntil}.`
+        : "Oracle Companion paused until explicitly resumed."
+    );
+  });
+
+companionCmd
+  .command("resume")
+  .description("Allow the companion to consider speaking again")
+  .action(async () => {
+    await (await requireRuntimeClient()).resumeCompanion();
+    console.log("Oracle Companion resumed.");
+  });
+
+companionCmd
+  .command("forget")
+  .description("Delete all stored semantic presence")
+  .action(async () => {
+    const result = await (await requireRuntimeClient()).forgetCompanionPresence();
+    console.log(`Forgot ${result.forgotten} semantic presence record(s).`);
+  });
+
 const schedCmd = program.command("schedule").description("Manage scheduled cron tasks");
 
 interface SchedulerAccess {

@@ -66,6 +66,7 @@ npx -p @oraclepersonal/oracle oracle ask "review this" -f "src/**/*.ts"
 | 19 | [Roadmap v0.6.0](roadmap-0.6.0.md) | Memory Engine foundation and agent coordination |
 | 20 | [Roadmap v0.7.0](roadmap-0.7.0.md) | Cost tracking, provider expansion, sandbox hardening, graph visualization |
 | 21 | [ACTB Governance Framework](superpowers/specs/2026-07-30-actb-governance-framework.md) | Awareness, Control, Transform, Boundary agent alignment architecture |
+| 22 | [Situated Companion](companion.md) | Semantic presence, self-initiated intents, silence gates, and privacy controls |
 
 ## MCP Tools
 

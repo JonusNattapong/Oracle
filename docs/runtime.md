@@ -51,8 +51,9 @@ imported with `INSERT OR IGNORE`. The original files are left untouched, and
 repeated startup is idempotent.
 
 The SQLite schema stores local and remote coordination, scheduler tasks, run
-history, approvals, Runtime metadata, and replayable events. WAL mode and a
-busy timeout allow local CLI readers to coexist with the daemon.
+history, approvals, semantic Companion presence and intents, Runtime metadata,
+and replayable events. WAL mode and a busy timeout allow local CLI readers to
+coexist with the daemon.
 
 ## Local API
 
@@ -72,6 +73,12 @@ PATCH  /v1/schedules/:id
 DELETE /v1/schedules/:id
 POST   /v1/schedules/:id/run
 GET    /v1/events?after=<event-id>&limit=<n>
+GET    /v1/companion/state
+POST   /v1/companion/presence
+POST   /v1/companion/evaluate
+POST   /v1/companion/pause
+POST   /v1/companion/resume
+DELETE /v1/companion/presence
 POST   /v1/daemon/stop
 GET    /v1/control/snapshot
 GET    /v1/control/approvals
@@ -142,6 +149,8 @@ Event types include:
 - `scheduler.task.created`, `scheduler.task.updated`,
   `scheduler.task.removed`
 - `scheduler.run.started`, `scheduler.run.completed`
+- `companion.presence.updated`, `companion.presence.forgotten`
+- `companion.intent.evaluated`, `companion.paused`, `companion.resumed`
 - `approval.requested`, `approval.vote.recorded`, `approval.approved`,
   `approval.rejected`, `approval.expired`
 - `approval.execution.claimed`, `approval.execution.completed`,
@@ -150,6 +159,10 @@ Event types include:
 
 Use `oracle daemon events --after <id>` instead of handling the token
 directly.
+
+See [Oracle Situated Companion](companion.md) for semantic presence, decision
+scoring, quiet hours, pause/forget controls, and the deliberate no-coordinate
+boundary.
 
 ## Security boundary
 

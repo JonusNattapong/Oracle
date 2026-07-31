@@ -4,6 +4,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { RuntimeDatabase, SqliteCronTaskStore } from "./database.js";
+import { CompanionStore } from "../companion/store.js";
 
 let home: string;
 let database: RuntimeDatabase;
@@ -26,7 +27,7 @@ describe("RuntimeDatabase", () => {
     }
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "9" });
+    ).get()).toEqual({ value: "10" });
   });
 
   test("persists scheduler tasks and run history in SQLite", async () => {
@@ -165,7 +166,7 @@ describe("RuntimeDatabase", () => {
     database = new RuntimeDatabase(home);
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "9" });
+    ).get()).toEqual({ value: "10" });
     expect(database.connection.prepare(`
       SELECT status, version, required_approvals, authorized_reviewers_json
       FROM approval_requests WHERE id = 'approval-legacy'
@@ -175,5 +176,42 @@ describe("RuntimeDatabase", () => {
       required_approvals: 1,
       authorized_reviewers_json: "[\"lead\"]"
     });
+  });
+
+  test("migrates a schema 9 database and makes Companion storage usable", async () => {
+    database.close();
+    await fs.rm(home, { recursive: true, force: true });
+    await fs.mkdir(path.join(home, "runtime"), { recursive: true });
+    const file = path.join(home, "runtime", "oracle.db");
+    const legacy = new DatabaseSync(file);
+    legacy.exec(`
+      CREATE TABLE runtime_metadata (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      ) STRICT;
+      INSERT INTO runtime_metadata VALUES (
+        'schema_version',
+        '9',
+        '2026-07-30T00:00:00.000Z'
+      );
+    `);
+    legacy.close();
+
+    database = new RuntimeDatabase(home);
+    expect(database.connection.prepare(
+      "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
+    ).get()).toEqual({ value: "10" });
+
+    const store = new CompanionStore(database);
+    const presence = store.createPresence({
+      state: "home",
+      source: "manual",
+      confidence: 1,
+      observedAt: "2026-07-31T00:00:00.000Z",
+      expiresAt: "2026-07-31T02:00:00.000Z",
+      createdAt: "2026-07-31T00:00:00.000Z"
+    });
+    expect(store.latestPresence()).toEqual(presence);
   });
 });

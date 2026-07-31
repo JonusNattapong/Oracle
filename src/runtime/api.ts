@@ -5,6 +5,13 @@ import http, {
 } from "node:http";
 import path from "node:path";
 import { WebSocket, WebSocketServer } from "ws";
+import type { CompanionService } from "../companion/service.js";
+import {
+  PRESENCE_SOURCES,
+  PRESENCE_STATES,
+  type PresenceSource,
+  type PresenceState
+} from "../companion/types.js";
 import { renderControlCenterDashboard } from "../control/dashboard.js";
 import type { ControlCenterService } from "../control/service.js";
 import {
@@ -45,6 +52,7 @@ export interface LocalApiServerOptions {
     options?: CreateExecutionBackendOptions
   ) => ExecutionBackend;
   scheduler: SchedulerService;
+  companion: CompanionService;
   control: ControlCenterService;
   events: RuntimeEventBus;
   swarm: RemoteSwarmService;
@@ -63,9 +71,10 @@ export class LocalApiServer {
     });
     this.server.on("upgrade", (request, socket, head) => {
       const url = new URL(request.url ?? "/", `http://${this.options.host}`);
-      const runtimeEvents = url.pathname === "/v1/events" && this.authorized(request, url);
+      const runtimeEvents = url.pathname === "/v1/events"
+        && this.authorized(request, url, true);
       const swarmIdentity = url.pathname === "/v1/swarm/events"
-        ? this.swarmIdentity(request, url)
+        ? this.swarmIdentity(request, url, true)
         : null;
       if (!runtimeEvents && !swarmIdentity) {
         socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n");
@@ -213,6 +222,63 @@ export class LocalApiServer {
         const after = this.integer(url.searchParams.get("after"), 0);
         const limit = this.integer(url.searchParams.get("limit"), 100);
         this.json(response, 200, { events: this.options.events.history(after, limit) });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/v1/companion/state") {
+        const limit = this.integer(url.searchParams.get("limit"), 20);
+        this.json(response, 200, this.options.companion.state(limit));
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/companion/presence") {
+        const body = await this.body(request);
+        this.assertAllowedFields(body, [
+          "state",
+          "source",
+          "confidence",
+          "observedAt",
+          "ttlMinutes"
+        ]);
+        const result = this.options.companion.updatePresence({
+          state: this.presenceState(body.state),
+          source: this.presenceSource(body.source),
+          confidence: this.optionalUnitNumber(body.confidence, "confidence"),
+          observedAt: this.optionalString(body.observedAt, "observedAt"),
+          ttlMinutes: this.optionalPositiveInteger(body.ttlMinutes, "ttlMinutes")
+        });
+        this.json(response, 201, result);
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/companion/evaluate") {
+        const body = await this.body(request);
+        this.assertAllowedFields(body, []);
+        this.json(response, 201, {
+          intent: this.options.companion.evaluate("manual")
+        });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/companion/pause") {
+        const body = await this.body(request);
+        this.assertAllowedFields(body, ["minutes"]);
+        const pause = this.options.companion.pause(
+          this.optionalPositiveInteger(body.minutes, "minutes")
+        );
+        this.json(response, 200, { pause });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/companion/resume") {
+        const body = await this.body(request);
+        this.assertAllowedFields(body, []);
+        this.json(response, 200, { pause: this.options.companion.resume() });
+        return;
+      }
+
+      if (request.method === "DELETE" && url.pathname === "/v1/companion/presence") {
+        this.json(response, 200, this.options.companion.forgetPresence());
         return;
       }
 
@@ -677,23 +743,33 @@ export class LocalApiServer {
     return false;
   }
 
-  private authorized(request: IncomingMessage, url: URL): boolean {
-    return this.requestToken(request, url) === this.options.token;
+  private authorized(
+    request: IncomingMessage,
+    url: URL,
+    allowQuery = false
+  ): boolean {
+    return this.requestToken(request, url, allowQuery) === this.options.token;
   }
 
-  private swarmIdentity(request: IncomingMessage, url: URL): SwarmIdentity | null {
-    const token = this.requestToken(request, url);
+  private swarmIdentity(
+    request: IncomingMessage,
+    url: URL,
+    allowQuery = false
+  ): SwarmIdentity | null {
+    const token = this.requestToken(request, url, allowQuery);
     return token ? this.options.swarm.authenticate(token) : null;
   }
 
-  private requestToken(request: IncomingMessage, url: URL): string | undefined {
+  private requestToken(
+    request: IncomingMessage,
+    url: URL,
+    allowQuery: boolean
+  ): string | undefined {
     const bearer = request.headers.authorization?.match(/^Bearer (.+)$/i)?.[1];
     const header = request.headers["x-oracle-token"];
-    const query = url.searchParams.get("token");
     return bearer
       ?? (typeof header === "string" ? header : undefined)
-      ?? query
-      ?? undefined;
+      ?? (allowQuery ? url.searchParams.get("token") ?? undefined : undefined);
   }
 
   private async body(request: IncomingMessage): Promise<Record<string, unknown>> {
@@ -715,6 +791,64 @@ export class LocalApiServer {
 
   private requiredString(value: unknown, field: string): string {
     if (typeof value !== "string" || !value.trim()) throw new Error(`${field} is required.`);
+    return value;
+  }
+
+  private assertAllowedFields(
+    body: Record<string, unknown>,
+    allowed: readonly string[]
+  ): void {
+    const rawLocationFields = new Set([
+      "lat",
+      "latitude",
+      "lng",
+      "longitude",
+      "coordinates",
+      "gps"
+    ]);
+    for (const field of Object.keys(body)) {
+      if (rawLocationFields.has(field.toLowerCase())) {
+        throw new Error(
+          `Raw location field "${field}" is forbidden; submit semantic presence only.`
+        );
+      }
+      if (!allowed.includes(field)) {
+        throw new Error(`Unexpected field "${field}".`);
+      }
+    }
+  }
+
+  private presenceState(value: unknown): PresenceState {
+    if (
+      typeof value === "string"
+      && PRESENCE_STATES.includes(value as PresenceState)
+    ) {
+      return value as PresenceState;
+    }
+    throw new Error(`state must be one of: ${PRESENCE_STATES.join(", ")}.`);
+  }
+
+  private presenceSource(value: unknown): PresenceSource | undefined {
+    if (value === undefined || value === null) return undefined;
+    if (
+      typeof value === "string"
+      && PRESENCE_SOURCES.includes(value as PresenceSource)
+    ) {
+      return value as PresenceSource;
+    }
+    throw new Error(`source must be one of: ${PRESENCE_SOURCES.join(", ")}.`);
+  }
+
+  private optionalUnitNumber(value: unknown, field: string): number | undefined {
+    if (value === undefined || value === null) return undefined;
+    if (
+      typeof value !== "number"
+      || !Number.isFinite(value)
+      || value < 0
+      || value > 1
+    ) {
+      throw new Error(`${field} must be a number between 0 and 1.`);
+    }
     return value;
   }
 

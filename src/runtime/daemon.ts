@@ -1,4 +1,6 @@
 import path from "node:path";
+import { CompanionService } from "../companion/service.js";
+import { CompanionStore } from "../companion/store.js";
 import { ControlCenterService } from "../control/service.js";
 import { VERSION } from "../version.js";
 import { LocalApiServer, type LocalApiServerOptions } from "./api.js";
@@ -31,6 +33,7 @@ export class OracleDaemon {
   private database?: RuntimeDatabase;
   private events?: RuntimeEventBus;
   private scheduler?: SchedulerService;
+  private companion?: CompanionService;
   private control?: ControlCenterService;
   private swarm?: RemoteSwarmService;
   private api?: LocalApiServer;
@@ -68,6 +71,10 @@ export class OracleDaemon {
     );
     this.events = new RuntimeEventBus(this.database);
     this.swarm = new RemoteSwarmService(this.database, this.events);
+    this.companion = new CompanionService(
+      new CompanionStore(this.database),
+      this.events
+    );
     const workspaceRoot = path.resolve(this.options.workspaceRoot ?? process.cwd());
     this.scheduler = new SchedulerService(this.database, this.events, workspaceRoot);
     this.control = new ControlCenterService(
@@ -96,6 +103,7 @@ export class OracleDaemon {
       workspaceRoot,
       backendFactory: this.options.backendFactory,
       scheduler: this.scheduler,
+      companion: this.companion,
       control: this.control,
       events: this.events,
       swarm: this.swarm,
@@ -126,6 +134,7 @@ export class OracleDaemon {
       this.database.close();
       this.api = undefined;
       this.scheduler = undefined;
+      this.companion = undefined;
       this.control = undefined;
       this.swarm = undefined;
       this.events = undefined;
@@ -153,6 +162,7 @@ export class OracleDaemon {
     this.state = undefined;
     this.api = undefined;
     this.scheduler = undefined;
+    this.companion = undefined;
     this.control = undefined;
     this.swarm = undefined;
     this.events = undefined;
