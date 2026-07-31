@@ -225,9 +225,20 @@ oracle companion resume
 oracle companion forget
 ```
 
-Only semantic states are accepted; raw coordinate fields are forbidden. See
-[Situated Companion](companion.md) for scoring, quiet hours, TTL, and privacy
-boundaries.
+Local notification delivery, disabled until enabled explicitly:
+
+```bash
+oracle companion channels [--json]
+oracle companion channel enable windows-toast
+oracle companion channel disable windows-toast
+oracle companion notify-test [--json]
+oracle companion deliveries [--json] [--limit 10]
+```
+
+Only semantic states are accepted; raw coordinate fields are forbidden. Silence
+is never delivered, an intent is delivered at most once per channel, and a
+cooldown prevents repeated notifications. See [Situated Companion](companion.md)
+for scoring, quiet hours, TTL, delivery gates, and privacy boundaries.
 
 ---
 

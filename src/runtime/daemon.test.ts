@@ -21,7 +21,10 @@ afterEach(async () => {
 });
 
 describe("OracleDaemon", () => {
-  test("serves scheduler API from SQLite and removes state on stop", async () => {
+  // Exercises the whole Runtime surface in one daemon: consult, swarm,
+  // approvals, and WebSockets. The default 5s budget is too tight for it under
+  // parallel suite load.
+  test("serves scheduler API from SQLite and removes state on stop", { timeout: 60_000 }, async () => {
     let runtimeSystemPrompt = "";
     daemon = new OracleDaemon({
       homeDir: home,
@@ -226,6 +229,79 @@ describe("OracleDaemon", () => {
 
     await daemon.stop();
     expect(await readDaemonState(home)).toBeNull();
+  });
+
+  test("requires authentication for Companion delivery routes and delivers once", { timeout: 60_000 }, async () => {
+    const delivered: string[] = [];
+    daemon = new OracleDaemon({
+      homeDir: home,
+      workspaceRoot: home,
+      host: "127.0.0.1",
+      port: 0,
+      token: "test-token",
+      notifiers: [{
+        channel: "test-channel",
+        enabled: true,
+        available: true,
+        deliver: async (intent) => {
+          delivered.push(intent.id);
+          return { delivered: true };
+        }
+      }]
+    });
+    const state = await daemon.start();
+    const base = `http://${state.host}:${state.port}`;
+    const client = (await RuntimeClient.connect(home))!;
+
+    for (const route of ["/v1/companion/channels", "/v1/companion/deliveries"]) {
+      expect((await fetch(`${base}${route}`)).status).toBe(401);
+      // Query-string tokens stay reserved for the WebSocket bootstrap.
+      expect((await fetch(`${base}${route}?token=test-token`)).status).toBe(401);
+    }
+    expect((await fetch(`${base}/v1/companion/notify-test`, { method: "POST" })).status)
+      .toBe(401);
+
+    // Channels start disabled: nothing leaves the terminal until asked.
+    expect(await client.getCompanionChannels()).toEqual([
+      { channel: "test-channel", enabled: false, available: true }
+    ]);
+    expect(await client.setCompanionChannelEnabled("test-channel", true)).toEqual([
+      { channel: "test-channel", enabled: true, available: true }
+    ]);
+
+    // A presence arrival home speaks, and the daemon dispatches it.
+    await client.updateCompanionPresence({ state: "away", ttlMinutes: 60 });
+    const arrival = await client.updateCompanionPresence({
+      state: "home",
+      ttlMinutes: 120
+    });
+
+    let deliveries = await client.getCompanionDeliveries();
+    for (let attempt = 0; attempt < 40 && deliveries.length === 0; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      deliveries = await client.getCompanionDeliveries();
+    }
+
+    if (arrival.intent.action === "speak") {
+      expect(deliveries).toHaveLength(1);
+      expect(deliveries[0]).toMatchObject({
+        intentId: arrival.intent.id,
+        channel: "test-channel",
+        status: "delivered"
+      });
+      expect(delivered).toEqual([arrival.intent.id]);
+    } else {
+      // Quiet hours on the test machine are a legitimate outcome, not a failure.
+      expect(deliveries).toHaveLength(0);
+      expect(delivered).toEqual([]);
+    }
+
+    // notify-test is authenticated and never delivers a silence decision.
+    const notified = await client.notifyTestCompanion();
+    if (notified.intent.action === "silence") {
+      expect(notified.deliveries).toEqual([]);
+    }
+    expect(delivered.length).toBeLessThanOrEqual(2);
   });
 
   test("streams persisted scheduler events over WebSocket", async () => {

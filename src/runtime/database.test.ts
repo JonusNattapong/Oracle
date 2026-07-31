@@ -4,7 +4,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { RuntimeDatabase, SqliteCronTaskStore } from "./database.js";
-import { CompanionStore } from "../companion/store.js";
+import { CompanionStore, DuplicateDeliveryError } from "../companion/store.js";
 
 let home: string;
 let database: RuntimeDatabase;
@@ -27,7 +27,7 @@ describe("RuntimeDatabase", () => {
     }
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "10" });
+    ).get()).toEqual({ value: "11" });
   });
 
   test("persists scheduler tasks and run history in SQLite", async () => {
@@ -166,7 +166,7 @@ describe("RuntimeDatabase", () => {
     database = new RuntimeDatabase(home);
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "10" });
+    ).get()).toEqual({ value: "11" });
     expect(database.connection.prepare(`
       SELECT status, version, required_approvals, authorized_reviewers_json
       FROM approval_requests WHERE id = 'approval-legacy'
@@ -201,7 +201,7 @@ describe("RuntimeDatabase", () => {
     database = new RuntimeDatabase(home);
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "10" });
+    ).get()).toEqual({ value: "11" });
 
     const store = new CompanionStore(database);
     const presence = store.createPresence({
@@ -213,5 +213,74 @@ describe("RuntimeDatabase", () => {
       createdAt: "2026-07-31T00:00:00.000Z"
     });
     expect(store.latestPresence()).toEqual(presence);
+  });
+
+  test("migrates a schema 10 database and preserves existing Companion data", async () => {
+    const store = new CompanionStore(database);
+    const presence = store.createPresence({
+      state: "home",
+      source: "manual",
+      confidence: 1,
+      observedAt: "2026-07-31T00:00:00.000Z",
+      expiresAt: "2026-07-31T02:00:00.000Z",
+      createdAt: "2026-07-31T00:00:00.000Z"
+    });
+    const intent = store.createIntent({
+      presenceId: presence.id,
+      trigger: "presence_update",
+      candidate: "welcome_home",
+      action: "speak",
+      message: "Welcome home.",
+      reason: "test",
+      score: {
+        relevance: 1,
+        relationalContinuity: 0,
+        urgency: 0,
+        interruptionCost: 0,
+        privacyRisk: 0,
+        uncertainty: 0,
+        total: 1,
+        threshold: 0.7
+      },
+      createdAt: "2026-07-31T00:00:00.000Z"
+    });
+    const file = database.filePath;
+    database.close();
+
+    // Roll the recorded version back to 10 so the delivery migration re-runs
+    // against a database that already holds Companion rows.
+    const legacy = new DatabaseSync(file);
+    legacy.exec("DROP TABLE companion_deliveries");
+    legacy.exec("UPDATE runtime_metadata SET value = '10' WHERE key = 'schema_version'");
+    legacy.close();
+
+    database = new RuntimeDatabase(home);
+    expect(database.connection.prepare(
+      "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
+    ).get()).toEqual({ value: "11" });
+
+    const migrated = new CompanionStore(database);
+    expect(migrated.latestPresence()).toEqual(presence);
+    expect(migrated.listIntents()[0].id).toBe(intent.id);
+    expect(migrated.listDeliveries()).toEqual([]);
+  });
+
+  test("rejects a duplicate delivery for the same intent and channel", () => {
+    const store = new CompanionStore(database);
+    const base = {
+      intentId: "intent-1",
+      channel: "windows-toast",
+      status: "delivered" as const,
+      attempts: 1,
+      createdAt: "2026-07-31T00:00:00.000Z"
+    };
+    const first = store.createDelivery(base);
+    expect(() => store.createDelivery(base)).toThrow(DuplicateDeliveryError);
+    try {
+      store.createDelivery(base);
+    } catch (error) {
+      expect((error as DuplicateDeliveryError).existing.id).toBe(first.id);
+    }
+    expect(store.listDeliveries()).toHaveLength(1);
   });
 });

@@ -1,5 +1,7 @@
 import type { CreateTaskInput, CronTask, UpdateTaskInput } from "../scheduler/taskStore.js";
 import type {
+  CompanionChannelStatus,
+  CompanionDelivery,
   CompanionIntent,
   CompanionPauseState,
   CompanionStateSnapshot,
@@ -169,6 +171,52 @@ export class RuntimeClient {
       undefined,
       true,
       10_000
+    );
+  }
+
+  async getCompanionChannels(): Promise<CompanionChannelStatus[]> {
+    return (await this.request<{ channels: CompanionChannelStatus[] }>(
+      "GET",
+      "/v1/companion/channels",
+      undefined,
+      true,
+      10_000
+    )).channels;
+  }
+
+  async setCompanionChannelEnabled(
+    channel: string,
+    enabled: boolean
+  ): Promise<CompanionChannelStatus[]> {
+    return (await this.request<{ channels: CompanionChannelStatus[] }>(
+      "POST",
+      "/v1/companion/channels",
+      { channel, enabled },
+      true,
+      10_000
+    )).channels;
+  }
+
+  async getCompanionDeliveries(limit = 20): Promise<CompanionDelivery[]> {
+    return (await this.request<{ deliveries: CompanionDelivery[] }>(
+      "GET",
+      `/v1/companion/deliveries?limit=${encodeURIComponent(String(limit))}`,
+      undefined,
+      true,
+      10_000
+    )).deliveries;
+  }
+
+  notifyTestCompanion(): Promise<{
+    intent: CompanionIntent;
+    deliveries: CompanionDelivery[];
+  }> {
+    return this.request(
+      "POST",
+      "/v1/companion/notify-test",
+      {},
+      true,
+      30_000
     );
   }
 

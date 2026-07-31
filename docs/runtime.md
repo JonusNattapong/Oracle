@@ -79,6 +79,10 @@ POST   /v1/companion/evaluate
 POST   /v1/companion/pause
 POST   /v1/companion/resume
 DELETE /v1/companion/presence
+GET    /v1/companion/channels
+POST   /v1/companion/channels
+GET    /v1/companion/deliveries
+POST   /v1/companion/notify-test
 POST   /v1/daemon/stop
 GET    /v1/control/snapshot
 GET    /v1/control/approvals
@@ -151,6 +155,9 @@ Event types include:
 - `scheduler.run.started`, `scheduler.run.completed`
 - `companion.presence.updated`, `companion.presence.forgotten`
 - `companion.intent.evaluated`, `companion.paused`, `companion.resumed`
+- `companion.channel.updated`, `companion.delivery.requested`,
+  `companion.delivery.delivered`, `companion.delivery.failed`,
+  `companion.delivery.suppressed`
 - `approval.requested`, `approval.vote.recorded`, `approval.approved`,
   `approval.rejected`, `approval.expired`
 - `approval.execution.claimed`, `approval.execution.completed`,
@@ -161,8 +168,13 @@ Use `oracle daemon events --after <id>` instead of handling the token
 directly.
 
 See [Oracle Situated Companion](companion.md) for semantic presence, decision
-scoring, quiet hours, pause/forget controls, and the deliberate no-coordinate
-boundary.
+scoring, quiet hours, pause/forget controls, notification delivery, and the
+deliberate no-coordinate boundary.
+
+Notification channels are disabled until enabled explicitly, and delivery
+re-checks every Boundary gate. Delivery events carry a classified `errorKind`
+rather than raw channel output, so replaying the event log never exposes host
+paths or message text.
 
 ## Security boundary
 

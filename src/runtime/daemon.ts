@@ -1,6 +1,9 @@
 import path from "node:path";
+import { CompanionDeliveryService } from "../companion/delivery.js";
+import { createDefaultNotifiers } from "../companion/notifier.js";
 import { CompanionService } from "../companion/service.js";
 import { CompanionStore } from "../companion/store.js";
+import type { CompanionNotifier } from "../companion/types.js";
 import { ControlCenterService } from "../control/service.js";
 import { VERSION } from "../version.js";
 import { LocalApiServer, type LocalApiServerOptions } from "./api.js";
@@ -26,6 +29,8 @@ export interface OracleDaemonOptions {
   workspaceRoot?: string;
   backendFactory?: LocalApiServerOptions["backendFactory"];
   allowRemote?: boolean;
+  /** Overrides the local notification channels; defaults to the platform set. */
+  notifiers?: CompanionNotifier[];
   onShutdown?: () => void;
 }
 
@@ -34,6 +39,7 @@ export class OracleDaemon {
   private events?: RuntimeEventBus;
   private scheduler?: SchedulerService;
   private companion?: CompanionService;
+  private delivery?: CompanionDeliveryService;
   private control?: ControlCenterService;
   private swarm?: RemoteSwarmService;
   private api?: LocalApiServer;
@@ -71,10 +77,20 @@ export class OracleDaemon {
     );
     this.events = new RuntimeEventBus(this.database);
     this.swarm = new RemoteSwarmService(this.database, this.events);
-    this.companion = new CompanionService(
-      new CompanionStore(this.database),
-      this.events
+    const companionStore = new CompanionStore(this.database);
+    this.companion = new CompanionService(companionStore, this.events);
+    this.delivery = new CompanionDeliveryService(
+      companionStore,
+      this.companion,
+      this.events,
+      this.options.notifiers ?? createDefaultNotifiers()
     );
+    const delivery = this.delivery;
+    this.companion.setDispatcher((intent) => {
+      // Fire-and-forget: dispatch persists its own outcome, and a rejected
+      // promise here must not surface as an unhandled rejection.
+      void delivery.dispatch(intent).catch(() => undefined);
+    });
     const workspaceRoot = path.resolve(this.options.workspaceRoot ?? process.cwd());
     this.scheduler = new SchedulerService(this.database, this.events, workspaceRoot);
     this.control = new ControlCenterService(
@@ -104,6 +120,7 @@ export class OracleDaemon {
       backendFactory: this.options.backendFactory,
       scheduler: this.scheduler,
       companion: this.companion,
+      delivery: this.delivery,
       control: this.control,
       events: this.events,
       swarm: this.swarm,
@@ -135,6 +152,7 @@ export class OracleDaemon {
       this.api = undefined;
       this.scheduler = undefined;
       this.companion = undefined;
+      this.delivery = undefined;
       this.control = undefined;
       this.swarm = undefined;
       this.events = undefined;
@@ -163,6 +181,7 @@ export class OracleDaemon {
     this.api = undefined;
     this.scheduler = undefined;
     this.companion = undefined;
+    this.delivery = undefined;
     this.control = undefined;
     this.swarm = undefined;
     this.events = undefined;

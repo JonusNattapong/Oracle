@@ -45,6 +45,7 @@ import { RuntimeClient } from "./runtime/client.js";
 import {
   PRESENCE_SOURCES,
   PRESENCE_STATES,
+  type CompanionDelivery,
   type CompanionIntent,
   type PresenceSource,
   type PresenceState
@@ -2321,6 +2322,102 @@ companionCmd
   .action(async () => {
     await (await requireRuntimeClient()).resumeCompanion();
     console.log("Oracle Companion resumed.");
+  });
+
+function printCompanionDelivery(delivery: CompanionDelivery): void {
+  const color = delivery.status === "delivered"
+    ? "\x1b[32m"
+    : delivery.status === "failed"
+      ? "\x1b[31m"
+      : "\x1b[2m";
+  console.log(
+    `${color}${delivery.status.toUpperCase()}\x1b[0m ${delivery.channel}`
+    + `  intent ${delivery.intentId}`
+  );
+  if (delivery.detail) console.log(`  detail: ${delivery.detail}`);
+}
+
+companionCmd
+  .command("channels")
+  .description("Show local notification channels and whether they can deliver")
+  .option("--json", "Print machine-readable channel status", false)
+  .action(async (options) => {
+    const channels = await (await requireRuntimeClient()).getCompanionChannels();
+    if (options.json) {
+      console.log(JSON.stringify(channels, null, 2));
+      return;
+    }
+    if (channels.length === 0) {
+      console.log("No notification channels are configured.");
+      return;
+    }
+    for (const channel of channels) {
+      const state = !channel.enabled
+        ? "disabled"
+        : channel.available ? "ready" : "unavailable";
+      console.log(`  ${channel.channel}: ${state}`);
+      if (channel.reason) console.log(`    ${channel.reason}`);
+    }
+  });
+
+companionCmd
+  .command("channel")
+  .description("Enable or disable a local notification channel (off by default)")
+  .argument("<action>", "enable | disable")
+  .argument("<channel>", "Channel name, e.g. windows-toast")
+  .action(async (action: string, channel: string) => {
+    if (action !== "enable" && action !== "disable") {
+      throw new Error("action must be enable or disable.");
+    }
+    const channels = await (await requireRuntimeClient())
+      .setCompanionChannelEnabled(channel, action === "enable");
+    const updated = channels.find((item) => item.channel === channel);
+    console.log(
+      `Channel ${channel} is now ${updated?.enabled ? "enabled" : "disabled"}.`
+    );
+    if (updated && !updated.available && updated.reason) {
+      console.log(`  note: ${updated.reason}`);
+    }
+  });
+
+companionCmd
+  .command("deliveries")
+  .description("Show recent notification delivery attempts and suppressions")
+  .option("--json", "Print machine-readable delivery history", false)
+  .option("--limit <n>", "Number of deliveries", "10")
+  .action(async (options) => {
+    const limit = Number(options.limit);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      throw new Error("--limit must be an integer between 1 and 100.");
+    }
+    const deliveries = await (await requireRuntimeClient()).getCompanionDeliveries(limit);
+    if (options.json) {
+      console.log(JSON.stringify(deliveries, null, 2));
+      return;
+    }
+    if (deliveries.length === 0) {
+      console.log("No delivery attempts recorded.");
+      return;
+    }
+    for (const delivery of deliveries) printCompanionDelivery(delivery);
+  });
+
+companionCmd
+  .command("notify-test")
+  .description("Evaluate now and dispatch the result to local channels")
+  .option("--json", "Print machine-readable result", false)
+  .action(async (options) => {
+    const result = await (await requireRuntimeClient()).notifyTestCompanion();
+    if (options.json) {
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+    printCompanionIntent(result.intent);
+    if (result.deliveries.length === 0) {
+      console.log("  no delivery attempted (silence is a valid outcome)");
+      return;
+    }
+    for (const delivery of result.deliveries) printCompanionDelivery(delivery);
   });
 
 companionCmd

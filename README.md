@@ -74,7 +74,7 @@ tasks.
 | **Act** | Runs a checkpointed coding loop with workspace tools, read-only mode, policy checks, approval gates, and audit evidence. | `oracle agent` · `oracle_agent` |
 | **Coordinate** | Connects agents through messages, presence, checklist-gated tasks, consensus, and recovery. | `oracle msg` / `oracle task` · `oracle_msg_*` / `oracle_task_*` |
 | **Operate** | Owns long-lived schedules, approvals, SQLite state, HTTP APIs, WebSocket events, and the human Control Center. | `oracle daemon` · `oracle control` |
-| **Companion** | Turns fresh semantic presence into an explainable `speak` or `silence` intent without storing raw coordinates. | `oracle companion` · Runtime API |
+| **Companion** | Turns fresh semantic presence into an explainable `speak` or `silence` intent without storing raw coordinates, and can raise an opt-in local notification. | `oracle companion` · Runtime API |
 | **Govern** | Exposes Awareness, Control, Transform, and Boundary signals without presenting them as a security certification. | `oracle governance` · audit and approval tools |
 
 ### One core, four surfaces
@@ -210,9 +210,20 @@ oracle companion status
 
 `focus`, `transit`, expired context, quiet hours, and a paused Companion fail
 closed to silence. Use `oracle companion pause`, `resume`, or `forget` for
-immediate control. The MVP emits an auditable intent for a future notification
-or voice adapter; it does not contact an external channel by itself. See
-[Situated Companion](docs/companion.md).
+immediate control.
+
+A `speak` intent can reach a local notification channel, but only one the user
+has turned on — every channel ships disabled:
+
+```bash
+oracle companion channel enable windows-toast
+oracle companion notify-test
+oracle companion deliveries
+```
+
+The Boundary runs again at delivery time, silence never reaches a channel, a
+cooldown prevents repeated notifications, and each intent is delivered at most
+once. Nothing leaves the machine. See [Situated Companion](docs/companion.md).
 
 ### Coordinate across machines
 

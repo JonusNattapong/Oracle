@@ -65,6 +65,23 @@ try {
       `Unexpected Companion decision: ${JSON.stringify(companionPresence)}`
     );
   }
+  const channels = JSON.parse(run(["companion", "channels", "--json"]));
+  if (!Array.isArray(channels) || channels.length === 0) {
+    throw new Error(`Companion channels missing: ${JSON.stringify(channels)}`);
+  }
+
+  // Focus presence is a do-not-disturb boundary, so nothing may be delivered.
+  const notified = JSON.parse(run(["companion", "notify-test", "--json"]));
+  if (notified.intent?.action !== "silence" || notified.deliveries?.length !== 0) {
+    throw new Error(
+      `Companion delivered during focus presence: ${JSON.stringify(notified)}`
+    );
+  }
+  const deliveries = JSON.parse(run(["companion", "deliveries", "--json"]));
+  if (deliveries.length !== 0) {
+    throw new Error(`Unexpected delivery records: ${JSON.stringify(deliveries)}`);
+  }
+
   run(["companion", "pause", "--minutes", "5"]);
   const companionStatus = JSON.parse(run(["companion", "status", "--json"]));
   if (

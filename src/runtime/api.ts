@@ -5,6 +5,7 @@ import http, {
 } from "node:http";
 import path from "node:path";
 import { WebSocket, WebSocketServer } from "ws";
+import type { CompanionDeliveryService } from "../companion/delivery.js";
 import type { CompanionService } from "../companion/service.js";
 import {
   PRESENCE_SOURCES,
@@ -53,6 +54,7 @@ export interface LocalApiServerOptions {
   ) => ExecutionBackend;
   scheduler: SchedulerService;
   companion: CompanionService;
+  delivery: CompanionDeliveryService;
   control: ControlCenterService;
   events: RuntimeEventBus;
   swarm: RemoteSwarmService;
@@ -279,6 +281,48 @@ export class LocalApiServer {
 
       if (request.method === "DELETE" && url.pathname === "/v1/companion/presence") {
         this.json(response, 200, this.options.companion.forgetPresence());
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/v1/companion/channels") {
+        this.json(response, 200, { channels: this.options.delivery.channels() });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/companion/channels") {
+        const body = await this.body(request);
+        this.assertAllowedFields(body, ["channel", "enabled"]);
+        if (typeof body.enabled !== "boolean") {
+          throw new Error("enabled must be a boolean.");
+        }
+        this.json(response, 200, {
+          channels: this.options.delivery.setChannelEnabled(
+            this.requiredString(body.channel, "channel"),
+            body.enabled
+          )
+        });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/v1/companion/deliveries") {
+        const limit = this.integer(url.searchParams.get("limit"), 20);
+        this.json(response, 200, {
+          deliveries: this.options.delivery.listDeliveries(limit)
+        });
+        return;
+      }
+
+      // Re-runs the loop and dispatches the resulting intent. A `silence`
+      // decision still returns 201 with no deliveries — that is a valid outcome,
+      // not an error.
+      if (request.method === "POST" && url.pathname === "/v1/companion/notify-test") {
+        const body = await this.body(request);
+        this.assertAllowedFields(body, []);
+        const intent = this.options.companion.evaluate("manual");
+        this.json(response, 201, {
+          intent,
+          deliveries: await this.options.delivery.dispatch(intent)
+        });
         return;
       }
 

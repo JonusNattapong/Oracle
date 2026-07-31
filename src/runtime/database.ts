@@ -576,8 +576,34 @@ export class RuntimeDatabase {
       version = 10;
     }
 
-    if (version > 10) {
-      throw new Error(`Runtime database schema ${version} is newer than supported schema 10.`);
+    if (version < 11) {
+      this.applyMigration(11, `
+        CREATE TABLE companion_deliveries (
+          sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+          id TEXT NOT NULL UNIQUE,
+          intent_id TEXT NOT NULL,
+          channel TEXT NOT NULL,
+          status TEXT NOT NULL CHECK (
+            status IN ('pending', 'delivered', 'failed', 'suppressed')
+          ),
+          attempts INTEGER NOT NULL DEFAULT 0,
+          detail TEXT,
+          created_at TEXT NOT NULL,
+          attempted_at TEXT,
+          delivered_at TEXT
+        ) STRICT;
+
+        CREATE UNIQUE INDEX companion_deliveries_intent_channel_idx
+          ON companion_deliveries(intent_id, channel);
+
+        CREATE INDEX companion_deliveries_status_idx
+          ON companion_deliveries(status, sequence DESC);
+      `);
+      version = 11;
+    }
+
+    if (version > 11) {
+      throw new Error(`Runtime database schema ${version} is newer than supported schema 11.`);
     }
   }
 

@@ -42,6 +42,7 @@ export class CompanionService {
   private readonly now: () => Date;
   private readonly quietHours: { startHour: number; endHour: number };
   private readonly threshold: number;
+  private dispatch?: (intent: CompanionIntent) => void;
 
   constructor(
     private readonly store: CompanionStore,
@@ -84,6 +85,38 @@ export class CompanionService {
     return { presence, intent };
   }
 
+  /**
+   * Registers the sink that carries `speak` intents to notification channels.
+   * Set after construction because delivery depends on this service, and a
+   * failing sink must never affect the decision that produced the intent.
+   */
+  setDispatcher(dispatch: (intent: CompanionIntent) => void): void {
+    this.dispatch = dispatch;
+  }
+
+  /**
+   * Re-runs the Boundary against an intent at delivery time. Evaluation and
+   * delivery are separate moments: presence may have expired, the user may have
+   * paused, quiet hours may have begun. Returns a reason to suppress, or
+   * undefined when speaking is still appropriate.
+   */
+  deliveryGuard(intent: CompanionIntent): string | undefined {
+    if (intent.action !== "speak") {
+      return "Intent action is not speak.";
+    }
+    const presence = intent.presenceId
+      ? this.store.getPresence(intent.presenceId)
+      : null;
+    // A newer observation means the situation moved on since this intent was
+    // formed. The newer observation produces its own intent, so suppressing
+    // here loses nothing and keeps a stale decision from reaching the user.
+    const latest = this.store.latestPresence();
+    if (presence && latest && latest.id !== presence.id) {
+      return "A newer presence observation superseded this intent.";
+    }
+    return this.gateReason(presence, this.now());
+  }
+
   evaluate(
     trigger: CompanionIntentTrigger = "manual",
     previousState?: PresenceState
@@ -124,6 +157,15 @@ export class CompanionService {
     this.events.publish("companion.intent.evaluated", {
       intent
     });
+    if (intent.action === "speak" && this.dispatch) {
+      // The decision is already recorded. Delivery is best-effort from here, so
+      // a broken notification channel cannot fail a presence update.
+      try {
+        this.dispatch(intent);
+      } catch {
+        // Delivery records its own failures; nothing to escalate.
+      }
+    }
     return intent;
   }
 

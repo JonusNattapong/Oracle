@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Companion local notification delivery**
+  - `CompanionNotifier` channel interface plus a Windows toast adapter that
+    passes message text through the environment, never a shell command line,
+    and degrades explicitly on non-Windows platforms.
+  - Delivery re-checks every Boundary gate (pause, freshness, superseded
+    presence, `focus`/`transit`, quiet hours) and fails closed to suppression;
+    `silence` intents never reach a channel.
+  - Channels ship disabled and are enabled per channel by the user.
+  - Per-(intent, channel) uniqueness, a delivery cooldown, persisted delivery
+    history, and SQLite schema v11.
+  - `oracle companion channels|channel|notify-test|deliveries`, authenticated
+    Runtime APIs, and `companion.channel.updated` plus
+    `companion.delivery.*` replayable events that exclude message text and raw
+    channel output.
+
 - **Situated Companion MVP**
   - Semantic-only presence for `home`, `work`, `transit`, `focus`, `available`,
     `away`, and `unknown`; raw coordinate fields are rejected.

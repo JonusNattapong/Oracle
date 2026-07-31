@@ -1,9 +1,19 @@
 # Oracle Situated Companion
 
 Oracle Companion is a local-first Runtime loop for semantic presence and
-self-initiated conversation. It does not ingest coordinates, call a model, or
-send a message by itself in this MVP. It decides whether a downstream channel
-may speak and records both speech and silence as auditable intents.
+self-initiated conversation. It does not ingest coordinates or call a model. It
+decides whether a channel may speak, records both speech and silence as
+auditable intents, and can carry a `speak` decision to a local notification
+channel the user has explicitly enabled.
+
+Four stages stay separate, and each is recorded on its own:
+
+| Stage | Question it answers |
+| --- | --- |
+| Intent generation | What would Oracle say, if it said anything? |
+| Boundary decision | Should it speak at all, right now? |
+| Delivery | May that decision still leave the terminal? |
+| Notification channel | How does it reach the user? |
 
 ## Start it
 
@@ -80,6 +90,48 @@ Forgetting presence does not remove prior intent evidence. Intent records
 contain only the semantic state reference and decision evidence, never raw
 coordinates.
 
+## Leaving the terminal
+
+A `speak` intent is not a notification. Delivery is a separate stage with its
+own gates, and every channel starts **disabled**: a fresh install never
+notifies until asked.
+
+```bash
+oracle companion channels
+oracle companion channel enable windows-toast
+oracle companion notify-test
+oracle companion deliveries
+oracle companion channel disable windows-toast
+```
+
+On Windows, `windows-toast` raises a local toast. Nothing leaves the machine and
+no cloud service is involved. On other platforms the channel reports itself as
+unavailable rather than pretending a delivery succeeded.
+
+Before anything is delivered, the Boundary runs a second time, because time
+passes between deciding and delivering. Delivery is suppressed when:
+
+- The intent action is `silence` — silence never reaches a channel at all.
+- The channel is disabled or unavailable on this platform.
+- Companion has been paused since the intent was formed.
+- The referenced presence has expired or been forgotten.
+- A newer presence observation superseded the intent.
+- Presence is now `focus`, `transit`, `away`, or `unknown`.
+- Local time has entered quiet hours.
+- The channel is inside its cooldown window (30 minutes by default), so
+  oscillating arrivals cannot produce repeated notifications.
+- The intent carries no deliverable message.
+
+Every attempt is persisted with its status, attempt count, and reason. A unique
+constraint on (intent, channel) makes dispatch idempotent: an intent is never
+delivered twice, and restarting the daemon never replays a completed delivery.
+An interrupted delivery stays `pending` and is deliberately not retried —
+failing closed is preferred to a surprise notification arriving late.
+
+A failing channel never fails the decision that produced the intent, and never
+takes the Runtime down with it. The failure is recorded; the presence update
+stands.
+
 ## Runtime API
 
 All routes require the Runtime admin bearer token:
@@ -91,6 +143,10 @@ POST   /v1/companion/evaluate
 POST   /v1/companion/pause
 POST   /v1/companion/resume
 DELETE /v1/companion/presence
+GET    /v1/companion/channels
+POST   /v1/companion/channels
+GET    /v1/companion/deliveries
+POST   /v1/companion/notify-test
 ```
 
 Example presence body:
@@ -114,11 +170,30 @@ Runtime emits replayable events:
 - `companion.intent.evaluated`
 - `companion.paused`
 - `companion.resumed`
+- `companion.channel.updated`
+- `companion.delivery.requested`
+- `companion.delivery.delivered`
+- `companion.delivery.failed`
+- `companion.delivery.suppressed`
+
+Delivery events carry the delivery id, intent id, channel, and either a
+suppression reason or a classified `errorKind`. Message text and raw channel
+output stay out of the event log; failure detail is kept locally in the delivery
+record instead.
 
 ## Deliberate MVP boundary
 
-This version provides operational initiative: Oracle forms a candidate,
-reflects through an interruption and privacy boundary, and records a decision.
-It does not claim consciousness or felt desire. A future notification, mobile,
-or voice adapter should consume only `speak` intents and must keep the same
-pause, freshness, quiet-hour, and semantic-only boundaries.
+This version provides operational initiative: Oracle forms a candidate, reflects
+through an interruption and privacy boundary, records a decision, and can raise
+a local notification. It does not claim consciousness or felt desire.
+
+Still out of scope: receiving presence from a phone or tray app, model-generated
+messages, long-term relationship memory in candidate construction, learning from
+whether the user answered, Control Center surfacing, and configurable quiet
+hours or thresholds.
+
+Any future channel — mobile, voice, or a remote transport — implements the same
+`CompanionNotifier` interface, consumes only `speak` intents, and inherits the
+same pause, freshness, quiet-hour, cooldown, and semantic-only boundaries.
+Channels that leave the machine must stay opt-in and must never be enabled by
+default.
