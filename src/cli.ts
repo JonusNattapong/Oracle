@@ -22,6 +22,24 @@ import {
   formatBrowserServiceInvocation,
   runBrowserService,
 } from "./browser/service.js";
+import {
+  bridgeConnectionPath,
+  createBridgeConnection,
+  generateBridgeToken,
+  readBridgeConnection,
+  redactBridgeConnection,
+  serializeBridgeConnection,
+  writeBridgeConnection,
+  type BridgeSshTarget
+} from "./bridge/connection.js";
+import {
+  DEFAULT_BRIDGE_LOCAL_PORT,
+  bridgeRemoteHostUrl,
+  buildSshTunnelCommand,
+  formatSshTunnelCommand,
+  runSshTunnel
+} from "./bridge/tunnel.js";
+import { runBridgeDoctor } from "./bridge/doctor.js";
 import { AgentService } from "./agent/service.js";
 import { FileSessionStore } from "./session/store.js";
 import {
@@ -1001,6 +1019,139 @@ program
         `(${serviceOptions.manualLogin ? "manual-login profile" : "cookie sync"}).`
     );
     process.exitCode = await runBrowserService(serviceOptions);
+  });
+
+const bridgeCmd = program
+  .command("bridge")
+  .description("Share one signed-in browser between machines over an SSH tunnel");
+
+function parsePort(value: string, label: string): number {
+  const port = Number(value);
+  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error(`${label} must be an integer between 1 and 65535.`);
+  }
+  return port;
+}
+
+bridgeCmd
+  .command("host")
+  .description("Run the browser service and write a connection artifact for clients")
+  .option("--host <address>", "Interface to bind")
+  .option("--port <number>", "TCP port")
+  .option("--token <value>", "Access token (generated when omitted)")
+  .option("--ssh-target <user@host>", "How clients reach this machine over ssh")
+  .option("--ssh-port <number>", "ssh port on this machine")
+  .option("--identity-file <path>", "ssh identity file clients should use")
+  .option("--out <path>", "Where to write the connection artifact")
+  .option("--manual-login", "Use a persistent manual-login Chrome profile")
+  .option("--no-manual-login", "Use browser cookie sync instead of manual login")
+  .option("--profile-dir <path>", "Persistent manual-login Chrome profile directory")
+  .option("--print-command", "Print the artifact and redacted command without starting")
+  .option("--cwd <path>", "Project configuration root", process.cwd())
+  .action(async (options) => {
+    const cwd = path.resolve(options.cwd);
+    const config = await loadProjectConfig(cwd);
+    const host = options.host ?? config.serve.host;
+    const port = options.port ? parsePort(options.port, "--port") : config.serve.port;
+    const token = options.token ?? process.env.ORACLE_SERVE_TOKEN ?? generateBridgeToken();
+    const ssh: BridgeSshTarget | undefined = options.sshTarget
+      ? {
+          target: options.sshTarget,
+          ...(options.sshPort ? { port: parsePort(options.sshPort, "--ssh-port") } : {}),
+          ...(options.identityFile ? { identityFile: options.identityFile } : {})
+        }
+      : undefined;
+
+    const connection = createBridgeConnection({ host, port, token, ssh });
+    const outPath = bridgeConnectionPath(cwd, options.out);
+    const serviceOptions = {
+      host,
+      port,
+      token,
+      manualLogin: options.manualLogin ?? config.serve.manualLogin,
+      profileDir: options.profileDir ?? config.serve.profileDir,
+      cwd,
+    };
+    const invocation = buildBrowserServiceInvocation(serviceOptions, {
+      platform: process.platform,
+      execPath: process.execPath,
+      appData: process.env.APPDATA,
+    });
+
+    if (options.printCommand) {
+      console.log(serializeBridgeConnection(redactBridgeConnection(connection)).trimEnd());
+      console.log(formatBrowserServiceInvocation(invocation));
+      return;
+    }
+
+    await writeBridgeConnection(outPath, connection);
+    console.log(`Connection artifact written to ${outPath} (owner-only).`);
+    console.log("It contains the service token — copy it to the client over a trusted channel.");
+    if (!ssh) {
+      console.log("No --ssh-target recorded; clients will need `oracle bridge client --no-tunnel`.");
+    }
+    console.log(
+      `Starting browser service at ${host}:${port} ` +
+        `(${serviceOptions.manualLogin ? "manual-login profile" : "cookie sync"}).`
+    );
+    process.exitCode = await runBrowserService(serviceOptions);
+  });
+
+bridgeCmd
+  .command("client")
+  .description("Open the SSH tunnel to a bridge host and print how to use it")
+  .option("--connection <path>", "Connection artifact to read")
+  .option("--local-port <number>", "Local port to forward")
+  .option("--no-tunnel", "Skip the tunnel and print the direct connection details")
+  .option("--print-command", "Print the ssh command without running it")
+  .option("--cwd <path>", "Project configuration root", process.cwd())
+  .action(async (options) => {
+    const cwd = path.resolve(options.cwd);
+    const connectionPath = bridgeConnectionPath(cwd, options.connection);
+    const connection = await readBridgeConnection(connectionPath);
+    const localPort = options.localPort
+      ? parsePort(options.localPort, "--local-port")
+      : DEFAULT_BRIDGE_LOCAL_PORT;
+
+    if (!options.tunnel) {
+      console.log(`Point Oracle at the service directly:`);
+      console.log(`  export ORACLE_REMOTE_HOST=http://${connection.host}:${connection.port}`);
+      if (connection.token) console.log(`  export ORACLE_REMOTE_TOKEN=<token from ${connectionPath}>`);
+      return;
+    }
+
+    const invocation = buildSshTunnelCommand(connection, { localPort });
+    if (options.printCommand) {
+      console.log(formatSshTunnelCommand(invocation));
+      return;
+    }
+
+    console.log(`Forwarding ${bridgeRemoteHostUrl(localPort)} → ${connection.host}:${connection.port} via ${connection.ssh?.target}.`);
+    console.log("While this runs, in another shell:");
+    console.log(`  export ORACLE_REMOTE_HOST=${bridgeRemoteHostUrl(localPort)}`);
+    if (connection.token) console.log(`  export ORACLE_REMOTE_TOKEN=<token from ${connectionPath}>`);
+    console.log("Press Ctrl+C to close the tunnel.");
+    process.exitCode = await runSshTunnel(invocation);
+  });
+
+bridgeCmd
+  .command("doctor")
+  .description("Check the bridge artifact, ssh client, and tunnel")
+  .option("--connection <path>", "Connection artifact to read")
+  .option("--local-port <number>", "Local port the tunnel forwards")
+  .option("--direct", "Probe the service address instead of the tunnel")
+  .option("--cwd <path>", "Project configuration root", process.cwd())
+  .action(async (options) => {
+    const cwd = path.resolve(options.cwd);
+    const checks = await runBridgeDoctor({
+      connectionPath: bridgeConnectionPath(cwd, options.connection),
+      localPort: options.localPort ? parsePort(options.localPort, "--local-port") : undefined,
+      direct: Boolean(options.direct),
+    });
+    for (const check of checks) {
+      console.log(`${check.ok ? "OK" : "FAIL"}  ${check.name}: ${check.detail}`);
+    }
+    process.exitCode = checks.every((check) => check.ok) ? 0 : 1;
   });
 
 program

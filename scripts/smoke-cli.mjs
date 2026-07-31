@@ -118,6 +118,73 @@ try {
     throw new Error(`Browser backend was not rejected before agent startup:\n${unsupportedOutput}`);
   }
 
+  const bridgeRoot = path.join(temporaryRoot, "bridge");
+  await fs.mkdir(bridgeRoot, { recursive: true });
+  const bridgePreview = run([
+    "bridge", "host",
+    "--cwd", bridgeRoot,
+    "--ssh-target", "smoke@bridge-host",
+    "--token", "smoke-bridge-token",
+    "--print-command"
+  ]);
+  if (bridgePreview.includes("smoke-bridge-token")) {
+    throw new Error(`Bridge host preview leaked its token:\n${bridgePreview}`);
+  }
+  if (!bridgePreview.includes("<redacted>")) {
+    throw new Error(`Bridge host preview did not redact its token:\n${bridgePreview}`);
+  }
+  const bridgeConnectionPath = path.join(bridgeRoot, ".oracle", "bridge.json");
+  if (await fs.access(bridgeConnectionPath).then(() => true, () => false)) {
+    throw new Error("Bridge host --print-command wrote an artifact instead of only previewing.");
+  }
+
+  await fs.mkdir(path.dirname(bridgeConnectionPath), { recursive: true });
+  await fs.writeFile(
+    bridgeConnectionPath,
+    `${JSON.stringify({
+      version: 1,
+      createdAt: new Date().toISOString(),
+      host: "127.0.0.1",
+      port: 9473,
+      token: "smoke-bridge-token",
+      ssh: { target: "smoke@bridge-host" }
+    })}\n`,
+    { encoding: "utf8", mode: 0o600 }
+  );
+  const tunnelCommand = run([
+    "bridge", "client", "--cwd", bridgeRoot, "--local-port", "9500", "--print-command"
+  ]);
+  if (
+    !tunnelCommand.includes(
+      "ssh -N -o ExitOnForwardFailure=yes -L 9500:127.0.0.1:9473 smoke@bridge-host"
+    )
+  ) {
+    throw new Error(`Unexpected bridge tunnel command:\n${tunnelCommand}`);
+  }
+  if (tunnelCommand.includes("smoke-bridge-token")) {
+    throw new Error(`Bridge tunnel command leaked the service token:\n${tunnelCommand}`);
+  }
+
+  const bridgeDoctor = execute(["bridge", "doctor", "--cwd", bridgeRoot, "--local-port", "9500"]);
+  const bridgeDoctorOutput = `${bridgeDoctor.stdout}${bridgeDoctor.stderr}`;
+  if (!bridgeDoctorOutput.includes("OK  connection artifact")) {
+    throw new Error(`Bridge doctor did not read its artifact:\n${bridgeDoctorOutput}`);
+  }
+  if (bridgeDoctorOutput.includes("smoke-bridge-token")) {
+    throw new Error(`Bridge doctor leaked the service token:\n${bridgeDoctorOutput}`);
+  }
+  if (bridgeDoctor.status === 0) {
+    throw new Error(`Bridge doctor passed without a running tunnel:\n${bridgeDoctorOutput}`);
+  }
+
+  const badTarget = execute([
+    "bridge", "host", "--cwd", bridgeRoot, "--ssh-target", "-oProxyCommand=touch /tmp/pwned",
+    "--print-command"
+  ]);
+  if (badTarget.status === 0) {
+    throw new Error("Bridge host accepted an ssh target that could inject an ssh option.");
+  }
+
   console.log("CLI smoke tests passed.");
 } finally {
   await fs.rm(temporaryRoot, { recursive: true, force: true });

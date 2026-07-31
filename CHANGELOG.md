@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Bridge — one signed-in browser, many machines**
+  - `oracle bridge host` generates a token, writes an owner-only (`0600`)
+    connection artifact to `.oracle/bridge.json`, and starts the browser service
+  - `oracle bridge client` reads that artifact and opens the SSH tunnel, then
+    prints the `ORACLE_REMOTE_HOST` / `ORACLE_REMOTE_TOKEN` pair to use;
+    `--no-tunnel` covers directly reachable hosts
+  - `oracle bridge doctor` checks the artifact, its freshness, the token, the
+    ssh client, and the tunnel, exiting non-zero on any failure. It stops early
+    rather than reporting checks that cannot mean anything yet
+  - The service token never reaches a command line: it travels in the artifact,
+    and `--print-command` renders it as `<redacted>`
+  - Artifact `host` and `ssh.target` values are validated on write *and* read,
+    so a hand-edited artifact cannot smuggle an ssh option such as
+    `-oProxyCommand=…` onto the tunnel command
+  - A stale artifact is reported as stale, and a future `createdAt` as clock
+    skew between the two machines
+
 - **Situated Companion MVP**
   - Semantic-only presence for `home`, `work`, `transit`, `focus`, `available`,
     `away`, and `unknown`; raw coordinate fields are rejected.

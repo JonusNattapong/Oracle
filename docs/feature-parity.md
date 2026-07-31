@@ -17,10 +17,11 @@ architecture while delegating ChatGPT UI automation to the pinned
 - Automatic routing for explicit browser/Azure prefixes, vendor-qualified
   OpenRouter model ids, Claude, GPT/o-series, and a configurable fallback.
 - Shared project configuration used by CLI and MCP startup.
+- `oracle bridge host|client|doctor` with owner-only SSH tunnel connection
+  artifacts, token redaction, and ssh-option injection guards. See
+  [Bridge](bridge.md).
 
 ## Remaining upstream work
 
-- Higher-level `oracle bridge host|client|doctor` commands and SSH tunnel
-  connection artifacts.
 - Multi-model advisory panels and partial-success manifests.
 - Native browser artifact transfer metadata in Oracle's own session model.

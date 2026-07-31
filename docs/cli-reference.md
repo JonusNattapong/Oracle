@@ -231,6 +231,31 @@ boundaries.
 
 ---
 
+### oracle bridge
+
+Share one signed-in browser between machines over an SSH tunnel.
+
+```bash
+# on the machine with the signed-in Chrome
+oracle bridge host --ssh-target ada@build-box
+oracle bridge host --ssh-target ada@build-box --print-command
+
+# on the other machine, after copying .oracle/bridge.json across
+oracle bridge client [--local-port 9500] [--print-command]
+oracle bridge client --no-tunnel
+oracle bridge doctor [--local-port 9500] [--direct]
+```
+
+`host` generates a token, writes an owner-only connection artifact to
+`.oracle/bridge.json`, and starts the browser service. `client` reads that
+artifact and opens the tunnel. `doctor` checks the artifact, its freshness, the
+ssh client, and the tunnel, exiting non-zero on any failure.
+
+The token is never placed on a command line, and `--print-command` redacts it.
+See [Bridge](bridge.md) for the full flow.
+
+---
+
 ### oracle schedule
 
 Runtime-backed cron task scheduler.

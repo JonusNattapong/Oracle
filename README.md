@@ -76,6 +76,7 @@ tasks.
 | **Operate** | Owns long-lived schedules, approvals, SQLite state, HTTP APIs, WebSocket events, and the human Control Center. | `oracle daemon` · `oracle control` |
 | **Companion** | Turns fresh semantic presence into an explainable `speak` or `silence` intent without storing raw coordinates. | `oracle companion` · Runtime API |
 | **Govern** | Exposes Awareness, Control, Transform, and Boundary signals without presenting them as a security certification. | `oracle governance` · audit and approval tools |
+| **Bridge** | Shares one signed-in browser across machines over an SSH tunnel, carrying the address and token in an owner-only artifact. | `oracle bridge` · [Bridge](docs/bridge.md) |
 
 ### One core, four surfaces
 
