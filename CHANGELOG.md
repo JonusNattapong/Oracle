@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Configurable memory store (`memory.store`)**
+  - Durable memory can live on this machine (`local`, the default), in the
+    signed-in ChatGPT account's Saved Memory (`chatgpt`), or both (`hybrid`).
+  - `hybrid` keeps the local store canonical and mirrors only entries that clear
+    a policy of minimum importance, memory type, and an optional tag allow-list.
+  - Saved Memory can now be read back and deleted, not only written: added
+    recall/forget prompt builders with a strict JSON-block parser.
+  - Because Saved Memory has no ids, tags, importance, or timestamps, `chatgpt`
+    mode keeps a local shadow index and joins it to the remote text by content
+    hash. Entries are capped at 2000 characters, reads are best-effort, and a
+    write or delete counts only when ChatGPT confirms it.
+  - `working` memory never leaves the machine. Entity graph, consolidation,
+    decay, and reflection remain local-only in every mode.
+  - A failed mirror is logged and reported, never silently dropped, and never
+    fails the local write. An unavailable browser backend degrades to local
+    memory instead of losing writes.
+  - `oracle memory store [local|chatgpt|hybrid]` shows or sets the mode.
+
+### Fixed
+- Windows toast delivery no longer throws a temporal-dead-zone `ReferenceError`
+  when PowerShell fails to spawn synchronously.
+
 - **Companion local notification delivery**
   - `CompanionNotifier` channel interface plus a Windows toast adapter that
     passes message text through the environment, never a shell command line,

@@ -26,6 +26,68 @@ accepted for compatibility and is normalized at load time.
 Browser paths relative to `~/.oracle/` keep login state outside the project.
 See [browser-mode.md](browser-mode.md).
 
+### Memory store
+
+`memory.store` selects where durable memory lives. The default keeps everything
+on this machine.
+
+```jsonc
+{
+  "memory": {
+    // "local" (default) | "chatgpt" | "hybrid"
+    "store": "hybrid",
+    // Backend used to reach ChatGPT Saved Memory. Only value today.
+    "remoteBackend": "chatgpt-browser",
+    // Reuse window for a Saved Memory read, in minutes. 0 disables caching.
+    "remoteCacheTtlMinutes": 10,
+    // hybrid only: which local entries are also pushed to the account.
+    "mirror": {
+      "minImportance": 0.7,
+      "types": ["fact", "insight"],
+      "tags": ["shared"]          // optional allow-list
+    }
+  }
+}
+```
+
+| Key | Default | Meaning |
+|---|---|---|
+| `store` | `"local"` | `local` = this machine only; `chatgpt` = the signed-in account's Saved Memory is the store; `hybrid` = local canonical plus a mirror |
+| `remoteBackend` | `"chatgpt-browser"` | Backend driving the signed-in session |
+| `remoteCacheTtlMinutes` | `10` | How long a Saved Memory read is reused (0–1440) |
+| `mirror.minImportance` | `0.7` | Minimum importance (0–1) for an entry to be mirrored |
+| `mirror.types` | `["fact","insight"]` | Memory types eligible for mirroring |
+| `mirror.tags` | unset | When set, an entry must also carry one of these tags |
+
+Switch stores from the CLI:
+
+```bash
+oracle memory store              # show current setting
+oracle memory store hybrid       # write it to .oracle/config.json
+```
+
+`chatgpt` and `hybrid` require a signed-in ChatGPT session and inherit every
+[Browser Mode](browser-mode.md) limitation. When the backend is unavailable or
+cannot write account memory, Oracle logs the reason and falls back to local
+memory rather than dropping writes.
+
+Saved Memory is a weaker store than the local one:
+
+- No ids, tags, importance, or timestamps — Oracle keeps those in a local shadow
+  index and joins them to the remote text by content hash.
+- 2000 characters per entry. Larger writes are rejected in `chatgpt` mode and
+  skipped by the mirror in `hybrid` mode.
+- Reads are a natural-language round-trip, so ordering and completeness are
+  best-effort; an unreadable account raises an error rather than reporting an
+  empty memory.
+- Writes and deletes count only when ChatGPT confirms them.
+- `working` memory never leaves the machine.
+- In `hybrid` mode, `forget` removes the local copy only; the mirrored entry
+  stays in the account until deleted from ChatGPT settings → Personalization →
+  Manage memory.
+
+Entity graph, consolidation, decay, and reflection are local-only in every mode.
+
 ### Backend credentials
 
 | Backend | Environment variable | Notes |

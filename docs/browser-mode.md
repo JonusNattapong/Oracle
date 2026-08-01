@@ -187,6 +187,24 @@ Account memory is different from Oracle project memory:
   confirmation. Browser Mode does not scrape the Manage Memories settings
   screen for a second independent verification.
 
+### Saved Memory as Oracle's memory store
+
+The per-call `accountMemory` above writes one fact and is unrelated to where
+Oracle keeps its own memory. To make Saved Memory the store itself, set
+`memory.store` to `chatgpt` (account-only) or `hybrid` (local canonical plus a
+mirror of high-importance entries):
+
+```bash
+oracle memory store hybrid
+```
+
+Both modes drive this backend, so they inherit every limitation on this page —
+manual login, an isolated Chrome profile, and UI automation rather than an API.
+Saved Memory also has no ids, tags, importance, or timestamps, caps entries at
+2,000 characters, and can only be read back through a natural-language
+round-trip, so completeness and ordering are best-effort. See
+[Memory store](config-schema.md#memory-store) for the full trade-offs.
+
 ## Runtime API
 
 The authenticated local Runtime API exposes the same consult service:

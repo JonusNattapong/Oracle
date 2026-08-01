@@ -32,7 +32,7 @@ stores and does not replace their existing sources of truth.
 | **ConsultService** | Core loop: build a validated file bundle → select execution backend → record answer | `src/core/consult.ts`, `src/context/bundleService.ts` |
 | **Execution backends** | Codex CLI, Anthropic, OpenAI, Gemini, OpenCode, and experimental ChatGPT Browser Mode | `src/backends/`, `src/providers/` |
 | **Execution sandbox** | Shared policy-only or fail-closed Docker runner for agent and scheduler commands, with per-run SQLite evidence. | `src/sandbox/`, `src/agent/`, `src/runtime/schedulerService.ts` |
-| **Memory system** | BM25 + vector search + entity knowledge graph + auto-consolidation + background maintenance | `src/memory/` |
+| **Memory system** | BM25 + vector search + entity knowledge graph + auto-consolidation + background maintenance; store is configurable (`local`, `chatgpt` account Saved Memory, or `hybrid`) | `src/memory/` |
 | **Messaging bus** | Transactional SQLite message store, presence registry, real-time watcher, Stop-hook wake-up | `src/messaging/` |
 | **Task tracker** | Plan/assign/verify/report on top of the messaging bus; checklist-gated review | `src/tasks/` |
 | **Coordination service** | Durable Task↔Message outbox, Swarm linkage, consensus reconciliation, recovery | `src/coordination/` |
