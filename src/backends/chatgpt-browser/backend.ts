@@ -7,7 +7,7 @@ import type {
   ExecutionBackendResponse
 } from "../backend.js";
 import type { ChatGptBrowserConfig } from "./types.js";
-import { ChromeLauncher, findOrCreatePageTarget } from "./chrome.js";
+import { ChromeLauncher, ensureWindowNotMinimized, findOrCreatePageTarget } from "./chrome.js";
 import {
   CdpSession,
   normalizeChatGptConversationUrl,
@@ -91,6 +91,18 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
       if (!target.webSocketDebuggerUrl) {
         throw new Error("Target page does not expose a WebSocket debugger URL.");
       }
+
+      // A minimized window has a frozen renderer, which answers no page-domain
+      // command. Repair it before connecting rather than letting every call time
+      // out with no indication of why.
+      await ensureWindowNotMinimized(processInfo.port, target.id, async (wsUrl) => {
+        const browserSession = new CdpSession(wsUrl);
+        await browserSession.connect(5_000);
+        return {
+          send: (method, params, timeoutMs) => browserSession.send(method, params, timeoutMs),
+          close: () => browserSession.close()
+        };
+      });
 
       session = new CdpSession(target.webSocketDebuggerUrl);
       await session.connect();

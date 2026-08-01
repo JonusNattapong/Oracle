@@ -153,6 +153,51 @@ export async function findOrCreatePageTarget(port: number): Promise<ChromeTarget
   return newTarget;
 }
 
+/**
+ * Restores the target's window if it is minimized, so its renderer is not frozen
+ * when page-domain CDP commands are issued.
+ *
+ * The launch flags above prevent the freeze for instances Oracle starts, but a
+ * Chrome left running from `oracle browser login`, an earlier version, or a
+ * manual launch has no such protection, and the launcher reuses it. Runs against
+ * the browser endpoint, which keeps answering even while renderers are frozen.
+ *
+ * Best-effort: a failure here is reported by the caller's own command timeout,
+ * so it must not mask the real work.
+ */
+export async function ensureWindowNotMinimized(
+  port: number,
+  targetId: string,
+  connectSession: (wsUrl: string) => Promise<{
+    send: <T>(method: string, params?: Record<string, unknown>, timeoutMs?: number) => Promise<T>;
+    close: () => void;
+  }>
+): Promise<"restored" | "already-visible" | "unknown"> {
+  let session: Awaited<ReturnType<typeof connectSession>> | undefined;
+  try {
+    const version = await fetchJson<{ webSocketDebuggerUrl: string }>(
+      `http://127.0.0.1:${port}/json/version`,
+      5000
+    );
+    session = await connectSession(version.webSocketDebuggerUrl);
+    const window = await session.send<{
+      windowId: number;
+      bounds: { windowState?: string };
+    }>("Browser.getWindowForTarget", { targetId }, 5000);
+    if (window.bounds.windowState !== "minimized") return "already-visible";
+    await session.send(
+      "Browser.setWindowBounds",
+      { windowId: window.windowId, bounds: { windowState: "normal" } },
+      5000
+    );
+    return "restored";
+  } catch {
+    return "unknown";
+  } finally {
+    session?.close();
+  }
+}
+
 export class ChromeLauncher {
   private childProcess?: ChildProcess;
 
@@ -184,7 +229,17 @@ export class ChromeLauncher {
       "--remote-debugging-port=0",
       `--user-data-dir=${config.profileDir}`,
       "--no-first-run",
-      "--no-default-browser-check"
+      "--no-default-browser-check",
+      // Oracle's Chrome window is an automation surface nobody interacts with,
+      // so it spends its life minimized or fully covered. Chrome freezes the
+      // renderers of backgrounded and occluded windows, and a frozen renderer
+      // never processes page-domain CDP commands: the browser endpoint keeps
+      // answering while every Runtime.evaluate and Page.enable times out, which
+      // surfaces as an unexplained "CDP command timed out".
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding",
+      "--disable-background-timer-throttling",
+      "--disable-features=CalculateNativeWinOcclusion"
     ];
 
     if (!config.headed) {

@@ -39,6 +39,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `oracle memory store [local|chatgpt|hybrid]` shows or sets the mode.
 
 ### Fixed
+- Browser Mode no longer stalls with unexplained `CDP command ... timed out`
+  errors when its Chrome window is minimized or fully covered. Chrome freezes
+  the renderers of backgrounded and occluded windows, and a frozen renderer
+  answers no page-domain command — the browser endpoint kept responding in
+  48ms while every `Runtime.evaluate` and `Page.enable` timed out, including on
+  `chrome://newtab/`. Chrome is now launched with the anti-backgrounding flags,
+  and a minimized window on a reused instance is restored before the page is
+  driven.
 - ChatGPT Saved Memory reads no longer report a populated account as empty.
   Observed live: after a deletion, ChatGPT answered with an empty list twice
   while four memories were still stored, and `chatgpt` mode reported that as

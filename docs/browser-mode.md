@@ -90,6 +90,13 @@ Browser Mode includes automated safeguards against web UI instability, network s
 - **UI Stalling & Self-Healing Reload**: If ChatGPT stops streaming response tokens without showing the completion action controls (e.g. copy or feedback buttons) for 30 consecutive quiet polling intervals (~30 seconds), Oracle automatically triggers a self-healing page reload (`Page.reload`). Upon reload, it waits for the finalized turn to resolve.
 - **No Partial Response Guarantee**: Oracle verifies that the assistant's turn is fully completed by asserting `hasCompletionAction`. If a response times out or stops streaming without exposing completion controls, Oracle explicitly rejects the turn and throws an error rather than returning a truncated or incomplete answer.
 - **Multi-Turn Continuity Verification**: Continuous multi-turn conversations across 3+ sequential turns are validated by establishing a `ResponseBaseline` (tracking previous response counts and text) prior to prompt submission. This ensures that earlier turn outputs are never mistaken for the new response.
+- **Frozen-Renderer Prevention**: Oracle's Chrome window is an automation surface nobody interacts with, so it spends its life minimized or fully covered — and Chrome freezes the renderers of backgrounded and occluded windows. A frozen renderer processes no page-domain CDP command, so the browser endpoint keeps answering while every `Runtime.evaluate` and `Page.enable` times out. Chrome is launched with `--disable-backgrounding-occluded-windows`, `--disable-renderer-backgrounding`, `--disable-background-timer-throttling`, and `--disable-features=CalculateNativeWinOcclusion`; a minimized window on an already-running instance (started by `oracle browser login`, an older version, or by hand) is restored before the page is driven.
+
+If you do see repeated `CDP command ... timed out` errors, check whether the Oracle Chrome window is minimized, and restart it so the launch flags apply:
+
+```bash
+oracle browser status --live
+```
 
 ## MCP
 
