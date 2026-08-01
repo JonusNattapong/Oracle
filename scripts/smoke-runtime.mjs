@@ -125,15 +125,6 @@ try {
   if (snapshot.version !== expectedVersion || snapshot.approvals?.pending !== 0) {
     throw new Error(`Unexpected Control Center snapshot: ${JSON.stringify(snapshot)}`);
   }
-  const tui = run(["control", "--once"]);
-  if (!tui.includes("ORACLE CONTROL CENTER") || !tui.includes("APPROVAL INBOX")) {
-    throw new Error(`Control Center TUI did not render:\n${tui}`);
-  }
-  const dashboardUrl = run(["control", "url"]).trim();
-  if (!dashboardUrl.includes("/control#token=")) {
-    throw new Error("Control Center URL did not use a token fragment.");
-  }
-
   const requested = run([
     "approval", "request",
     "--title", "Runtime smoke approval",

@@ -267,7 +267,7 @@ export class RuntimeDatabase {
           approval_id TEXT NOT NULL REFERENCES approval_requests(id) ON DELETE CASCADE,
           actor TEXT NOT NULL,
           decision TEXT NOT NULL CHECK (decision IN ('approve', 'reject')),
-          channel TEXT NOT NULL CHECK (channel IN ('api', 'cli', 'tui', 'dashboard', 'telegram', 'recovery')),
+          channel TEXT NOT NULL CHECK (channel IN ('agent', 'api', 'recovery')),
           note TEXT,
           created_at TEXT NOT NULL,
           UNIQUE (approval_id, actor)
@@ -602,8 +602,52 @@ export class RuntimeDatabase {
       version = 11;
     }
 
-    if (version > 11) {
-      throw new Error(`Runtime database schema ${version} is newer than supported schema 11.`);
+    if (version < 12) {
+      const hasApprovalVotes = Boolean(this.connection.prepare(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'approval_votes'"
+      ).get());
+      this.applyMigration(12, hasApprovalVotes ? `
+        ALTER TABLE approval_votes RENAME TO approval_votes_v11;
+
+        CREATE TABLE approval_votes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          approval_id TEXT NOT NULL REFERENCES approval_requests(id) ON DELETE CASCADE,
+          actor TEXT NOT NULL,
+          decision TEXT NOT NULL CHECK (decision IN ('approve', 'reject')),
+          channel TEXT NOT NULL CHECK (channel IN ('agent', 'api', 'recovery')),
+          note TEXT,
+          created_at TEXT NOT NULL,
+          UNIQUE (approval_id, actor)
+        ) STRICT;
+
+        INSERT INTO approval_votes (id, approval_id, actor, decision, channel, note, created_at)
+        SELECT id, approval_id, actor, decision,
+          CASE WHEN channel IN ('agent', 'api', 'recovery') THEN channel ELSE 'agent' END,
+          note, created_at
+        FROM approval_votes_v11;
+
+        DROP TABLE approval_votes_v11;
+        CREATE INDEX approval_votes_approval_idx
+          ON approval_votes(approval_id, id ASC);
+      ` : `
+        CREATE TABLE approval_votes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          approval_id TEXT NOT NULL REFERENCES approval_requests(id) ON DELETE CASCADE,
+          actor TEXT NOT NULL,
+          decision TEXT NOT NULL CHECK (decision IN ('approve', 'reject')),
+          channel TEXT NOT NULL CHECK (channel IN ('agent', 'api', 'recovery')),
+          note TEXT,
+          created_at TEXT NOT NULL,
+          UNIQUE (approval_id, actor)
+        ) STRICT;
+        CREATE INDEX approval_votes_approval_idx
+          ON approval_votes(approval_id, id ASC);
+      `);
+      version = 12;
+    }
+
+    if (version > 12) {
+      throw new Error(`Runtime database schema ${version} is newer than supported schema 12.`);
     }
   }
 

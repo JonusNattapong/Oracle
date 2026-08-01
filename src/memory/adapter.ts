@@ -409,7 +409,7 @@ export class MemoryAdapter implements MemoryPort {
     return this.entityGraph.getStats();
   }
 
-  /** Renderable graph projection for the dashboard and `oracle memory graph`. */
+  /** Renderable graph projection for `oracle memory graph`. */
   async getGraphView(opts?: { limit?: number; includeIsolated?: boolean }): Promise<import("./entityGraph.js").GraphView> {
     return this.entityGraph.toGraphView(opts);
   }

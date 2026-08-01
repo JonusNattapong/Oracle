@@ -27,7 +27,7 @@ describe("RuntimeDatabase", () => {
     }
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "11" });
+    ).get()).toEqual({ value: "12" });
   });
 
   test("persists scheduler tasks and run history in SQLite", async () => {
@@ -166,7 +166,7 @@ describe("RuntimeDatabase", () => {
     database = new RuntimeDatabase(home);
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "11" });
+    ).get()).toEqual({ value: "12" });
     expect(database.connection.prepare(`
       SELECT status, version, required_approvals, authorized_reviewers_json
       FROM approval_requests WHERE id = 'approval-legacy'
@@ -201,7 +201,7 @@ describe("RuntimeDatabase", () => {
     database = new RuntimeDatabase(home);
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "11" });
+    ).get()).toEqual({ value: "12" });
 
     const store = new CompanionStore(database);
     const presence = store.createPresence({
@@ -257,7 +257,7 @@ describe("RuntimeDatabase", () => {
     database = new RuntimeDatabase(home);
     expect(database.connection.prepare(
       "SELECT value FROM runtime_metadata WHERE key = 'schema_version'"
-    ).get()).toEqual({ value: "11" });
+    ).get()).toEqual({ value: "12" });
 
     const migrated = new CompanionStore(database);
     expect(migrated.latestPresence()).toEqual(presence);

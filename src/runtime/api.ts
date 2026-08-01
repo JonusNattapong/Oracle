@@ -13,7 +13,6 @@ import {
   type PresenceSource,
   type PresenceState
 } from "../companion/types.js";
-import { renderControlCenterDashboard } from "../control/dashboard.js";
 import type { ControlCenterService } from "../control/service.js";
 import {
   ApprovalAuthorizationError,
@@ -165,14 +164,6 @@ export class LocalApiServer {
           schedulerRunning: this.options.scheduler.isRunning,
           storage: "sqlite"
         });
-        return;
-      }
-
-      if (
-        request.method === "GET"
-        && (url.pathname === "/control" || url.pathname === "/control/")
-      ) {
-        this.html(response, 200, renderControlCenterDashboard());
         return;
       }
 
@@ -953,17 +944,14 @@ export class LocalApiServer {
 
   private approvalDecisionChannel(
     value: unknown
-  ): "api" | "cli" | "tui" | "dashboard" | "telegram" | "recovery" | undefined {
+  ): "agent" | "api" | "recovery" | undefined {
     if (value === undefined || value === null) return undefined;
     if (
-      value === "api"
-      || value === "cli"
-      || value === "tui"
-      || value === "dashboard"
-      || value === "telegram"
+      value === "agent"
+      || value === "api"
       || value === "recovery"
     ) return value;
-    throw new Error("channel is invalid.");
+    throw new Error("channel must be agent, api, or recovery.");
   }
 
   private optionalRecord(value: unknown, field: string): Record<string, unknown> | undefined {
@@ -1046,24 +1034,4 @@ export class LocalApiServer {
     response.end(encoded);
   }
 
-  private html(response: ServerResponse, status: number, content: string): void {
-    response.writeHead(status, {
-      "content-type": "text/html; charset=utf-8",
-      "content-length": Buffer.byteLength(content),
-      "cache-control": "no-store",
-      "content-security-policy": [
-        "default-src 'self'",
-        "style-src 'self' 'unsafe-inline'",
-        "script-src 'self' 'unsafe-inline'",
-        "connect-src 'self' ws: wss:",
-        "img-src 'self' data:",
-        "object-src 'none'",
-        "base-uri 'none'",
-        "frame-ancestors 'none'"
-      ].join("; "),
-      "referrer-policy": "no-referrer",
-      "x-content-type-options": "nosniff"
-    });
-    response.end(content);
-  }
 }

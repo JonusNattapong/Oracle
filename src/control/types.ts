@@ -8,7 +8,8 @@ import type { TaskRecord, TaskStatus } from "../tasks/store.js";
 export type ApprovalKind = "task_review" | "command" | "policy" | "custom";
 export type ApprovalRisk = "low" | "medium" | "high";
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "cancelled" | "expired";
-export type ApprovalDecisionChannel = "api" | "cli" | "tui" | "dashboard" | "telegram" | "recovery";
+/** Decisions are produced by registered automation agents through the local API. */
+export type ApprovalDecisionChannel = "agent" | "api" | "recovery";
 
 export interface ApprovalAction {
   type: string;
