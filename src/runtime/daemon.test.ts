@@ -62,8 +62,7 @@ describe("OracleDaemon", () => {
     const unauthorized = await fetch(`http://${state.host}:${state.port}/v1/schedules`);
     expect(unauthorized.status).toBe(401);
     const controlPage = await fetch(`http://${state.host}:${state.port}/control`);
-    expect(controlPage.status).toBe(200);
-    expect(await controlPage.text()).toContain("Oracle Control Center");
+    expect(controlPage.status).toBe(401);
     const unauthorizedControl = await fetch(`http://${state.host}:${state.port}/v1/control/snapshot`);
     expect(unauthorizedControl.status).toBe(401);
     expect(await client!.health()).toMatchObject({

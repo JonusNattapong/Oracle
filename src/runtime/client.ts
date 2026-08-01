@@ -362,12 +362,6 @@ export class RuntimeClient {
     );
   }
 
-  controlCenterUrl(): string {
-    const url = new URL("/control", this.baseUrl());
-    url.hash = new URLSearchParams({ token: this.state.token }).toString();
-    return url.toString();
-  }
-
   webSocketUrl(after = 0): string {
     const url = new URL(this.baseUrl().replace(/^http/, "ws"));
     url.pathname = "/v1/events";

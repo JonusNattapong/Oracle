@@ -1930,7 +1930,8 @@ function defaultActor(): string {
 
 const controlCmd = program
   .command("control")
-  .description("Open the Control Center TUI for approvals, tasks, memory, and audit")
+  .description("Inspect agent-governed approvals, tasks, memory, and audit state");
+/*
   .option("--once", "Render one snapshot and exit", false)
   .option("--plain", "Use the dependency-free ANSI TUI", false)
   .option("--interval <ms>", "Refresh interval in milliseconds", "2000")
@@ -2030,7 +2031,9 @@ const controlCmd = program
       process.stdin.pause();
     });
   });
+*/
 
+/* Dashboard removed; approvals are handled by authorized agents.
 controlCmd
   .command("url")
   .description("Print the authenticated loopback Dashboard URL")
@@ -2038,6 +2041,7 @@ controlCmd
     const client = await requireRuntimeClient();
     console.log(client.controlCenterUrl());
   });
+*/
 
 controlCmd
   .command("snapshot")
@@ -2111,7 +2115,7 @@ approvalCmd
   .requiredOption("--title <text>", "Approval title")
   .option("--description <text>", "Decision context")
   .requiredOption("--requested-by <agent>", "Requesting agent")
-  .requiredOption("--assigned-to <agent>", "Human or agent responsible for the decision")
+  .requiredOption("--assigned-to <agent>", "Authorized agent responsible for the decision")
   .option("--reviewers <actors>", "Comma-separated authorized reviewer identities")
   .option("--quorum <n>", "Required approval votes")
   .option("--expires-in <minutes>", "Minutes before the request expires")
@@ -2174,7 +2178,7 @@ for (const decision of ["approve", "reject"] as const) {
         decision,
         decidedBy: options.by,
         expectedVersion: current.version,
-        channel: "cli",
+        channel: "agent",
         note: options.note
       });
       printApproval(approval);

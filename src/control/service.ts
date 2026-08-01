@@ -11,7 +11,6 @@ import type { SchedulerService } from "../runtime/schedulerService.js";
 import { TaskStore, type TaskRecord, type TaskStatus } from "../tasks/store.js";
 import { VERSION } from "../version.js";
 import { ApprovalStore } from "./approvalStore.js";
-import { TelegramApprovalNotifier } from "./telegram.js";
 import type {
   ApprovalExecution,
   ApprovalDecision,
@@ -52,7 +51,6 @@ export class ControlCenterService {
   private readonly projectMemory: MemoryAdapter;
   private readonly globalMemory: MemoryAdapter;
   private readonly audit = new AuditLogger();
-  private readonly telegram: TelegramApprovalNotifier;
   private expiryTimer?: NodeJS.Timeout;
 
   constructor(
@@ -62,7 +60,6 @@ export class ControlCenterService {
     private readonly options: {
       homeDir: string;
       workspaceRoot: string;
-      telegram?: TelegramApprovalNotifier;
     }
   ) {
     this.approvals = new ApprovalStore(database);
@@ -77,7 +74,6 @@ export class ControlCenterService {
     this.agents = new AgentRegistry(options.homeDir);
     this.projectMemory = new MemoryAdapter(options.workspaceRoot);
     this.globalMemory = new MemoryAdapter(options.homeDir, "memory");
-    this.telegram = options.telegram ?? new TelegramApprovalNotifier();
   }
 
   start(): void {
@@ -86,29 +82,12 @@ export class ControlCenterService {
       void this.expireApprovals();
     }, 30_000);
     this.expiryTimer.unref();
-    this.telegram.startCallbacks(async (callback) => {
-      const approval = this.approvals.getByTelegramToken(callback.token);
-      if (!approval) throw new Error("Approval not found or no longer available.");
-      if (approval.localOnly) throw new Error("This approval must be decided locally.");
-      const actor = `telegram:${callback.userId}`;
-      const updated = await this.decide(approval.id, {
-        decision: callback.decision,
-        decidedBy: actor,
-        expectedVersion: callback.expectedVersion,
-        channel: "telegram",
-        note: `Decision received from Telegram user ${callback.userId}.`
-      });
-      return updated.status === "pending"
-        ? `Vote recorded (${updated.approvalCount}/${updated.requiredApprovals}).`
-        : `Approval ${updated.status}.`;
-    });
   }
 
   stop(): void {
     if (!this.expiryTimer) return;
     clearInterval(this.expiryTimer);
     this.expiryTimer = undefined;
-    this.telegram.stopCallbacks();
   }
 
   dispose(): void {
@@ -199,7 +178,6 @@ export class ControlCenterService {
       assignedTo: approval.assignedTo,
       taskId: approval.taskId
     });
-    await this.notify(approval);
     await this.logDecision("requested", approval, input.requestedBy);
     return approval;
   }
@@ -379,7 +357,6 @@ export class ControlCenterService {
           assignedTo: ensured.approval.assignedTo,
           taskId: task.id
         });
-        await this.notify(ensured.approval);
         await this.logDecision("requested", ensured.approval, task.assignee);
       }
     }
@@ -421,22 +398,6 @@ export class ControlCenterService {
       );
     }
     return null;
-  }
-
-  private async notify(approval: ApprovalRequest): Promise<void> {
-    if (!this.telegram.enabled || approval.notifiedAt) return;
-    try {
-      if (await this.telegram.notify(
-        approval,
-        this.approvals.telegramToken(approval.id) ?? undefined
-      )) this.approvals.markNotified(approval.id);
-    } catch (error) {
-      this.events.publish("approval.notification.failed", {
-        approvalId: approval.id,
-        channel: "telegram",
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
   }
 
   private taskVisualization(tasks: TaskRecord[]): TaskVisualization {

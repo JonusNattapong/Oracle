@@ -1,4 +1,4 @@
-/** Shared formatting helpers for the Control Center UIs (Ink TUI, ANSI TUI, CLI). */
+/** Shared formatting helpers for CLI control output. */
 
 export type RiskTone = "danger" | "warn" | "ok";
 

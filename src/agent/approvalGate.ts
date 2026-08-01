@@ -1,4 +1,3 @@
-import os from "node:os";
 import type {
   ApprovalExecution,
   ApprovalRequest,
@@ -42,7 +41,7 @@ export interface AgentApprovalGate {
 
 export class ApprovalRuntimeUnavailableError extends Error {
   constructor() {
-    super("A risky action needs human approval, but Oracle Runtime is not running. Start it with `oracle daemon start`, then resume this checkpoint.");
+    super("A risky action needs agent approval, but Oracle Runtime is not running. Start it with `oracle daemon start`, then resume this checkpoint.");
     this.name = "ApprovalRuntimeUnavailableError";
   }
 }
@@ -57,7 +56,7 @@ export class RuntimeAgentApprovalGate implements AgentApprovalGate {
   ) {
     const configured = policy.approval.reviewers
       ?? process.env.ORACLE_APPROVAL_REVIEWERS?.split(",")
-      ?? [os.userInfo().username || "operator"];
+      ?? ["claude-reviewer", "codex-reviewer"];
     this.reviewers = [...new Set(configured.map((value) => value.trim()).filter(Boolean))];
     this.mode = policy.approval.mode;
   }

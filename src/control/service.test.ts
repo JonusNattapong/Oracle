@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { MemoryAdapter } from "../memory/adapter.js";
 import { AuditLogger } from "../observability/audit.js";
 import { RuntimeDatabase } from "../runtime/database.js";
@@ -9,7 +9,6 @@ import { RuntimeEventBus } from "../runtime/events.js";
 import { SchedulerService } from "../runtime/schedulerService.js";
 import { TaskStore } from "../tasks/store.js";
 import { ControlCenterService } from "./service.js";
-import { TelegramApprovalNotifier } from "./telegram.js";
 
 let home: string;
 let workspace: string;
@@ -29,8 +28,7 @@ beforeEach(async () => {
     new SchedulerService(database, events),
     {
       homeDir: home,
-      workspaceRoot: workspace,
-      telegram: new TelegramApprovalNotifier({ botToken: "", chatId: "" })
+      workspaceRoot: workspace
     }
   );
 });
@@ -104,35 +102,4 @@ describe("ControlCenterService", () => {
     expect(snapshot.audit.policyDenials).toBe(1);
   });
 
-  test("sends optional Telegram notification without making it a dependency", async () => {
-    const fetchImpl = vi.fn(async () => new Response(
-      JSON.stringify({ ok: true }),
-      { status: 200, headers: { "content-type": "application/json" } }
-    ));
-    const events = new RuntimeEventBus(database);
-    const telegramService = new ControlCenterService(
-      database,
-      events,
-      new SchedulerService(database, events),
-      {
-        homeDir: home,
-        workspaceRoot: workspace,
-        telegram: new TelegramApprovalNotifier({
-          botToken: "test-bot-token",
-          chatId: "123",
-          fetchImpl
-        })
-      }
-    );
-    disposables.push(telegramService);
-    const approval = await telegramService.createApproval({
-      title: "Approve release",
-      requestedBy: "worker",
-      assignedTo: "lead",
-      risk: "high"
-    });
-
-    expect(fetchImpl).toHaveBeenCalledOnce();
-    expect(telegramService.getApproval(approval.id)?.notifiedAt).toBeDefined();
-  });
 });

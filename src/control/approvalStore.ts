@@ -204,6 +204,11 @@ export class ApprovalStore {
         `${decision.decidedBy} is not authorized to decide approval ${id}.`
       );
     }
+    if (approval.requestedBy === decision.decidedBy) {
+      throw new ApprovalAuthorizationError(
+        `${decision.decidedBy} cannot approve its own request ${id}.`
+      );
+    }
     if (approval.votes.some((vote) => vote.actor === decision.decidedBy)) {
       throw new ApprovalConflictError(`${decision.decidedBy} has already voted on approval ${id}.`);
     }
