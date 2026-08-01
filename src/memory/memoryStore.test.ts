@@ -6,6 +6,7 @@ import {
   ACCOUNT_MEMORY_LIST_BEGIN,
   ACCOUNT_MEMORY_LIST_END,
   ACCOUNT_MEMORY_FORGOTTEN_MARKER,
+  ACCOUNT_MEMORY_EMPTY_MARKER,
   buildAccountMemoryRecallPrompt,
   parseAccountMemoryRecall
 } from "../backends/chatgpt-browser/accountMemory.js";
@@ -38,6 +39,8 @@ class FakeChatGptBackend implements ExecutionBackend {
   failWith: Error | null = null;
   /** When true, saves are acknowledged but never confirmed. */
   refuseSave = false;
+  /** When true, the account declines to enumerate Saved Memory. */
+  refuseRead = false;
 
   async run(request: ExecutionBackendRequest): Promise<ExecutionBackendResponse> {
     this.requests.push(request);
@@ -45,12 +48,17 @@ class FakeChatGptBackend implements ExecutionBackend {
     const usage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
 
     if (request.userPrompt.includes(ACCOUNT_MEMORY_LIST_BEGIN)) {
+      // Matches the real protocol: emptiness is stated with the marker, never
+      // with an empty array.
+      if (this.refuseRead) return { text: "I can't share that.", usage };
       return {
-        text: [
-          ACCOUNT_MEMORY_LIST_BEGIN,
-          JSON.stringify(this.saved),
-          ACCOUNT_MEMORY_LIST_END
-        ].join("\n"),
+        text: this.saved.length
+          ? [
+              ACCOUNT_MEMORY_LIST_BEGIN,
+              JSON.stringify(this.saved),
+              ACCOUNT_MEMORY_LIST_END
+            ].join("\n")
+          : ACCOUNT_MEMORY_EMPTY_MARKER,
         usage
       };
     }
@@ -133,17 +141,45 @@ describe("account memory recall protocol", () => {
       '["prefers small diffs", "works on Oracle"]',
       ACCOUNT_MEMORY_LIST_END
     ].join("\n");
-    expect(parseAccountMemoryRecall(response)).toEqual([
-      "prefers small diffs",
-      "works on Oracle"
-    ]);
+    expect(parseAccountMemoryRecall(response)).toEqual({
+      readable: true,
+      entries: ["prefers small diffs", "works on Oracle"]
+    });
   });
 
-  test("returns an empty list for malformed or missing blocks", () => {
-    expect(parseAccountMemoryRecall("no markers here")).toEqual([]);
+  test("accepts emptiness only from the explicit marker", () => {
+    expect(parseAccountMemoryRecall(ACCOUNT_MEMORY_EMPTY_MARKER)).toEqual({
+      readable: true,
+      entries: []
+    });
+  });
+
+  test("treats a bare empty array as unreadable, not as an empty account", () => {
+    // Observed live: ChatGPT answered `[]` while four memories were present.
+    // Accepting that as emptiness silently hides real stored data.
+    const result = parseAccountMemoryRecall(
+      `${ACCOUNT_MEMORY_LIST_BEGIN}\n[]\n${ACCOUNT_MEMORY_LIST_END}`
+    );
+    expect(result.readable).toBe(false);
+  });
+
+  test("reports malformed or missing blocks as unreadable", () => {
+    expect(parseAccountMemoryRecall("no markers here").readable).toBe(false);
     expect(
       parseAccountMemoryRecall(`${ACCOUNT_MEMORY_LIST_BEGIN}\nnot json\n${ACCOUNT_MEMORY_LIST_END}`)
-    ).toEqual([]);
+        .readable
+    ).toBe(false);
+  });
+
+  test("does not accept the empty marker alongside a malformed list", () => {
+    const result = parseAccountMemoryRecall(
+      `${ACCOUNT_MEMORY_EMPTY_MARKER}\n${ACCOUNT_MEMORY_LIST_BEGIN}\nnot json\n${ACCOUNT_MEMORY_LIST_END}`
+    );
+    expect(result.readable).toBe(false);
+  });
+
+  test("instructs the model never to answer with an empty array", () => {
+    expect(buildAccountMemoryRecallPrompt()).toContain("Never answer with an empty array");
   });
 
   test("passes the query through as a hint", () => {
@@ -257,6 +293,35 @@ describe("ChatGptMemoryAdapter", () => {
     const entry = await adapter.remember("oracle", "fact", "Temporary fact");
     await adapter.forget(entry.id, "fact");
     expect(backend.saved).not.toContain("Temporary fact");
+  });
+
+  test("errors instead of reporting an empty memory when the account is unreadable", async () => {
+    // The live failure this guards: after a delete, ChatGPT answered with an
+    // empty list twice while four memories were still stored. Reporting that as
+    // "no memories" hides the account's real contents from every caller.
+    const backend = new FakeChatGptBackend();
+    backend.saved = ["a real memory that is still there"];
+    backend.refuseRead = true;
+    const adapter = new ChatGptMemoryAdapter({
+      backend,
+      shadow: new MemoryAdapter(workspace),
+      cacheTtlMinutes: 0,
+      cwd: workspace
+    });
+
+    await expect(adapter.recall()).rejects.toThrow(/Could not read ChatGPT Saved Memory/);
+  });
+
+  test("reports a genuinely empty account as empty", async () => {
+    const backend = new FakeChatGptBackend();
+    const adapter = new ChatGptMemoryAdapter({
+      backend,
+      shadow: new MemoryAdapter(workspace),
+      cacheTtlMinutes: 0,
+      cwd: workspace
+    });
+
+    await expect(adapter.recall()).resolves.toEqual([]);
   });
 
   test("refuses to construct on a backend without account memory", () => {

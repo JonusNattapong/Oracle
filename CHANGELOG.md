@@ -39,6 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `oracle memory store [local|chatgpt|hybrid]` shows or sets the mode.
 
 ### Fixed
+- ChatGPT Saved Memory reads no longer report a populated account as empty.
+  Observed live: after a deletion, ChatGPT answered with an empty list twice
+  while four memories were still stored, and `chatgpt` mode reported that as
+  "no memories". Emptiness now requires an explicit marker — an empty list, a
+  malformed reply, or a refusal all raise `ORACLE_ACCOUNT_MEMORY_UNREADABLE`
+  instead of being silently read as an empty memory.
 - Windows toast delivery no longer throws a temporal-dead-zone `ReferenceError`
   when PowerShell fails to spawn synchronously.
 

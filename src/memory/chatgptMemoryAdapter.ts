@@ -137,15 +137,30 @@ export class ChatGptMemoryAdapter implements MemoryPort {
     });
   }
 
-  /** Reads Saved Memory, honouring the cache window. Throws if unreadable. */
+  /**
+   * Reads Saved Memory, honouring the cache window.
+   *
+   * An unreadable reply throws rather than resolving to an empty list. Returning
+   * `[]` here would let a refusal to enumerate Saved Memory look exactly like an
+   * empty account, so a recall would quietly report that Oracle remembers
+   * nothing while the entries are still there.
+   */
   private async readRemote(query?: string): Promise<string[]> {
     if (!query && this.cache && Date.now() - this.cache.at < this.cacheTtlMs) {
       return this.cache.entries;
     }
     const reply = await this.askText(buildAccountMemoryRecallPrompt(query));
-    const entries = parseAccountMemoryRecall(reply);
-    if (!query) this.cache = { at: Date.now(), entries };
-    return entries;
+    const result = parseAccountMemoryRecall(reply);
+    if (!result.readable) {
+      throw new OracleError(
+        "ORACLE_ACCOUNT_MEMORY_UNREADABLE",
+        `Could not read ChatGPT Saved Memory: ${result.reason}.`,
+        'Retry, or set memory.store to "local"/"hybrid" so reads do not depend on the account.',
+        { reply: reply.slice(0, 200) }
+      );
+    }
+    if (!query) this.cache = { at: Date.now(), entries: result.entries };
+    return result.entries;
   }
 
   /**

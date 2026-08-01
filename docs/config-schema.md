@@ -78,8 +78,9 @@ Saved Memory is a weaker store than the local one:
 - 2000 characters per entry. Larger writes are rejected in `chatgpt` mode and
   skipped by the mirror in `hybrid` mode.
 - Reads are a natural-language round-trip, so ordering and completeness are
-  best-effort; an unreadable account raises an error rather than reporting an
-  empty memory.
+  best-effort. Emptiness must be stated with an explicit marker; an empty list,
+  a malformed reply, or a refusal all raise an error instead of reporting an
+  empty memory, so a full account is never mistaken for an empty one.
 - Writes and deletes count only when ChatGPT confirms them.
 - `working` memory never leaves the machine.
 - In `hybrid` mode, `forget` removes the local copy only; the mirrored entry

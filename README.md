@@ -329,7 +329,10 @@ Oracle does not paper over the difference:
 - Each entry is capped at 2000 characters; larger writes are rejected in
   `chatgpt` mode and skipped by the mirror in `hybrid` mode.
 - Reads are a natural-language round-trip, so ordering and completeness are
-  best-effort. An unreadable account surfaces as an error, never as "no memories".
+  best-effort. Emptiness is only accepted from an explicit marker: a reply that
+  returns an empty list is treated as unreadable and raises an error, because
+  that is also what a refusal to enumerate Saved Memory looks like. An
+  unreadable account never reports itself as "no memories".
 - Writes and deletes only count as done when ChatGPT confirms them.
 - `working` memory always stays local — it is short-lived scratch state, and
   Saved Memory is account-wide and user-visible.
