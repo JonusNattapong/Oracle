@@ -130,6 +130,18 @@ oracle memory prune --days 30
 oracle memory promote <id>
 ```
 
+Select where durable memory lives — `local` (default, this machine),
+`chatgpt` (the signed-in account's Saved Memory), or `hybrid` (local canonical
+plus a mirror of high-importance entries):
+
+```bash
+oracle memory store
+oracle memory store hybrid
+```
+
+`chatgpt` and `hybrid` require the `chatgpt-browser` backend and a signed-in
+session. See the memory storage table in the README for the trade-offs.
+
 ---
 
 ### oracle wiki

@@ -123,6 +123,9 @@ export class WindowsToastNotifier implements CompanionNotifier {
     return new Promise((resolve) => {
       let settled = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
+      // Assigned once the child's listeners are attached. A synchronous spawn
+      // failure settles before that, with nothing yet to detach.
+      let cleanup: () => void = () => undefined;
 
       const settle = (result: DeliveryResult): void => {
         if (settled) return;
@@ -206,7 +209,7 @@ export class WindowsToastNotifier implements CompanionNotifier {
       child.on("error", onError);
       child.on("close", onClose);
 
-      const cleanup = () => {
+      cleanup = () => {
         child.stderr?.removeListener("data", onStderr);
         child.removeListener("error", onError);
         child.removeListener("close", onClose);

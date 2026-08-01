@@ -15,6 +15,37 @@ export interface McpServerConfig {
   trustedForMutation?: boolean;
 }
 
+/**
+ * Where durable memory lives.
+ * - `local`  — this machine only (SQLite/file store, optionally via the
+ *   oracle-memory MCP sidecar). Full fidelity: ids, tags, importance, search.
+ * - `chatgpt` — the signed-in ChatGPT account's Saved Memory is the store.
+ *   Requires the `chatgpt-browser` backend. Saved Memory has no ids, tags,
+ *   timestamps, or reliable ordering, so this mode is best-effort: entries are
+ *   shadow-indexed locally to keep the MemoryPort contract usable.
+ * - `hybrid` — local is canonical; entries matching the mirror policy are also
+ *   pushed to ChatGPT Saved Memory so web conversations share the context.
+ */
+export type MemoryStoreMode = "local" | "chatgpt" | "hybrid";
+
+export interface MemoryMirrorConfig {
+  /** Only mirror entries at or above this importance (0–1). */
+  minImportance: number;
+  /** Only mirror these memory types. */
+  types: Array<"fact" | "insight" | "chunk" | "working">;
+  /** When set, an entry must also carry at least one of these tags. */
+  tags?: string[];
+}
+
+export interface MemoryConfig {
+  store: MemoryStoreMode;
+  /** Backend used to reach ChatGPT Saved Memory in `chatgpt`/`hybrid` mode. */
+  remoteBackend: "chatgpt-browser";
+  /** How long a remote Saved Memory read is reused before re-querying. */
+  remoteCacheTtlMinutes: number;
+  mirror: MemoryMirrorConfig;
+}
+
 export interface ProjectConfig {
   backend: BackendName;
   provider: ProviderSelection;
@@ -24,6 +55,7 @@ export interface ProjectConfig {
   maxFileSizeBytes: number;
   maxInputBytes: number;
   mcpServers?: McpServerConfig[];
+  memory: MemoryConfig;
   experimental?: {
     browserMode?: boolean;
   };
@@ -125,6 +157,25 @@ const browserSchema = z
   })
   .strict();
 
+const memorySchema = z
+  .object({
+    store: z.enum(["local", "chatgpt", "hybrid"]).optional(),
+    remoteBackend: z.literal("chatgpt-browser").optional(),
+    remoteCacheTtlMinutes: z.number().int().min(0).max(1_440).optional(),
+    mirror: z
+      .object({
+        minImportance: z.number().min(0).max(1).optional(),
+        types: z
+          .array(z.enum(["fact", "insight", "chunk", "working"]))
+          .min(1)
+          .optional(),
+        tags: z.array(z.string().trim().min(1)).optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+
 const workerSchema = z
   .object({
     pollInterval: z.string().trim().min(1).optional(),
@@ -199,6 +250,7 @@ const schema = z
         })
       )
       .optional(),
+    memory: memorySchema.optional(),
     experimental: z
       .object({ browserMode: z.boolean().optional() })
       .strict()
@@ -225,6 +277,15 @@ export const DEFAULT_PROJECT_CONFIG: Readonly<ProjectConfig> = Object.freeze({
   ]) as unknown as string[],
   maxFileSizeBytes: 1_000_000,
   maxInputBytes: 5_000_000,
+  memory: Object.freeze({
+    store: "local",
+    remoteBackend: "chatgpt-browser",
+    remoteCacheTtlMinutes: 10,
+    mirror: Object.freeze({
+      minImportance: 0.7,
+      types: Object.freeze(["fact", "insight"]) as unknown as MemoryMirrorConfig["types"],
+    }),
+  }) as unknown as MemoryConfig,
   experimental: Object.freeze({ browserMode: false }),
   browser: Object.freeze({
     model: "gpt-5.6-sol",
@@ -273,6 +334,13 @@ function copyDefaults(): ProjectConfig {
     include: [...DEFAULT_PROJECT_CONFIG.include],
     exclude: [...DEFAULT_PROJECT_CONFIG.exclude],
     experimental: { ...DEFAULT_PROJECT_CONFIG.experimental },
+    memory: {
+      ...DEFAULT_PROJECT_CONFIG.memory,
+      mirror: {
+        ...DEFAULT_PROJECT_CONFIG.memory.mirror,
+        types: [...DEFAULT_PROJECT_CONFIG.memory.mirror.types],
+      },
+    },
     browser: {
       ...DEFAULT_PROJECT_CONFIG.browser,
       followUps: [...DEFAULT_PROJECT_CONFIG.browser.followUps],
@@ -306,6 +374,17 @@ export async function loadProjectConfig(root: string): Promise<ProjectConfig> {
         ...defaults.browser,
         ...parsed.browser,
         followUps: parsed.browser?.followUps ?? defaults.browser.followUps,
+      },
+      memory: {
+        store: parsed.memory?.store ?? defaults.memory.store,
+        remoteBackend: parsed.memory?.remoteBackend ?? defaults.memory.remoteBackend,
+        remoteCacheTtlMinutes:
+          parsed.memory?.remoteCacheTtlMinutes ?? defaults.memory.remoteCacheTtlMinutes,
+        mirror: {
+          ...defaults.memory.mirror,
+          ...parsed.memory?.mirror,
+          types: parsed.memory?.mirror?.types ?? [...defaults.memory.mirror.types],
+        },
       },
       worker: { ...defaults.worker, ...parsed.worker },
       azure: { ...defaults.azure, ...parsed.azure },

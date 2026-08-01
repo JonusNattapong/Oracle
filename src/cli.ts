@@ -522,6 +522,56 @@ memCmd
   });
 
 memCmd
+  .command("store")
+  .description("Show or set where memory is stored (local | chatgpt | hybrid)")
+  .argument("[mode]", "local, chatgpt, or hybrid; omit to show the current setting")
+  .action(async (mode?: string) => {
+    const root = process.cwd();
+    const configPath = path.join(root, ".oracle", "config.json");
+
+    if (!mode) {
+      const config = await loadProjectConfig(root);
+      const { store, remoteBackend, remoteCacheTtlMinutes, mirror } = config.memory;
+      console.log(`store:          ${store}`);
+      if (store !== "local") {
+        console.log(`remote backend: ${remoteBackend}`);
+        console.log(`remote cache:   ${remoteCacheTtlMinutes}m`);
+      }
+      if (store === "hybrid") {
+        console.log(`mirror:         importance >= ${mirror.minImportance}, types ${mirror.types.join(", ")}${mirror.tags?.length ? `, tags ${mirror.tags.join(", ")}` : ""}`);
+      }
+      return;
+    }
+
+    if (mode !== "local" && mode !== "chatgpt" && mode !== "hybrid") {
+      console.error(`Invalid store "${mode}". Use local, chatgpt, or hybrid.`);
+      process.exitCode = 1;
+      return;
+    }
+
+    // Merge into the existing file so unrelated settings survive.
+    let raw: Record<string, unknown> = {};
+    try {
+      raw = JSON.parse(await fs.readFile(configPath, "utf8")) as Record<string, unknown>;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      await fs.mkdir(path.dirname(configPath), { recursive: true });
+    }
+    const existingMemory = (raw.memory ?? {}) as Record<string, unknown>;
+    raw.memory = { ...existingMemory, store: mode };
+    await fs.writeFile(configPath, `${JSON.stringify(raw, null, 2)}\n`, "utf8");
+
+    console.log(`Memory store set to "${mode}" in ${configPath}`);
+    if (mode !== "local") {
+      console.log(
+        "Requires a signed-in ChatGPT session via the chatgpt-browser backend. "
+        + "Saved Memory has no ids or tags, is capped at 2000 characters per entry, "
+        + "and is visible account-wide."
+      );
+    }
+  });
+
+memCmd
   .command("clear")
   .description("Clear working memory for an agent (or all)")
   .argument("[agent]", "Agent name (omit for all)")

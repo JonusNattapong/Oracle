@@ -289,6 +289,58 @@ Configuration, policy, docs, and skills live under the project's `.oracle/`
 directory. User-level sessions, identity, memory, and Runtime state live under
 `~/.oracle/`.
 
+### Where memory is stored
+
+`memory.store` selects the durable memory backend. The default keeps everything
+on this machine.
+
+```bash
+oracle memory store              # show the current setting
+oracle memory store hybrid       # local canonical + mirror to ChatGPT
+```
+
+| Store | Durable copy lives in | Use when |
+|---|---|---|
+| `local` (default) | This machine (SQLite/file, optionally the `oracle-memory` MCP sidecar) | You want full fidelity and nothing leaving the machine. |
+| `chatgpt` | The signed-in ChatGPT account's Saved Memory | You want ChatGPT web conversations to be the single source of memory. |
+| `hybrid` | This machine, plus a mirror of selected entries in Saved Memory | You want local search and graph features *and* shared context on chatgpt.com. |
+
+```json
+{
+  "memory": {
+    "store": "hybrid",
+    "remoteCacheTtlMinutes": 10,
+    "mirror": {
+      "minImportance": 0.7,
+      "types": ["fact", "insight"],
+      "tags": ["shared"]
+    }
+  }
+}
+```
+
+`chatgpt` and `hybrid` drive the signed-in session through the
+`chatgpt-browser` backend, so they inherit every [Browser Mode](docs/browser-mode.md)
+limitation. ChatGPT Saved Memory is a weaker store than the local one, and
+Oracle does not paper over the difference:
+
+- Entries have no ids, tags, importance, or timestamps. Oracle keeps those in a
+  local shadow index and joins them to the remote text by content hash.
+- Each entry is capped at 2000 characters; larger writes are rejected in
+  `chatgpt` mode and skipped by the mirror in `hybrid` mode.
+- Reads are a natural-language round-trip, so ordering and completeness are
+  best-effort. An unreadable account surfaces as an error, never as "no memories".
+- Writes and deletes only count as done when ChatGPT confirms them.
+- `working` memory always stays local — it is short-lived scratch state, and
+  Saved Memory is account-wide and user-visible.
+- In `hybrid` mode, `oracle memory forget` removes the local copy only. The
+  mirrored entry stays in your account until you delete it from ChatGPT
+  settings → Personalization → Manage memory.
+- A failed mirror never fails the local write; it is logged and reported.
+
+Entity graph, consolidation, decay, and reflection are local-only features in
+every mode.
+
 ## Security model
 
 Oracle treats model calls, workspace mutation, local administration, and remote
