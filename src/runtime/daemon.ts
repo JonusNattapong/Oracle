@@ -89,7 +89,9 @@ export class OracleDaemon {
     this.companion.setDispatcher((intent) => {
       // Fire-and-forget: dispatch persists its own outcome, and a rejected
       // promise here must not surface as an unhandled rejection.
-      void delivery.dispatch(intent).catch(() => undefined);
+      delivery.dispatch(intent).catch((err) => {
+        console.error(`[daemon] Delivery dispatch failed: ${err instanceof Error ? err.message : String(err)}`);
+      });
     });
     const workspaceRoot = path.resolve(this.options.workspaceRoot ?? process.cwd());
     this.scheduler = new SchedulerService(this.database, this.events, workspaceRoot);

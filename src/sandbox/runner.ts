@@ -176,18 +176,27 @@ export class SandboxRunner {
       });
       const timer = setTimeout(() => {
         timedOut = true;
-        child.kill();
+        try {
+          child.kill("SIGTERM");
+          setTimeout(() => {
+            if (!child.killed) child.kill("SIGKILL");
+          }, 1000);
+        } catch {
+          // Process may already be dead; no-op
+        }
       }, timeout);
-      child.stdout.on("data", (chunk) => { stdout += chunk.toString(); });
-      child.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
-      child.once("error", (error) => {
+      const onStdout = (chunk: Buffer) => { stdout += chunk.toString(); };
+      const onStderr = (chunk: Buffer) => { stderr += chunk.toString(); };
+      const onError = (error: Error) => {
         clearTimeout(timer);
+        cleanup();
         reject(new SandboxExecutionError(`Sandbox runner could not start '${file}': ${error.message}`, {
           stdout, stderr, durationMs: Date.now() - started
         }));
-      });
-      child.once("close", (code) => {
+      };
+      const onClose = (code: number | null) => {
         clearTimeout(timer);
+        cleanup();
         const result = { stdout, stderr, exitCode: timedOut ? 124 : (code ?? 1), durationMs: Date.now() - started };
         if (timedOut) {
           reject(new SandboxExecutionError(`Command timed out after ${timeout}ms`, result));
@@ -196,7 +205,17 @@ export class SandboxRunner {
         } else {
           resolve(result);
         }
-      });
+      };
+      const cleanup = () => {
+        child.stdout.removeListener("data", onStdout);
+        child.stderr.removeListener("data", onStderr);
+        child.removeListener("error", onError);
+        child.removeListener("close", onClose);
+      };
+      child.stdout.on("data", onStdout);
+      child.stderr.on("data", onStderr);
+      child.once("error", onError);
+      child.once("close", onClose);
     });
   }
 }

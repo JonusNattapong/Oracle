@@ -66,9 +66,13 @@ export class McpMemoryAdapter implements MemoryPort {
     })) as ToolResult;
 
     const text = this.extractText(result);
-    const parsed = JSON.parse(text);
-    if (!parsed.success) throw new Error(parsed.error || "remember failed");
-    return parsed.memory as MemoryStoreEntry;
+    try {
+      const parsed = JSON.parse(text);
+      if (!parsed.success) throw new Error(parsed.error || "remember failed");
+      return parsed.memory as MemoryStoreEntry;
+    } catch (err) {
+      throw new Error(`Failed to parse remember response: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   async recall(opts?: { type?: MemoryType; agent?: string; tags?: string[]; limit?: number; includeArchived?: boolean }): Promise<MemoryStoreEntry[]> {
@@ -87,9 +91,13 @@ export class McpMemoryAdapter implements MemoryPort {
       },
     })) as ToolResult;
     const text = this.extractText(result);
-    const parsed = JSON.parse(text);
-    if (!parsed.success) throw new Error(parsed.error || "recall failed");
-    return (parsed.results || []) as MemoryStoreEntry[];
+    try {
+      const parsed = JSON.parse(text);
+      if (!parsed.success) throw new Error(parsed.error || "recall failed");
+      return (parsed.results || []) as MemoryStoreEntry[];
+    } catch (err) {
+      throw new Error(`Failed to parse recall response: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   async searchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number }): Promise<MemoryStoreEntry[]> {
@@ -104,9 +112,13 @@ export class McpMemoryAdapter implements MemoryPort {
       },
     })) as ToolResult;
     const text = this.extractText(result);
-    const parsed = JSON.parse(text);
-    if (!parsed.success) throw new Error(parsed.error || "search failed");
-    return (parsed.results || []) as MemoryStoreEntry[];
+    try {
+      const parsed = JSON.parse(text);
+      if (!parsed.success) throw new Error(parsed.error || "search failed");
+      return (parsed.results || []) as MemoryStoreEntry[];
+    } catch (err) {
+      throw new Error(`Failed to parse search response: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   async scoredSearchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number }): Promise<MemoryStoreEntry[]> {
@@ -129,10 +141,18 @@ export class McpMemoryAdapter implements MemoryPort {
         },
       })) as ToolResult;
       const text = this.extractText(result);
-      const parsed = JSON.parse(text);
-      if (!parsed.success) return null;
-      return parsed.memory as MemoryStoreEntry;
-    } catch { return null; }
+      try {
+        const parsed = JSON.parse(text);
+        if (!parsed.success) return null;
+        return parsed.memory as MemoryStoreEntry;
+      } catch (err) {
+        console.error(`[oracle-memory] Failed to parse update response: ${err instanceof Error ? err.message : String(err)}`);
+        return null;
+      }
+    } catch (err) {
+      console.error(`[oracle-memory] Update operation failed: ${err instanceof Error ? err.message : String(err)}`);
+      return null;
+    }
   }
 
   async getStats(): Promise<{ total: number; byType: Record<string, number>; byAgent: Record<string, number> }> {
@@ -153,8 +173,12 @@ export class McpMemoryAdapter implements MemoryPort {
       arguments: { id, type },
     })) as ToolResult;
     const text = this.extractText(result);
-    const parsed = JSON.parse(text);
-    if (!parsed.success) throw new Error(parsed.error || "forget failed");
+    try {
+      const parsed = JSON.parse(text);
+      if (!parsed.success) throw new Error(parsed.error || "forget failed");
+    } catch (err) {
+      throw new Error(`Failed to parse forget response: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   async clearWorking(agent?: string): Promise<number> {
@@ -164,9 +188,13 @@ export class McpMemoryAdapter implements MemoryPort {
       arguments: { agent: agent ?? "" },
     })) as ToolResult;
     const text = this.extractText(result);
-    const parsed = JSON.parse(text);
-    if (!parsed.success) throw new Error(parsed.error || "clear_working failed");
-    return parsed.cleared as number;
+    try {
+      const parsed = JSON.parse(text);
+      if (!parsed.success) throw new Error(parsed.error || "clear_working failed");
+      return parsed.cleared as number;
+    } catch (err) {
+      throw new Error(`Failed to parse clear_working response: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   // ── Advanced methods delegated to oracle-memory server ──────────
@@ -183,18 +211,28 @@ export class McpMemoryAdapter implements MemoryPort {
       },
     })) as ToolResult;
     const text = this.extractText(result);
-    const parsed = JSON.parse(text);
-    if (!parsed.success) return [];
-    return (parsed.results || []) as MemoryStoreEntry[];
+    try {
+      const parsed = JSON.parse(text);
+      if (!parsed.success) return [];
+      return (parsed.results || []) as MemoryStoreEntry[];
+    } catch (err) {
+      console.error(`[oracle-memory] Failed to parse graph query response: ${err instanceof Error ? err.message : String(err)}`);
+      return [];
+    }
   }
 
   async consolidate(): Promise<{ consolidated: number; created: MemoryStoreEntry | null; archived: string[] }> {
     await this.ensureConnected();
     const result = (await this.client.callTool({ name: "consolidate", arguments: {} })) as ToolResult;
     const text = this.extractText(result);
-    const parsed = JSON.parse(text);
-    if (!parsed.success) return { consolidated: 0, created: null, archived: [] };
-    return { consolidated: parsed.consolidated ?? 0, created: parsed.created ?? null, archived: parsed.archived ?? [] };
+    try {
+      const parsed = JSON.parse(text);
+      if (!parsed.success) return { consolidated: 0, created: null, archived: [] };
+      return { consolidated: parsed.consolidated ?? 0, created: parsed.created ?? null, archived: parsed.archived ?? [] };
+    } catch (err) {
+      console.error(`[oracle-memory] Failed to parse consolidate response: ${err instanceof Error ? err.message : String(err)}`);
+      return { consolidated: 0, created: null, archived: [] };
+    }
   }
 
   async pruneStale(opts?: { minImportance?: number; minStaleDays?: number }): Promise<string[]> {
@@ -204,8 +242,13 @@ export class McpMemoryAdapter implements MemoryPort {
       arguments: { min_importance: opts?.minImportance, min_stale_days: opts?.minStaleDays },
     })) as ToolResult;
     const text = this.extractText(result);
-    const parsed = JSON.parse(text);
-    return (parsed.memories || []).map((m: any) => m.id);
+    try {
+      const parsed = JSON.parse(text);
+      return (parsed.memories || []).map((m: any) => m.id);
+    } catch (err) {
+      console.error(`[oracle-memory] Failed to parse prune response: ${err instanceof Error ? err.message : String(err)}`);
+      return [];
+    }
   }
 
   async promoteWorking(opts?: { minAccessCount?: number }): Promise<string[]> {
@@ -215,8 +258,13 @@ export class McpMemoryAdapter implements MemoryPort {
       arguments: { min_access_count: opts?.minAccessCount },
     })) as ToolResult;
     const text = this.extractText(result);
-    const parsed = JSON.parse(text);
-    return (parsed.memories || []).map((m: any) => m.id);
+    try {
+      const parsed = JSON.parse(text);
+      return (parsed.memories || []).map((m: any) => m.id);
+    } catch (err) {
+      console.error(`[oracle-memory] Failed to parse promote response: ${err instanceof Error ? err.message : String(err)}`);
+      return [];
+    }
   }
 
   async runMaintenance(opts?: { minImportance?: number; minStaleDays?: number; minAccessCount?: number }): Promise<{ pruned: string[]; promoted: string[] }> {
@@ -231,7 +279,12 @@ export class McpMemoryAdapter implements MemoryPort {
     await this.ensureConnected();
     const result = (await this.client.callTool({ name: "reflect", arguments: { agent: opts?.agent ?? "oracle" } })) as ToolResult;
     const text = this.extractText(result);
-    const parsed = JSON.parse(text);
-    return (parsed.memories || []) as any[];
+    try {
+      const parsed = JSON.parse(text);
+      return (parsed.memories || []) as any[];
+    } catch (err) {
+      console.error(`[oracle-memory] Failed to parse reflect response: ${err instanceof Error ? err.message : String(err)}`);
+      return [];
+    }
   }
 }

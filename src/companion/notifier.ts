@@ -122,13 +122,13 @@ export class WindowsToastNotifier implements CompanionNotifier {
   private runToast(body: string): Promise<DeliveryResult> {
     return new Promise((resolve) => {
       let settled = false;
-      // Declared before settle(): a synchronous spawn failure settles the
-      // promise before the timeout is ever armed.
       let timer: ReturnType<typeof setTimeout> | undefined;
+
       const settle = (result: DeliveryResult): void => {
         if (settled) return;
         settled = true;
         if (timer) clearTimeout(timer);
+        cleanup();
         resolve(result);
       };
 
@@ -147,8 +147,6 @@ export class WindowsToastNotifier implements CompanionNotifier {
           {
             windowsHide: true,
             stdio: ["ignore", "ignore", "pipe"],
-            // Minimal environment: the toast needs only what PowerShell itself
-            // requires plus the message, so no unrelated secrets are exported.
             env: {
               SystemRoot: process.env.SystemRoot ?? "",
               windir: process.env.windir ?? "",
@@ -180,17 +178,17 @@ export class WindowsToastNotifier implements CompanionNotifier {
       timer.unref?.();
 
       let stderr = "";
-      child.stderr?.on("data", (chunk: Buffer) => {
+      const onStderr = (chunk: Buffer) => {
         if (stderr.length < 500) stderr += chunk.toString("utf8");
-      });
-      child.on("error", (error) => {
+      };
+      const onError = (error: Error) => {
         settle({
           delivered: false,
           errorKind: "spawn_failed",
           detail: error instanceof Error ? error.name : "spawn failed"
         });
-      });
-      child.on("close", (code) => {
+      };
+      const onClose = (code: number | null) => {
         if (code === 0) {
           settle({ delivered: true });
           return;
@@ -202,7 +200,17 @@ export class WindowsToastNotifier implements CompanionNotifier {
             `PowerShell exited with code ${code}. ${stderr}`
           )
         });
-      });
+      };
+
+      child.stderr?.on("data", onStderr);
+      child.on("error", onError);
+      child.on("close", onClose);
+
+      const cleanup = () => {
+        child.stderr?.removeListener("data", onStderr);
+        child.removeListener("error", onError);
+        child.removeListener("close", onClose);
+      };
     });
   }
 }

@@ -48,7 +48,9 @@ export async function watchInbox(
   };
 
   watcher.on("all", () => {
-    void scan();
+    scan().catch((err) => {
+      console.error(`[message-watcher] Error scanning inbox: ${err instanceof Error ? err.message : String(err)}`);
+    });
   });
   const origClose = watcher.close.bind(watcher);
   watcher.close = () => {

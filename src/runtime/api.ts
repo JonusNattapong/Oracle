@@ -116,9 +116,18 @@ export class LocalApiServer {
 
   async start(): Promise<{ host: string; port: number }> {
     await new Promise<void>((resolve, reject) => {
-      this.server.once("error", reject);
+      const onError = (err: Error & { code?: string }) => {
+        this.server.off("error", onError);
+        const detail = err.code === "EADDRINUSE"
+          ? `Port ${this.options.port} is already in use`
+          : err.code === "EACCES"
+            ? `Permission denied to bind to ${this.options.host}:${this.options.port}`
+            : err.message;
+        reject(new Error(`Failed to start Runtime API: ${detail}`));
+      };
+      this.server.once("error", onError);
       this.server.listen(this.options.port, this.options.host, () => {
-        this.server.off("error", reject);
+        this.server.off("error", onError);
         resolve();
       });
     });

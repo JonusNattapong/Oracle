@@ -165,18 +165,33 @@ export class ProcessSupervisor {
       const controller = new AbortController();
       const timeoutHandle = setTimeout(() => controller.abort(), 1000);
 
-      const url = `${endpoint.replace("/mcp", "")}/health`;
+      try {
+        const url = `${endpoint.replace("/mcp", "")}/health`;
 
-      const resp = await fetch(url, {
-        method: "GET",
-        signal: controller.signal as AbortSignal,
-      });
+        const resp = await fetch(url, {
+          method: "GET",
+          signal: controller.signal as AbortSignal,
+        });
 
-      clearTimeout(timeoutHandle);
-      return resp.ok;
+        return resp.ok;
+      } finally {
+        clearTimeout(timeoutHandle);
+      }
     } catch {
       return false;
     }
+  }
+
+  private async resolveExecutable(command: string): Promise<string> {
+    // Check if absolute path exists
+    if (path.isAbsolute(command)) {
+      await fs.access(command, fs.constants.X_OK);
+      return command;
+    }
+    // For relative paths, check if resolvable from current directory
+    const resolved = path.resolve(process.cwd(), command);
+    await fs.access(resolved, fs.constants.X_OK);
+    return resolved;
   }
 
   private async findFreePort(): Promise<number> {
@@ -202,8 +217,14 @@ export class ProcessSupervisor {
     let execArgs: string[] = [];
     let useShell = false;
     if (/\.(js|mjs|cjs)$/.test(lower)) {
+      // Validate .js path is resolvable (absolute or in PATH)
+      const resolved = await this.resolveExecutable(command).catch(() => null);
+      if (!resolved) {
+        debugOrchestrator(`[orchestrator] Cannot resolve JavaScript entry point: ${command}`);
+        return null;
+      }
       execCommand = process.execPath;
-      execArgs = [command];
+      execArgs = [resolved];
     } else if (/\.(cmd|bat|ps1)$/.test(lower)) {
       useShell = true;
     }
@@ -243,6 +264,7 @@ export class ProcessSupervisor {
         await sleep(150);
         if (spawnError || exited || proc.exitCode !== null) {
           debugOrchestrator(`[orchestrator] ${service} failed or exited early — falling back immediately`);
+          this.activeProcesses.delete(service);
           return null;
         }
         if (await this.healthCheck(service, endpoint)) {
@@ -252,6 +274,7 @@ export class ProcessSupervisor {
         retries--;
       }
 
+      this.activeProcesses.delete(service);
       return null;
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
