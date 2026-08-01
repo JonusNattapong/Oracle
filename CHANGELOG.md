@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Automatic project-memory recall in `oracle ask` and `oracle_ask`**
+  - Memory relevant to the question is recalled and included as a labelled
+    prompt block, so answers are grounded in what Oracle has stored. Previously
+    both paths sent only the files, docs, and conversation context the caller
+    passed explicitly, and a model asked about stored memory would fabricate an
+    answer rather than admit the gap.
+  - Recalled entries are marked as data, not instructions, and the model is told
+    to say it does not know rather than guess.
+  - Opt out with `--no-memory` (CLI) or `include_memory: false` (MCP).
+  - Recall failures and budget-starved recalls are reported, not silently
+    dropped; a failed recall degrades the answer instead of failing the call.
+
 - **Configurable memory store (`memory.store`)**
   - Durable memory can live on this machine (`local`, the default), in the
     signed-in ChatGPT account's Saved Memory (`chatgpt`), or both (`hybrid`).

@@ -16,6 +16,11 @@ one or more MCP tools of the same name.
 
 Ask Oracle anything with full project context.
 
+Stored project memory relevant to the question is recalled and included
+automatically, so answers are grounded in what Oracle already knows instead of
+being guessed. Pass `--no-memory` to skip the recall. The MCP `oracle_ask` tool
+behaves the same way and takes `include_memory: false` for the same purpose.
+
 ```bash
 oracle ask "Why is service X timing out?"
 oracle ask "review this" -f "src/**/*.ts"
@@ -28,6 +33,7 @@ oracle ask "describe this image" -f "docs/assets/system-map.png" --backend chatg
 | Flag | Purpose |
 |---|---|
 | `-f, --files <glob>` | Include code files (supports `!exclude` patterns) |
+| `--no-memory` | Answer without recalling stored project memory |
 | `--include-docs` | Inject `.oracle/docs/` knowledge base |
 | `--include-gh` | Include GitHub PR/issue context |
 | `--soul <name>` | Personality: `engineer`, `socratic`, `witty`, etc. |

@@ -6,6 +6,7 @@ import type { ProjectConfig } from "../../config/project.js";
 import type { MemoryPort } from "../../orchestrator/ports.js";
 import { OracleError, serializeOracleError } from "../../errors.js";
 import { getConversationContext, recordSelfLog } from "../../core/selfMemory.js";
+import { buildMemoryContext } from "../../core/memoryContext.js";
 import { loadSoul } from "../../core/souls.js";
 import { buildOracleSystemPrompt } from "../../core/systemPrompt.js";
 import { searchDocs } from "../../docs/reader.js";
@@ -56,7 +57,7 @@ export function registerConsultTool(
     "oracle_ask",
     {
       title: "Ask Oracle",
-      description: "Ask anything. Pass `files` to read code, `conversationId` for multi-turn recall, or `accountMemory` to explicitly save a high-level fact to the signed-in ChatGPT account.",
+      description: "Ask anything. Stored project memory relevant to the question is recalled automatically (`include_memory: false` to skip). Pass `files` to read code, `conversationId` for multi-turn recall, or `accountMemory` to explicitly save a high-level fact to the signed-in ChatGPT account.",
       inputSchema: {
         question: z.string().min(1).describe("Your question or what you're stuck on"),
         soul: z.string().optional().describe("Soul prompt name (e.g. 'engineer', 'philosopher'). Defaults to 'default'"),
@@ -66,10 +67,11 @@ export function registerConsultTool(
         conversationId: z.string().optional().describe("Stable id for this exchange — pass the same value across multiple oracle_ask calls so Oracle recalls what it already said"),
         accountMemory: z.string().min(1).max(2000).optional().describe("Explicit opt-in: exact high-level fact or preference to save to the signed-in ChatGPT account's Saved Memory. Requires backend='chatgpt-browser'; never use for secrets or large text."),
         include_docs: z.boolean().optional().describe("Search .oracle/docs/ for relevant documentation and include as context"),
-        doc_search: z.string().optional().describe("Specific doc query (defaults to using the question itself)")
+        doc_search: z.string().optional().describe("Specific doc query (defaults to using the question itself)"),
+        include_memory: z.boolean().optional().describe("Recall stored project memory relevant to the question. Default: true")
       }
     },
-    async ({ question, soul, context, files, backend, conversationId, accountMemory, include_docs, doc_search }) => {
+    async ({ question, soul, context, files, backend, conversationId, accountMemory, include_docs, doc_search, include_memory }) => {
       try {
         if (soul !== undefined) {
           soul = soul.trim();
@@ -94,6 +96,24 @@ export function registerConsultTool(
 
         if (conversationId) {
           ctxBlock += await getConversationContext(deps.memory, conversationId);
+        }
+
+        if (include_memory !== false) {
+          // Recall is best-effort: losing it degrades the answer but does not
+          // make the question unanswerable, so report and continue.
+          try {
+            const recalled = await buildMemoryContext(deps.memory, question);
+            ctxBlock += recalled.block;
+            if (recalled.used === 0 && recalled.omitted > 0) {
+              console.error(
+                `[memory] ${recalled.omitted} recalled item(s) did not fit the context budget; answering without project memory.`
+              );
+            }
+          } catch (error) {
+            console.error(
+              `[memory] recall failed, answering without project memory: ${error instanceof Error ? error.message : String(error)}`
+            );
+          }
         }
 
         if (include_docs) {

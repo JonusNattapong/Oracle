@@ -73,6 +73,7 @@ import { agentqlExtract } from "./web/providers/agentql.js";
 import { loadSoul } from "./core/souls.js";
 import { buildOracleSystemPrompt } from "./core/systemPrompt.js";
 import { getConversationContext, recordSelfLog } from "./core/selfMemory.js";
+import { buildMemoryContext } from "./core/memoryContext.js";
 import { buildWiki, getWikiPage, listWikiTopics } from "./wiki/compile.js";
 
 /**
@@ -138,6 +139,7 @@ program
   .option("--conversation <id>", "Stable id so Oracle recalls what it already told you across calls")
   .option("--remember <text>", "Explicitly save a high-level fact or preference to ChatGPT account memory (chatgpt-browser only)")
   .option("--include-docs", "Search .oracle/docs/ for relevant documentation")
+  .option("--no-memory", "Answer without recalling stored project memory")
   .option("-m, --model <model>", "Model override")
   .option("--backend <backend>", "Backend override (codex, openai, anthropic, gemini, opencode, browser, chatgpt-browser, azure, openrouter)")
   .option("--provider <provider>", "Provider override (deprecated: use --backend)")
@@ -241,6 +243,24 @@ program
     let ctxBlock = "";
     if (options.conversation) {
       ctxBlock += await getConversationContext(memory, options.conversation);
+    }
+    if (options.memory !== false) {
+      // A recall failure must not sink the consult — the question is still
+      // answerable without stored memory — but it is reported, because a silent
+      // drop looks identical to "nothing was remembered".
+      try {
+        const recalled = await buildMemoryContext(memory, question);
+        ctxBlock += recalled.block;
+        if (recalled.used === 0 && recalled.omitted > 0) {
+          console.warn(
+            `[memory] ${recalled.omitted} recalled item(s) did not fit the context budget; answering without project memory.`
+          );
+        }
+      } catch (error) {
+        console.warn(
+          `[memory] recall failed, answering without project memory: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
     }
     if (options.includeDocs) {
       const matched = await searchDocs(cwd, question, 5);
