@@ -1,12 +1,11 @@
-import {
-  buildAccountMemoryPrompt,
-  isAccountMemorySaveConfirmed,
-  MAX_ACCOUNT_MEMORY_CHARS
-} from "../backends/chatgpt-browser/accountMemory.js";
+import { MAX_ACCOUNT_MEMORY_CHARS } from "../backends/chatgpt-browser/accountMemory.js";
 import type { ExecutionBackend } from "../backends/backend.js";
 import type { MemoryMirrorConfig } from "../config/project.js";
 import type { MemoryPort } from "../orchestrator/ports.js";
 import type { MemoryStoreEntry, MemoryType } from "./adapter.js";
+
+/** Cheapest possible follow-up turn after the backend performs the save. */
+const MIRROR_ACK_PROMPT = "Reply with exactly: OK";
 
 export interface MirrorOutcome {
   attempted: boolean;
@@ -85,14 +84,18 @@ export class HybridMemoryAdapter implements MemoryPort {
       };
     }
     try {
+      // The backend owns the save: it builds its own memory prompt from
+      // `accountMemory`, verifies the confirmation, and reports the outcome.
+      // `userPrompt` is still sent as a normal turn, so it must be a cheap
+      // no-op rather than a second copy of the memory request.
       const response = await this.backend.run({
         model: this.model,
         systemPrompt: "",
-        userPrompt: buildAccountMemoryPrompt(entry.content),
+        userPrompt: MIRROR_ACK_PROMPT,
         cwd: this.cwd,
         accountMemory: entry.content
       });
-      const saved = isAccountMemorySaveConfirmed(response.text ?? "");
+      const saved = Boolean(response.accountMemorySaved);
       return {
         attempted: true,
         saved,

@@ -1,10 +1,8 @@
 import { createHash } from "node:crypto";
 import {
   buildAccountMemoryForgetPrompt,
-  buildAccountMemoryPrompt,
   buildAccountMemoryRecallPrompt,
   isAccountMemoryForgetConfirmed,
-  isAccountMemorySaveConfirmed,
   parseAccountMemoryRecall,
   MAX_ACCOUNT_MEMORY_CHARS
 } from "../backends/chatgpt-browser/accountMemory.js";
@@ -76,15 +74,27 @@ export class ChatGptMemoryAdapter implements MemoryPort {
     this.onWarning = options.onWarning;
   }
 
-  private async ask(userPrompt: string, accountMemory?: string): Promise<string> {
-    const response = await this.backend.run({
+  /**
+   * The backend always sends `userPrompt` as a normal turn. When saving, the
+   * save itself is driven by `accountMemory` — the backend builds its own memory
+   * prompt, verifies the confirmation, and reports the outcome on the response —
+   * so the prompt here must be a cheap no-op rather than a second copy of the
+   * memory request, which would save the entry twice.
+   */
+  private static readonly ACK_PROMPT = "Reply with exactly: OK";
+
+  private async ask(userPrompt: string, accountMemory?: string) {
+    return this.backend.run({
       model: this.model,
       systemPrompt: "",
       userPrompt,
       cwd: this.cwd,
       accountMemory
     });
-    return response.text ?? "";
+  }
+
+  private async askText(userPrompt: string): Promise<string> {
+    return (await this.ask(userPrompt)).text ?? "";
   }
 
   /** `working` memory stays local; everything else is account-visible. */
@@ -109,13 +119,13 @@ export class ChatGptMemoryAdapter implements MemoryPort {
       );
     }
 
-    const reply = await this.ask(buildAccountMemoryPrompt(content), content);
-    if (!isAccountMemorySaveConfirmed(reply)) {
+    const response = await this.ask(ChatGptMemoryAdapter.ACK_PROMPT, content);
+    if (!response.accountMemorySaved) {
       throw new OracleError(
         "ORACLE_ACCOUNT_MEMORY_NOT_CONFIRMED",
         "ChatGPT did not confirm the memory was saved.",
         "Check that Saved Memory is enabled and not full for the signed-in account.",
-        { reply: reply.slice(0, 200) }
+        { reply: (response.text ?? "").slice(0, 200) }
       );
     }
     this.cache = null;
@@ -132,7 +142,7 @@ export class ChatGptMemoryAdapter implements MemoryPort {
     if (!query && this.cache && Date.now() - this.cache.at < this.cacheTtlMs) {
       return this.cache.entries;
     }
-    const reply = await this.ask(buildAccountMemoryRecallPrompt(query));
+    const reply = await this.askText(buildAccountMemoryRecallPrompt(query));
     const entries = parseAccountMemoryRecall(reply);
     if (!query) this.cache = { at: Date.now(), entries };
     return entries;
@@ -228,16 +238,13 @@ export class ChatGptMemoryAdapter implements MemoryPort {
 
     if (updates.content && updates.content !== existing.content && this.isRemoteType(type)) {
       await this.forgetRemote(existing.content);
-      const reply = await this.ask(
-        buildAccountMemoryPrompt(updates.content),
-        updates.content
-      );
-      if (!isAccountMemorySaveConfirmed(reply)) {
+      const response = await this.ask(ChatGptMemoryAdapter.ACK_PROMPT, updates.content);
+      if (!response.accountMemorySaved) {
         throw new OracleError(
           "ORACLE_ACCOUNT_MEMORY_NOT_CONFIRMED",
           "ChatGPT did not confirm the updated memory was saved.",
           "The previous entry was removed; re-run the update once Saved Memory is available.",
-          { reply: reply.slice(0, 200) }
+          { reply: (response.text ?? "").slice(0, 200) }
         );
       }
       this.cache = null;
@@ -246,7 +253,7 @@ export class ChatGptMemoryAdapter implements MemoryPort {
   }
 
   private async forgetRemote(content: string): Promise<boolean> {
-    const reply = await this.ask(buildAccountMemoryForgetPrompt(content));
+    const reply = await this.askText(buildAccountMemoryForgetPrompt(content));
     const confirmed = isAccountMemoryForgetConfirmed(reply);
     if (confirmed) this.cache = null;
     return confirmed;

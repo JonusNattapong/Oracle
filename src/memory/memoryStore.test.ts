@@ -6,7 +6,6 @@ import {
   ACCOUNT_MEMORY_LIST_BEGIN,
   ACCOUNT_MEMORY_LIST_END,
   ACCOUNT_MEMORY_FORGOTTEN_MARKER,
-  ACCOUNT_MEMORY_SAVED_MARKER,
   buildAccountMemoryRecallPrompt,
   parseAccountMemoryRecall
 } from "../backends/chatgpt-browser/accountMemory.js";
@@ -64,11 +63,14 @@ class FakeChatGptBackend implements ExecutionBackend {
       return { text: ACCOUNT_MEMORY_FORGOTTEN_MARKER, usage };
     }
     if (request.accountMemory) {
+      // Mirrors the real backend: it drives the save itself, throws when ChatGPT
+      // does not confirm, and reports the outcome via accountMemorySaved — the
+      // caller's userPrompt is a separate, ordinary turn.
       if (this.refuseSave) {
-        return { text: "ORACLE_MEMORY_NOT_SAVED: memory is full", usage };
+        throw new Error("ChatGPT did not confirm the Saved Memory update");
       }
       this.saved.push(request.accountMemory);
-      return { text: ACCOUNT_MEMORY_SAVED_MARKER, usage };
+      return { text: "OK", usage, accountMemorySaved: true };
     }
     return { text: "", usage };
   }
@@ -166,6 +168,25 @@ describe("ChatGptMemoryAdapter", () => {
     expect(recalled.map((entry) => entry.content)).toContain("Deploys run on Fridays");
   });
 
+  test("saves once per remember, not twice", async () => {
+    // The backend builds its own memory prompt from `accountMemory` and sends
+    // `userPrompt` as a separate ordinary turn. Passing the memory request as
+    // the prompt too would save the entry a second time.
+    const backend = new FakeChatGptBackend();
+    const adapter = new ChatGptMemoryAdapter({
+      backend,
+      shadow: new MemoryAdapter(workspace),
+      cacheTtlMinutes: 0,
+      cwd: workspace
+    });
+
+    await adapter.remember("oracle", "fact", "Exactly one copy");
+
+    expect(backend.saved).toEqual(["Exactly one copy"]);
+    expect(backend.requests).toHaveLength(1);
+    expect(backend.requests[0].userPrompt).not.toContain("Saved Memory");
+  });
+
   test("surfaces entries saved directly in ChatGPT that Oracle never wrote", async () => {
     const backend = new FakeChatGptBackend();
     backend.saved = ["Set from the ChatGPT web UI"];
@@ -194,6 +215,7 @@ describe("ChatGptMemoryAdapter", () => {
     await expect(adapter.remember("oracle", "fact", "Never lands")).rejects.toThrow(
       /did not confirm/i
     );
+    expect(backend.saved).toEqual([]);
     // Nothing may be shadow-indexed if the remote write failed.
     const local = await new MemoryAdapter(workspace).recall({ limit: 10 });
     expect(local.map((entry) => entry.content)).not.toContain("Never lands");
