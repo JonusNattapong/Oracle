@@ -109,25 +109,4 @@ export function registerAgentTools(
     }
   );
 
-  server.registerTool(
-    "oracle_skills",
-    {
-      title: "List Skills",
-      description: "List available Oracle skills.",
-      inputSchema: {}
-    },
-    async () => {
-      try {
-        const list = deps.skills.list().map((s) => ({
-          name: s.name,
-          description: s.description,
-          model: s.model ?? null,
-          filePatterns: s.filePatterns ?? null
-        }));
-        return success(JSON.stringify(list, null, 2), { skills: list });
-      } catch (error) {
-        return failure(error);
-      }
-    }
-  );
 }

@@ -15,8 +15,6 @@ import { registerMemoryTools } from "./tools/memory.js";
 import { registerDocsTools } from "./tools/docs.js";
 import { registerWebTools } from "./tools/web.js";
 import { registerIdentityTools } from "./tools/identity.js";
-import { registerOracleProfileTools } from "./tools/oracle.js";
-import { registerSessionTools } from "./tools/session.js";
 import { registerHistoryTools } from "./tools/history.js";
 import { registerUtilTool } from "./tools/util.js";
 
@@ -94,12 +92,6 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
     backend: providerId
   });
 
-  // Oracle profile tools (oracle_oracle_*)
-  registerOracleProfileTools(server, oracles);
-
-  // Session tools (oracle_sessions, oracle_session_get)
-  registerSessionTools(server, service);
-
   // Util / diagnostics (oracle_doctor)
   registerUtilTool(server, {
     config,
@@ -112,6 +104,12 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
   // History tools (oracle_history_*)
   registerHistoryTools(server);
 
+  // Oracle profiles, sessions, skills, persona and identity setup are not
+  // exposed either: each is a thing a person configures or inspects, and each
+  // already has a CLI command (`oracle oracle`, `oracle session`, `oracle
+  // status`, `oracle skill`, `oracle identity`). History tools stay because
+  // nothing on the CLI reaches them.
+  //
   // Messaging (10), task tracking (10) and GitHub (11) tools are deliberately
   // not exposed here. Every tool a client loads costs it context and one more
   // way to pick the wrong one, and these three groups are all reachable by

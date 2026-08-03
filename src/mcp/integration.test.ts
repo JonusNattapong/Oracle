@@ -141,16 +141,11 @@ describe("Oracle MCP tools", () => {
     const tools = (await client.listTools()).tools.map((tool) => tool.name).sort();
     expect(tools).toContain("oracle_ask");
     expect(tools).toContain("oracle_doctor");
-    expect(tools).toContain("oracle_skills");
-    expect(tools).toContain("oracle_oracle_list");
-    expect(tools).toContain("oracle_oracle_register");
     expect(tools).toContain("oracle_memory_search");
     expect(tools).toContain("oracle_memory_remember");
     expect(tools).toContain("oracle_memory_maintain");
     expect(tools).toContain("oracle_identity_show");
-    expect(tools).toContain("oracle_identity_setup");
     expect(tools).toContain("oracle_awareness_show");
-    expect(tools).toContain("oracle_persona_set");
     expect(tools).toContain("oracle_msg_send");
     expect(tools).toContain("oracle_task_create");
   });
@@ -338,10 +333,11 @@ describe("Oracle MCP tools", () => {
     });
     expect(typeof (consultation.structuredContent as { sessionId: string }).sessionId).toBe("string");
 
-    const sessions = await client.callTool({ name: "oracle_sessions", arguments: { limit: 1 } });
-    const sessionId = (sessions.structuredContent as { sessions: Array<{ sessionId: string }> }).sessions[0].sessionId;
-    const session = await client.callTool({ name: "oracle_session_get", arguments: { sessionId } });
-    expect(session.isError).not.toBe(true);
+    // Session browsing left the MCP surface for `oracle status` / `oracle
+    // session <id>`; the record itself must still be written.
+    const stored = await new FileSessionStore(path.join(root, ".sessions")).list(1);
+    expect(stored).toHaveLength(1);
+    expect(stored[0].sessionId).toBe((consultation.structuredContent as { sessionId: string }).sessionId);
 
     const doctor = await client.callTool({ name: "oracle_doctor", arguments: {} });
     const expectedHealthy = Number.parseInt(process.versions.node.split(".")[0], 10) >= 24;
@@ -432,44 +428,11 @@ describe("Oracle MCP tools", () => {
     });
   });
 
-  test("identity_setup accepts a single freeform string as well as an array for list fields", async () => {
-    // Found via real usage: preferences/habits/goals are stored as arrays,
-    // but a single descriptive string is the natural first thing an agent
-    // tries — it must not hard-fail, and should split into discrete items
-    // rather than being stored as one giant entry.
-    const stringForm = await client.callTool({
-      name: "oracle_identity_setup",
-      arguments: { name: "string-agent", preferences: "prefers concise diffs, likes tabs" }
-    });
-    expect(stringForm.isError).not.toBe(true);
-
-    const shown = await client.callTool({ name: "oracle_identity_show", arguments: {} });
-    expect((shown.structuredContent as { identity: { preferences: string[] } }).identity.preferences).toEqual([
-      "prefers concise diffs",
-      "likes tabs"
-    ]);
-
-    const arrayForm = await client.callTool({
-      name: "oracle_identity_setup",
-      arguments: { name: "array-agent", goals: ["ship feature X", "fix bug Y"] }
-    });
-    expect(arrayForm.isError).not.toBe(true);
-
-    const shownArray = await client.callTool({ name: "oracle_identity_show", arguments: {} });
-    expect((shownArray.structuredContent as { identity: { goals: string[] } }).identity.goals).toEqual([
-      "ship feature X",
-      "fix bug Y"
-    ]);
-  });
-
   test("exposes and injects the current self-awareness snapshot", async () => {
-    await client.callTool({
-      name: "oracle_identity_setup",
-      arguments: {
-        name: "awareness-operator",
-        role: "maintainer",
-        preferences: ["evidence first"]
-      }
+    await new ProfileStore(root).saveIdentity({
+      name: "awareness-operator",
+      role: "maintainer",
+      preferences: ["evidence first"]
     });
 
     const shown = await client.callTool({ name: "oracle_awareness_show", arguments: {} });

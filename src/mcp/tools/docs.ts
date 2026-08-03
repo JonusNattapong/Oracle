@@ -18,35 +18,30 @@ function failure(error: unknown) {
 
 export function registerDocsTools(server: McpServer, workspaceRoot: string): void {
   server.registerTool(
-    "oracle_docs_list",
-    {
-      title: "List Docs",
-      description: "List .oracle/docs/ files.",
-      inputSchema: {}
-    },
-    async () => {
-      try {
-        const docs = await listDocs(workspaceRoot);
-        const summary = docs.map((d) => ({ name: d.name, size: d.size }));
-        return success(JSON.stringify(summary, null, 2), { count: docs.length, docs: summary });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
     "oracle_docs_search",
     {
       title: "Search Docs",
-      description: "BM25 search over .oracle/docs/ chunked by heading.",
+      description:
+        "BM25 search over .oracle/docs/, chunked by heading. Omit `query` to list the "
+        + "available documents instead.",
       inputSchema: {
-        query: z.string().min(1),
+        query: z.string().min(1).optional().describe("Omit to list documents rather than search"),
         limit: z.number().int().min(1).max(20).default(5),
       }
     },
     async ({ query, limit }) => {
       try {
+        if (!query) {
+          const docs = await listDocs(workspaceRoot);
+          const summary = docs.map((d) => ({ name: d.name, size: d.size }));
+          return success(JSON.stringify(summary, null, 2), {
+            mode: "list", count: docs.length, docs: summary
+          });
+        }
         const results = await searchDocs(workspaceRoot, query, limit);
-        return success(JSON.stringify(results, null, 2), { count: results.length, results });
+        return success(JSON.stringify(results, null, 2), {
+          mode: "search", count: results.length, results
+        });
       } catch (error) { return failure(error); }
     }
   );

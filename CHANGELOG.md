@@ -62,6 +62,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `oracle memory store [local|chatgpt|hybrid]` shows or sets the mode.
 
 ### Removed
+- **Session, skill, oracle-profile, persona, identity-setup, init and
+  docs-list tools.** Each configures or inspects something a person decides,
+  and each already has a CLI command (`oracle status`, `oracle session <id>`,
+  `oracle skill`, `oracle oracle`, `oracle identity`, `oracle init`); doc
+  listing folded into `oracle_docs_search`, which now lists when `query` is
+  omitted. The default MCP server is 19 tools, from 75 at the start.
+  History tools stayed despite being niche, because nothing on the CLI reaches
+  them. Note that `oracle_identity_setup` accepted a comma-separated string
+  where a list was expected and split it; that leniency lived in the tool's
+  schema and went with it — `oracle identity setup` takes explicit flags.
+
 - **Fifteen of the nineteen memory tools.** Reading was split across
   `oracle_memory_list`, `_search` and `_scored_search`; tidying across
   `_consolidate`, `_prune`, `_promote`, `_maintenance`, `_clear` and
