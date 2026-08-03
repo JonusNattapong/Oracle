@@ -164,8 +164,7 @@ cache.invalidatePattern("skill-.*");
 
 ### 6. Web (3 tools)
 - `oracle_web_search` — Search via Brave/Tavily/Firecrawl
-- `oracle_web_fetch` — Load & extract text from URL
-- `oracle_web_extract` — Structured extraction via AgentQL
+- `oracle_web_fetch` — Read a URL as text, or pass `extract` for structured data via AgentQL
 
 **Standards:**
 - Provider selection in config (fallback to first available)

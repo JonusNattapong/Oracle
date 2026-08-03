@@ -277,7 +277,7 @@ oracle_task_close {
 | Messaging (6) | `oracle_msg_register`, `oracle_msg_send`, `oracle_msg_inbox`, `oracle_msg_ack`, `oracle_msg_agents`, `oracle_msg_thread` |
 | Tasks (8) | `oracle_task_create`, `oracle_task_list`, `oracle_task_get`, `oracle_task_update`, `oracle_task_checklist`, `oracle_task_submit`, `oracle_task_close`, `oracle_task_board` |
 | Agents | `oracle_agent` (autonomous sandbox) |
-| Docs & Web | `oracle_docs_*`, `oracle_web_search`, `oracle_web_fetch`, `oracle_web_extract` |
+| Docs & Web | `oracle_docs_*`, `oracle_web_search`, `oracle_web_fetch` |
 | Identity & System | `oracle_identity_*`, `oracle_persona_set`, `oracle_doctor`, `oracle_skills`, `oracle_oracle_*` |
 
 ---

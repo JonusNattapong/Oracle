@@ -48,34 +48,30 @@ export function registerWebTools(server: McpServer): void {
     "oracle_web_fetch",
     {
       title: "Fetch URL",
-      description: "Fetch URL as readable text. 'native' (SSRF-guarded) strips HTML; 'firecrawl' uses JS rendering.",
+      description:
+        "Read a URL. By default returns readable text — 'native' (SSRF-guarded) strips HTML, "
+        + "'firecrawl' renders JS. Pass `extract` to describe what you want instead and get "
+        + "structured data back via AgentQL (requires AGENTQL_API_KEY); `provider` does not "
+        + "apply in that case, because AgentQL does its own retrieval.",
       inputSchema: {
         url: z.string().min(1),
-        provider: z.enum(FETCH_PROVIDERS as [string, ...string[]]).default("native")
+        provider: z.enum(FETCH_PROVIDERS as [string, ...string[]]).default("native"),
+        extract: z.string().min(1).optional()
+          .describe("What to extract, e.g. 'the product name, price, and in-stock status'")
       }
     },
-    async ({ url, provider }) => {
+    async ({ url, provider, extract }) => {
       try {
+        if (extract) {
+          const result = await agentqlExtract(url, extract);
+          return success(JSON.stringify(result.data, null, 2), {
+            mode: "extract", data: result.data, sourceUrl: result.sourceUrl
+          });
+        }
         const page = await fetchUrl(url, provider as any);
-        return success(page.text, { url: page.url, title: page.title, length: page.text.length });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_web_extract",
-    {
-      title: "Extract Structured Data",
-      description: "Extract structured data from a URL via AgentQL. Requires AGENTQL_API_KEY.",
-      inputSchema: {
-        url: z.string().min(1),
-        prompt: z.string().min(1).describe("What to extract, e.g. 'the product name, price, and in-stock status'")
-      }
-    },
-    async ({ url, prompt }) => {
-      try {
-        const result = await agentqlExtract(url, prompt);
-        return success(JSON.stringify(result.data, null, 2), { data: result.data, sourceUrl: result.sourceUrl });
+        return success(page.text, {
+          mode: "text", url: page.url, title: page.title, length: page.text.length
+        });
       } catch (error) { return failure(error); }
     }
   );

@@ -62,6 +62,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `oracle memory store [local|chatgpt|hybrid]` shows or sets the mode.
 
 ### Removed
+- **`oracle_web_extract`.** It took a URL and returned page content, which is
+  what `oracle_web_fetch` does; the difference was the shape of the answer.
+  Fetch now takes an optional `extract` describing what you want, and returns
+  structured data via AgentQL instead of text. `oracle web extract` is unchanged
+  on the CLI. The default MCP server is 18 tools.
+
 - **Session, skill, oracle-profile, persona, identity-setup, init and
   docs-list tools.** Each configures or inspects something a person decides,
   and each already has a CLI command (`oracle status`, `oracle session <id>`,
