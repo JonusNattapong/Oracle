@@ -328,6 +328,71 @@ export class ResponseMonitor {
     );
   }
 
+  /** Opens the composer's plus menu. Returns false if the button is not there. */
+  async openComposerMenu(): Promise<boolean> {
+    const plusSelector = CHATGPT_SELECTORS.attachButton
+      .map((sel) => `document.querySelector(${JSON.stringify(sel)})`)
+      .join(" || ");
+    const plus = await this.centreOf(`(${plusSelector})`);
+    if (!plus) return false;
+    await this.clickAt(plus.x, plus.y);
+    await new Promise((resolve) => setTimeout(resolve, 1_200));
+    return true;
+  }
+
+  /**
+   * Closes the composer menu, leaving the composer as it was found.
+   *
+   * Escape alone did not dismiss it, so the click that does is used instead:
+   * the prompt input is always present and clicking it is harmless.
+   */
+  async closeComposerMenu(): Promise<void> {
+    for (const type of ["keyDown", "keyUp"] as const) {
+      await this.session.send("Input.dispatchKeyEvent", {
+        type, key: "Escape", code: "Escape", windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27
+      });
+    }
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    const promptSelector = CHATGPT_SELECTORS.promptInput
+      .map((sel) => `document.querySelector(${JSON.stringify(sel)})`)
+      .join(" || ");
+    const input = await this.centreOf(`(${promptSelector})`);
+    if (input) await this.clickAt(input.x, input.y);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+
+  /**
+   * Waits for the composer menu to list its entries.
+   *
+   * The class the entries carry is shared with other menus in the page, so an
+   * early read returns those instead and looks like an empty tool menu.
+   */
+  async waitForComposerMenuItems(timeoutMs = 5_000): Promise<string[]> {
+    const deadline = Date.now() + timeoutMs;
+    let items: string[] = [];
+    while (Date.now() < deadline) {
+      items = await this.listComposerMenuItems();
+      if (items.some((item) => /^(add photos|create image|web search|deep research)/i.test(item))) {
+        return items;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+    return items;
+  }
+
+  /** Labels currently listed in the composer menu. Requires the menu to be open. */
+  async listComposerMenuItems(): Promise<string[]> {
+    const itemSelector = CHATGPT_SELECTORS.composerMenuItem
+      .map((sel) => `document.querySelectorAll(${JSON.stringify(sel)})`)
+      .join(", ...");
+    return this.session.evaluate<string[]>(
+      `Array.from([...${itemSelector}])
+         .map((n) => (n.textContent || "").trim())
+         .filter((t) => t.length > 0 && t.length < 60)`
+    );
+  }
+
   /**
    * Turns on a composer tool (currently Web search) for the next message.
    *
@@ -346,13 +411,7 @@ export class ResponseMonitor {
     await this.waitForComposerReady();
     if (await this.isComposerToolActive(label)) return true;
 
-    const plusSelector = CHATGPT_SELECTORS.attachButton
-      .map((sel) => `document.querySelector(${JSON.stringify(sel)})`)
-      .join(" || ");
-    const plus = await this.centreOf(`(${plusSelector})`);
-    if (!plus) return false;
-    await this.clickAt(plus.x, plus.y);
-    await new Promise((resolve) => setTimeout(resolve, 1_200));
+    if (!await this.openComposerMenu()) return false;
 
     const itemSelector = CHATGPT_SELECTORS.composerMenuItem
       .map((sel) => `document.querySelectorAll(${JSON.stringify(sel)})`)

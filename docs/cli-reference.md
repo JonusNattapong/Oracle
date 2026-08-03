@@ -160,6 +160,7 @@ Manage the isolated Chrome profile used by ChatGPT Browser Mode.
 oracle browser setup            # create the profile and log in
 oracle browser login            # re-open for manual login, no automation flags
 oracle browser status --live    # verify the saved session
+oracle browser status --selectors  # check the ChatGPT DOM handles still resolve
 oracle browser open             # open ChatGPT in the Oracle profile
 oracle browser stop             # close it and reclaim the memory
 ```

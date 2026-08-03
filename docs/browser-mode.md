@@ -146,6 +146,22 @@ If you do see repeated `CDP command ... timed out` errors, check whether the Ora
 oracle browser status --live
 ```
 
+### Checking for DOM drift
+
+ChatGPT's DOM is not an API, and the composer menu carries no `data-testid` at
+all — the handles there are a class name and the visible label. When the UI
+changes, the affected feature fails at the moment someone runs it, with a
+timeout that explains nothing.
+
+```bash
+oracle browser status --selectors
+```
+
+This resolves each handle against the live page and reports which alternate
+matched. Falling through to a later fallback is drift that has already started,
+even while everything still works. The check opens the composer menu to read it
+and closes it again, so it never leaves a tool switched on.
+
 ## MCP
 
 The `oracle_ask` tool accepts a per-call backend override:

@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`npm run verify:live`** — end-to-end verification against the real
+  signed-in account. Every defect found while building the browser backend
+  shipped with unit tests passing; what they had in common is that nothing
+  checked the observable result. These seven checks assert on state outside the
+  process — the bundle actually sent, the session record written, the account's
+  own memory listing — including that recalled memory reaches the prompt and
+  that a session is still named after its question. Not part of `npm test`: it
+  costs real time and a real ChatGPT session. A check may retry once, and says
+  so when it does.
+
+- **`oracle browser status --selectors`** — resolves each DOM handle Browser
+  Mode depends on against the live page, reporting which alternate matched.
+  Falling through to a later fallback is drift that has already started. The
+  composer menu carries no `data-testid`, so its entries are checked by opening
+  the menu, reading it, and closing it again.
+
 - **`oracle ask --deep-research`** — runs ChatGPT's Deep research for one
   answer. It needs a 45-minute timeout floor instead of the three-minute turn
   default, and the stall-recovery page reload is disabled for it: deep research

@@ -57,7 +57,8 @@
     "test:cli": "node scripts/smoke-cli.mjs",
     "test:runtime": "node scripts/smoke-runtime.mjs",
     "verify": "npm run build && npm run test && npm run test:cli && npm run test:runtime",
-    "prepublishOnly": "npm run verify"
+    "prepublishOnly": "npm run verify",
+    "verify:live": "node scripts/verify-live.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",

@@ -1031,6 +1031,7 @@ browserCmd
   .command("status")
   .description("Check ChatGPT Browser Mode status and diagnostics")
   .option("--live", "Open or reuse Oracle Chrome and verify the authenticated ChatGPT session")
+  .option("--selectors", "Check that the ChatGPT DOM handles Browser Mode depends on still resolve")
   .action(async (options) => {
     const projectConfig = await loadProjectConfig(process.cwd());
     const runtimeOptions = backendRuntimeOptions(projectConfig);
@@ -1040,6 +1041,19 @@ browserCmd
         "./backends/chatgpt-browser/diagnostics.js"
       );
       checks.push(await checkLiveChatGptAuthentication({
+        profileDir: runtimeOptions.browser.profileDir,
+        enabled: projectConfig.experimental?.browserMode ?? false,
+        headed: true,
+        timeoutMs: runtimeOptions.browser.timeoutMs
+      }));
+    }
+    if (options.selectors) {
+      // The DOM is not an API: a UI change breaks Browser Mode at the moment a
+      // user runs it, with a timeout that says nothing about the cause.
+      const { checkChatGptSelectors } = await import(
+        "./backends/chatgpt-browser/diagnostics.js"
+      );
+      checks.push(...await checkChatGptSelectors({
         profileDir: runtimeOptions.browser.profileDir,
         enabled: projectConfig.experimental?.browserMode ?? false,
         headed: true,

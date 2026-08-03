@@ -6,6 +6,7 @@ import {
   findChromeExecutable,
   findOrCreatePageTarget
 } from "./chrome.js";
+import { CHATGPT_SELECTORS } from "./selectors.js";
 import { CdpSession, ResponseMonitor } from "./response.js";
 import type { DoctorCheck } from "../backend.js";
 
@@ -104,6 +105,104 @@ export async function checkLiveChatGptAuthentication(
       ok: false,
       detail: error instanceof Error ? error.message : String(error)
     };
+  } finally {
+    session?.close();
+  }
+}
+
+/**
+ * Reports whether each selector Browser Mode depends on still resolves.
+ *
+ * ChatGPT's DOM is not an API, and its composer menu carries no data-testid at
+ * all — the handles are a class name and the visible label. When the UI changes,
+ * every affected feature fails at the moment a user runs it, with a timeout that
+ * says nothing about the cause. This turns that into something checkable before
+ * it bites.
+ *
+ * Each group lists fallbacks in preference order, so the index that matched is
+ * reported too: falling through to a later alternate is drift that has already
+ * started, even while everything still works.
+ */
+export async function checkChatGptSelectors(
+  config: ChatGptBrowserConfig
+): Promise<DoctorCheck[]> {
+  let session: CdpSession | undefined;
+  try {
+    const processInfo = await new ChromeLauncher().launch({ ...config, headed: true });
+    const target = await findOrCreatePageTarget(processInfo.port);
+    if (!target.webSocketDebuggerUrl) {
+      throw new Error("ChatGPT page does not expose a Chrome debugger endpoint.");
+    }
+    session = new CdpSession(target.webSocketDebuggerUrl);
+    await session.connect();
+    const monitor = new ResponseMonitor(session);
+    await monitor.navigateToChatGPT();
+    await monitor.waitForComposerReady();
+
+    const checks: DoctorCheck[] = [];
+    const resolve = async (group: keyof typeof CHATGPT_SELECTORS): Promise<number> =>
+      session!.evaluate<number>(
+        `(() => {
+           const selectors = ${JSON.stringify(CHATGPT_SELECTORS[group])};
+           for (let i = 0; i < selectors.length; i++) {
+             if (document.querySelector(selectors[i])) return i;
+           }
+           return -1;
+         })()`
+      );
+
+    // Present on an idle composer.
+    for (const group of ["promptInput", "attachButton", "fileInput"] as const) {
+      const index = await resolve(group);
+      checks.push({
+        name: `selector ${group}`,
+        ok: index === 0,
+        detail: index === -1
+          ? `no selector matched: ${CHATGPT_SELECTORS[group].join(" | ")}`
+          : index === 0
+            ? `matched ${CHATGPT_SELECTORS[group][0]}`
+            : `fell through to fallback #${index} (${CHATGPT_SELECTORS[group][index]}) — the preferred selector no longer matches`
+      });
+    }
+
+    // The composer menu only exists while open, and only opens for trusted
+    // input. Open it, read it, close it: a check must not leave a tool switched
+    // on in the user's composer.
+    const opened = await monitor.openComposerMenu();
+    const items = opened ? await monitor.waitForComposerMenuItems() : [];
+    if (opened) await monitor.closeComposerMenu();
+
+    const menuIndex = opened ? await resolve("composerMenuItem") : -1;
+    checks.push({
+      name: "selector composerMenuItem",
+      ok: opened && menuIndex === 0,
+      detail: !opened
+        ? "the composer plus menu did not open — --web-search and --deep-research will fail"
+        : menuIndex === -1
+          ? `no selector matched: ${CHATGPT_SELECTORS.composerMenuItem.join(" | ")}`
+          : menuIndex === 0
+            ? `matched ${CHATGPT_SELECTORS.composerMenuItem[0]}`
+            : `fell through to fallback #${menuIndex} (${CHATGPT_SELECTORS.composerMenuItem[menuIndex]})`
+    });
+
+    for (const label of ["Web search", "Deep research"]) {
+      const present = items.some((item) => item.toLowerCase().startsWith(label.toLowerCase()));
+      checks.push({
+        name: `composer tool "${label}"`,
+        ok: present,
+        detail: present
+          ? "listed in the composer menu"
+          : `not listed — ${items.length ? `menu shows: ${items.join(", ")}` : "the menu appeared empty"}`
+      });
+    }
+
+    return checks;
+  } catch (error) {
+    return [{
+      name: "selectors",
+      ok: false,
+      detail: error instanceof Error ? error.message : String(error)
+    }];
   } finally {
     session?.close();
   }
