@@ -184,6 +184,39 @@ function isSentenceInitial(content: string, index: number): boolean {
   return true; // start of content
 }
 
+/**
+ * Tech keywords that are also ordinary English words. Matching these
+ * case-insensitively anywhere turned "the next step", "at rest", "windows" and
+ * "express intent" into technologies — `Next` was ranked a top entity in this
+ * workspace purely from prose.
+ */
+const AMBIGUOUS_TECH = new Set([
+  "next", "go", "rest", "node", "express", "nest", "bun", "react", "angular",
+  "svelte", "rust", "python", "azure", "windows", "bash", "prettier", "biome",
+  "transformers"
+]);
+
+/**
+ * Accepts an ambiguous keyword only on evidence beyond the bare word: a
+ * framework suffix (`Next.js`), or a capitalised occurrence that is not merely
+ * opening a sentence. Ordinary prose uses these words in lower case, so the
+ * capital is the signal that a product is meant.
+ */
+function findAmbiguousTech(content: string, keyword: string): string | null {
+  const suffixed = new RegExp(`\\b(${escapeRe(keyword)})(\\.js|\\.ts)\\b`, "i").exec(content);
+  if (suffixed) return keyword;
+
+  const pattern = new RegExp(`\\b${escapeRe(keyword)}\\b`, "gi");
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(content)) !== null) {
+    const text = match[0];
+    if (text[0] !== text[0].toUpperCase()) continue; // lower case: ordinary word
+    if (isSentenceInitial(content, match.index)) continue;
+    return text;
+  }
+  return null;
+}
+
 /** Inflected verb forms are never entity names, however they are capitalised. */
 function looksLikeVerbForm(name: string): boolean {
   return /^[A-Za-z]+(ed|ing)$/.test(name) && !TECH_KEYWORDS.has(name.toLowerCase());
@@ -253,8 +286,13 @@ function extractEntities(content: string, tags: string[]): [string, EntityType][
     add(name, guessType(name));
   }
 
-  // Tech keywords (case-insensitive)
+  // Tech keywords (case-insensitive), except those spelled like ordinary words
   for (const keyword of [...TECH_KEYWORDS, ...Object.keys(CANONICAL)]) {
+    if (AMBIGUOUS_TECH.has(keyword)) {
+      const found = findAmbiguousTech(content, keyword);
+      if (found) add(found, "technology");
+      continue;
+    }
     const origMatch = new RegExp(`\\b${escapeRe(keyword)}\\b`, "i").exec(content);
     if (origMatch) add(origMatch[0], "technology");
   }

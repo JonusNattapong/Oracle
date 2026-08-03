@@ -141,6 +141,28 @@ describe("EntityGraph", () => {
     expect(stats.edgeCount).toBeLessThan(6);
   });
 
+  it("does not treat ordinary words that shadow tech keywords as technologies", async () => {
+    // "Next" was ranked a top entity in a real workspace purely from prose.
+    await graph.indexMemory(
+      "mem-1",
+      "The next step is to rest the workers and express the intent clearly.",
+      []
+    );
+    const names = (await graph.listEntities(30)).map((e) => e.name);
+
+    expect(names).not.toContain("next");
+    expect(names).not.toContain("rest");
+    expect(names).not.toContain("express");
+  });
+
+  it("still recognises those keywords when they name the product", async () => {
+    await graph.indexMemory("mem-1", "We migrated the app to Next.js last week", []);
+    expect((await graph.listEntities(30)).map((e) => e.name.toLowerCase())).toContain("next");
+
+    await graph.indexMemory("mem-2", "The dashboard runs on Express behind nginx", []);
+    expect((await graph.listEntities(30)).map((e) => e.name.toLowerCase())).toContain("express");
+  });
+
   // ── rebuild ───────────────────────────────────────────────────────────
 
   it("rebuild discards entities the current extractor would not emit", async () => {
