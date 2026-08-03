@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`oracle ask --web-search`** — turns on ChatGPT's Web search for a single
+  answer through the composer's `+` menu (`chatgpt-browser` backend). The menu
+  opens only for trusted input, so it is driven through the browser's event
+  pipeline; selection is confirmed against the composer before the question is
+  sent, and the consult fails rather than answering as though the web had been
+  searched. ChatGPT also searches unprompted when it judges a question needs it,
+  so the flag guarantees search was requested, not that its absence means none.
+
 - **`oracle memory graph rebuild`** — discards the entity graph and re-indexes
   every stored memory. Indexing is incremental, so entities extracted under
   older rules survive until their memory is rewritten; this is what applies an

@@ -34,6 +34,8 @@ export interface ConsultRequest {
    * backend account. It is not added to bundles or persisted as session text.
    */
   accountMemory?: string;
+  /** Composer tool to engage for this turn; backends that cannot honour it fail. */
+  tool?: "web-search";
   preset?: string;
   systemPrompt?: string;
   cwd?: string;

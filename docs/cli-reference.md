@@ -34,6 +34,7 @@ oracle ask "describe this image" -f "docs/assets/system-map.png" --backend chatg
 |---|---|
 | `-f, --files <glob>` | Include code files (supports `!exclude` patterns) |
 | `--no-memory` | Answer without recalling stored project memory |
+| `--web-search` | Turn on ChatGPT's Web search for this answer (`chatgpt-browser` only) |
 | `--include-docs` | Inject `.oracle/docs/` knowledge base |
 | `--include-gh` | Include GitHub PR/issue context |
 | `--soul <name>` | Personality: `engineer`, `socratic`, `witty`, etc. |

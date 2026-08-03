@@ -49,6 +49,16 @@ export const CHATGPT_SELECTORS: SelectorMap = {
     "button[aria-label*='Add photos' i]",
     "button[aria-label*='Upload' i]"
   ],
+  /**
+   * Items in the composer's plus menu (Add photos, Create image, Web search,
+   * Deep research). They carry no data-testid and no menuitem role — the class
+   * plus the visible label is the only handle available.
+   */
+  composerMenuItem: [
+    "div.__menu-item",
+    "[role='menuitem']",
+    "[role='option']"
+  ],
   attachment: [
     "[data-testid*='attachment']",
     "[data-testid*='file-thumbnail']",

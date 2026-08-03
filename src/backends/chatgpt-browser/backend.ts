@@ -7,7 +7,7 @@ import type {
   ExecutionBackendRequest,
   ExecutionBackendResponse
 } from "../backend.js";
-import type { ChatGptBrowserConfig } from "./types.js";
+import { COMPOSER_TOOL_LABELS, type ChatGptBrowserConfig } from "./types.js";
 import { ChromeLauncher, ensureWindowNotMinimized, findOrCreatePageTarget } from "./chrome.js";
 import {
   CdpSession,
@@ -232,6 +232,21 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
               "The saved ChatGPT conversation became unavailable after the account-memory update."
             );
           }
+        }
+      }
+
+      if (request.tool) {
+        // Engaging the tool must be confirmed, not assumed: answering a question
+        // that was meant to search the web without having searched looks like a
+        // normal answer and is silently wrong.
+        const label = COMPOSER_TOOL_LABELS[request.tool];
+        const engaged = await monitor.selectComposerTool(label);
+        if (!engaged) {
+          throw new OracleError(
+            "ORACLE_BROWSER_EXECUTION_FAILED",
+            `Could not turn on "${label}" in the ChatGPT composer.`,
+            "ChatGPT's composer menu may have changed, or the tool may be unavailable on this account. Retry without the tool option to answer without it."
+          );
         }
       }
 

@@ -175,6 +175,7 @@ export class ConsultService {
         cwd,
         previousResponseId,
         accountMemory,
+        tool: request.tool,
         artifactsDir,
         images: files
           .filter((f): f is ContextFile & { base64: string; mimeType: string } => !!f.base64 && !!f.mimeType)

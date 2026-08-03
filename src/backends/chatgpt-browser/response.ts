@@ -295,6 +295,117 @@ export class ResponseMonitor {
         };
   }
 
+  /**
+   * Clicks at viewport coordinates through the browser's own input pipeline.
+   *
+   * The composer menu does not respond to `element.click()` or synthesised
+   * pointer events — it opens only for trusted input — so selecting a tool has
+   * to go through Input.dispatchMouseEvent rather than the DOM.
+   */
+  private async clickAt(x: number, y: number): Promise<void> {
+    const px = Math.round(x);
+    const py = Math.round(y);
+    await this.session.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: px, y: py, buttons: 0 });
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    await this.session.send("Input.dispatchMouseEvent", {
+      type: "mousePressed", x: px, y: py, button: "left", buttons: 1, clickCount: 1
+    });
+    await new Promise((resolve) => setTimeout(resolve, 90));
+    await this.session.send("Input.dispatchMouseEvent", {
+      type: "mouseReleased", x: px, y: py, button: "left", buttons: 0, clickCount: 1
+    });
+  }
+
+  private async centreOf(script: string): Promise<{ x: number; y: number } | null> {
+    return this.session.evaluate<{ x: number; y: number } | null>(
+      `(() => {
+         const el = ${script};
+         if (!el) return null;
+         const r = el.getBoundingClientRect();
+         if (r.width === 0 && r.height === 0) return null;
+         return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+       })()`
+    );
+  }
+
+  /**
+   * Turns on a composer tool (currently Web search) for the next message.
+   *
+   * Returns only after confirming the composer shows the tool's pill: clicking
+   * the menu entry is not evidence it engaged, and answering a question that was
+   * supposed to search the web without having searched is worse than failing.
+   */
+  async selectComposerTool(label: string, timeoutMs = 20_000): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs;
+
+    // ChatGPT keeps the tool switched on across navigations, so it may already
+    // be active — but the composer renders about six seconds after the page
+    // loads, and asking before that reports "off" for a tool that is on. Turning
+    // it on again stacks another pill onto the composer, so wait for the
+    // composer itself rather than guessing a delay.
+    await this.waitForComposerReady();
+    if (await this.isComposerToolActive(label)) return true;
+
+    const plusSelector = CHATGPT_SELECTORS.attachButton
+      .map((sel) => `document.querySelector(${JSON.stringify(sel)})`)
+      .join(" || ");
+    const plus = await this.centreOf(`(${plusSelector})`);
+    if (!plus) return false;
+    await this.clickAt(plus.x, plus.y);
+    await new Promise((resolve) => setTimeout(resolve, 1_200));
+
+    const itemSelector = CHATGPT_SELECTORS.composerMenuItem
+      .map((sel) => `document.querySelectorAll(${JSON.stringify(sel)})`)
+      .join(", ...");
+    const item = await this.centreOf(
+      `Array.from([...${itemSelector}]).find((n) =>
+         (n.textContent || "").trim().toLowerCase().startsWith(${JSON.stringify(label.toLowerCase())}))`
+    );
+    if (!item) {
+      // Leave the composer as it was found rather than with a menu hanging open.
+      await this.session.evaluate("document.activeElement && document.activeElement.blur()");
+      return false;
+    }
+    await this.clickAt(item.x, item.y);
+
+    while (Date.now() < deadline) {
+      if (await this.isComposerToolActive(label)) return true;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+    return false;
+  }
+
+  /**
+   * Waits until the composer has actually rendered. Its contents appear several
+   * seconds after the page reports loaded, and an empty composer is
+   * indistinguishable from one with no tool selected.
+   */
+  async waitForComposerReady(timeoutMs = 15_000): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const ready = await this.session.evaluate<boolean>(
+        `(() => {
+           const form = document.querySelector("form");
+           return !!form && ((form.innerText || "").trim().length > 0);
+         })()`
+      );
+      if (ready) return true;
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    }
+    return false;
+  }
+
+  /** True when the composer displays the tool's pill. */
+  async isComposerToolActive(label: string): Promise<boolean> {
+    return this.session.evaluate<boolean>(
+      `(() => {
+         const form = document.querySelector("form");
+         const text = (form && form.innerText) || "";
+         return text.toLowerCase().includes(${JSON.stringify(label.toLowerCase())});
+       })()`
+    );
+  }
+
   async uploadImages(images: BrowserImagePayload[], timeoutMs = 60_000): Promise<void> {
     if (images.length === 0) return;
     const fileInputSelectors = JSON.stringify(CHATGPT_SELECTORS.fileInput);

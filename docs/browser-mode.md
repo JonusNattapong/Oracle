@@ -64,6 +64,33 @@ oracle ask "Review this design" --remember "I prefer concise architecture review
 `oracle browser open` reopens the same isolated profile. Leave that Chrome
 session open while running consults.
 
+### Composer tools
+
+ChatGPT's composer offers tools behind the `+` button. Oracle can turn on Web
+search for a single answer:
+
+```bash
+oracle ask --web-search "What changed in the Node LTS line this week?"
+```
+
+The menu opens only for trusted input, so Oracle drives it through the browser's
+own event pipeline rather than `element.click()`, and the composer renders
+several seconds after the page reports loaded — Oracle waits for the composer
+itself instead of assuming a delay, because checking too early reports a tool as
+off and switching it on again stacks a second pill into the message.
+
+Selection is confirmed against the composer before the question is sent. If the
+pill does not appear, the consult fails rather than answering as though the web
+had been searched. The toggle applies to that one message: it is consumed when
+the message is sent and does not linger on the account.
+
+Note that ChatGPT also searches on its own when it judges a question needs it,
+so omitting `--web-search` does not guarantee no search happened. What the flag
+guarantees is that search was explicitly turned on and verified.
+
+Only Web search is wired up. Deep research uses the same menu but needs much
+longer response handling than the normal turn timeout allows.
+
 `oracle browser stop` closes it. Browser Mode keeps Chrome running on purpose so
 consecutive consults reuse one session, but that instance — profile plus any
 extensions installed in it — holds real memory, which is worth reclaiming on a

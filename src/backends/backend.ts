@@ -20,6 +20,11 @@ export interface ExecutionBackendRequest {
   previousResponseId?: string;
   /** Exact user-authorized text to save to the signed-in account's memory. */
   accountMemory?: string;
+  /**
+   * Composer tool to engage for this turn (currently `web-search`). Backends
+   * that cannot honour it must fail rather than answer without it.
+   */
+  tool?: "web-search";
   images?: Array<{ base64: string; mimeType: string; fileName: string }>;
   /** Session-owned directory where the backend may persist generated artifacts. */
   artifactsDir?: string;

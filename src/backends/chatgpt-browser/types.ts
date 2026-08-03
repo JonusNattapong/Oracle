@@ -32,8 +32,17 @@ export interface SelectorMap {
   assistantTurn: string[];
   fileInput: string[];
   attachButton: string[];
+  composerMenuItem: string[];
   attachment: string[];
 }
+
+/** Tools selectable from the composer's plus menu. */
+export type ChatGptComposerTool = "web-search";
+
+/** Visible label each tool is listed under, and the pill it leaves behind. */
+export const COMPOSER_TOOL_LABELS: Record<ChatGptComposerTool, string> = {
+  "web-search": "Web search"
+};
 
 export interface BrowserImagePayload {
   base64: string;
