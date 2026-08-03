@@ -409,6 +409,24 @@ export class MemoryAdapter implements MemoryPort {
     return this.entityGraph.getStats();
   }
 
+  /**
+   * Rebuilds the entity graph from every stored memory.
+   *
+   * Indexing is incremental, so entities extracted under older rules survive
+   * until their memory is rewritten. This is what applies an extractor change
+   * to memories that are already on disk.
+   */
+  async graphRebuild(): Promise<{
+    entityCount: number;
+    edgeCount: number;
+    memoriesIndexed: number;
+  }> {
+    const memories = await this.recall({ limit: 100_000, includeArchived: true });
+    return this.entityGraph.rebuild(
+      memories.map((entry) => ({ id: entry.id, content: entry.content, tags: entry.tags }))
+    );
+  }
+
   /** Renderable graph projection for `oracle memory graph`. */
   async getGraphView(opts?: { limit?: number; includeIsolated?: boolean }): Promise<import("./entityGraph.js").GraphView> {
     return this.entityGraph.toGraphView(opts);

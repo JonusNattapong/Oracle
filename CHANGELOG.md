@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`oracle memory graph rebuild`** — discards the entity graph and re-indexes
+  every stored memory. Indexing is incremental, so entities extracted under
+  older rules survive until their memory is rewritten; this is what applies an
+  extractor change to what is already on disk. Reports counts before and after.
+
 - **`oracle browser stop`** — closes the Chrome instance Browser Mode leaves
   running for session reuse, reclaiming its memory. The profile and its ChatGPT
   login stay on disk; running it with nothing up is a no-op.

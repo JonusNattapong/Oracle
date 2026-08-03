@@ -40,6 +40,9 @@ export interface MemoryPort {
   /** Prune stale/isolated entities from the entity graph. */
   graphPrune?(maxAgeDays?: number): Promise<{ removedEntities: number; removedEdges: number }>;
 
+  /** Rebuild the entity graph from every stored memory. */
+  graphRebuild?(): Promise<{ entityCount: number; edgeCount: number; memoriesIndexed: number }>;
+
   /** Renderable projection of the entity graph. */
   getGraphView?(opts?: { limit?: number; includeIsolated?: boolean }): Promise<import("../memory/entityGraph.js").GraphView>;
 

@@ -616,6 +616,30 @@ memCmd
 const graphCmd = memCmd.command("graph").description("Explore the memory entity graph");
 
 graphCmd
+  .command("rebuild")
+  .description("Rebuild the entity graph from every stored memory")
+  .action(async () => {
+    const orchestrator = new OrchestratorFactory(process.cwd(), homeDir());
+    const memory = await orchestrator.createMemoryAdapter();
+    if (!memory.graphRebuild) {
+      console.error("The active memory backend does not expose an entity graph.");
+      process.exitCode = 1;
+      return;
+    }
+
+    // Indexing is incremental, so entities extracted under older rules persist
+    // until their memory is rewritten. This is what applies an extractor change
+    // to memories already on disk.
+    const before = await memory.getGraphStats?.();
+    const result = await memory.graphRebuild();
+    if (before) {
+      console.log(`before:  ${before.entityCount} entities, ${before.edgeCount} edges`);
+    }
+    console.log(`rebuilt: ${result.entityCount} entities, ${result.edgeCount} edges`);
+    console.log(`from ${result.memoriesIndexed} memories.`);
+  });
+
+graphCmd
   .command("show")
   .description("Show entity graph overview")
   .option("-n, --limit <number>", "Max entities", "20")

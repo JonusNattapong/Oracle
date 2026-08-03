@@ -141,6 +141,32 @@ describe("EntityGraph", () => {
     expect(stats.edgeCount).toBeLessThan(6);
   });
 
+  // ── rebuild ───────────────────────────────────────────────────────────
+
+  it("rebuild discards entities the current extractor would not emit", async () => {
+    // Simulates a graph indexed under looser rules: inject a node directly, then
+    // rebuild from the memories themselves.
+    await graph.indexMemory("mem-1", "Redis caches sessions", []);
+    await graph.indexMemory("legacy", "Implemented Contains Status", []);
+
+    const result = await graph.rebuild([
+      { id: "mem-1", content: "Redis caches sessions", tags: [] }
+    ]);
+
+    expect(result.memoriesIndexed).toBe(1);
+    const names = (await graph.listEntities(50)).map((e) => e.name);
+    expect(names).toContain("Redis");
+    expect(names).not.toContain("Implemented");
+  });
+
+  it("rebuild on no memories leaves an empty graph", async () => {
+    await graph.indexMemory("mem-1", "Redis caches sessions", []);
+
+    const result = await graph.rebuild([]);
+
+    expect(result).toMatchObject({ entityCount: 0, edgeCount: 0, memoriesIndexed: 0 });
+  });
+
   // ── expandQuery ───────────────────────────────────────────────────────
 
   it("expandQuery returns direct matches", async () => {

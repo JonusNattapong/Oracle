@@ -587,6 +587,28 @@ export class EntityGraph {
   }
 
   /**
+   * Discards the graph and rebuilds it from the supplied memories.
+   *
+   * Indexing is incremental, so entities extracted under older, looser rules
+   * persist until the memory that produced them is rewritten — a graph can stay
+   * full of names the current extractor would never emit. Rebuilding is the only
+   * way to apply an extractor change to what is already stored.
+   */
+  async rebuild(
+    memories: Array<{ id: string; content: string; tags: string[] }>
+  ): Promise<{ entityCount: number; edgeCount: number; memoriesIndexed: number }> {
+    await this.ready;
+    await this.mutex.acquire(async () => {
+      await this.save({ entities: {}, edges: [] });
+    });
+    for (const memory of memories) {
+      await this.indexMemory(memory.id, memory.content, memory.tags);
+    }
+    const stats = await this.getStats();
+    return { ...stats, memoriesIndexed: memories.length };
+  }
+
+  /**
    * Serialize the graph for rendering.
    *
    * `limit` keeps the most-connected entities, since a force-directed layout

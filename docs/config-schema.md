@@ -151,7 +151,14 @@ for security properties and limits.
 oracle memory graph show --limit 20 --connected
 oracle memory graph entity Redis
 oracle memory graph path Oracle Docker
+oracle memory graph rebuild
 ```
+
+Indexing is incremental, so entities extracted under older rules stay in the
+graph until the memory that produced them is rewritten. `rebuild` discards the
+graph and re-indexes every stored memory — the only way to apply an extractor
+change to what is already on disk. It prints the entity and edge counts before
+and after.
 
 ## Schema v1.0
 
