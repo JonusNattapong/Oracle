@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`oracle ask --deep-research`** — runs ChatGPT's Deep research for one
+  answer. It needs a 45-minute timeout floor instead of the three-minute turn
+  default, and the stall-recovery page reload is disabled for it: deep research
+  leaves the turn unchanged for minutes by design, and reloading would discard
+  the research rather than rescue a wedged UI.
+
 - **`oracle ask --web-search`** — turns on ChatGPT's Web search for a single
   answer through the composer's `+` menu (`chatgpt-browser` backend). The menu
   opens only for trusted input, so it is driven through the browser's event

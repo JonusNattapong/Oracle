@@ -88,8 +88,23 @@ Note that ChatGPT also searches on its own when it judges a question needs it,
 so omitting `--web-search` does not guarantee no search happened. What the flag
 guarantees is that search was explicitly turned on and verified.
 
-Only Web search is wired up. Deep research uses the same menu but needs much
-longer response handling than the normal turn timeout allows.
+Deep research uses the same menu and needs two things the ordinary turn does
+not:
+
+```bash
+oracle ask --deep-research "Research the current state of X. Keep it under 200 words."
+```
+
+- **A much larger budget.** The turn runs for many minutes, so the tool raises
+  the timeout floor to 45 minutes rather than letting the three-minute default
+  cut the research off partway.
+- **No stall recovery.** Browser Mode reloads the page when a turn sits
+  unchanged for ~30 seconds, which rescues a wedged UI. Deep research sits
+  unchanged for minutes at a time by design, so that reload would throw the
+  research away; it is disabled for this tool.
+
+Deep research answers often embed charts. Oracle reports any it could not
+capture as artifact warnings rather than dropping them silently.
 
 `oracle browser stop` closes it. Browser Mode keeps Chrome running on purpose so
 consecutive consults reuse one session, but that instance — profile plus any

@@ -771,8 +771,14 @@ export class ResponseMonitor {
 
   async waitForResponse(
     baseline: ResponseBaseline,
-    timeoutMs = 180_000
+    timeoutMs = 180_000,
+    options: { allowStallReload?: boolean } = {}
   ): Promise<string> {
+    // Reloading rescues a UI that stopped streaming, but it also abandons work
+    // in progress. A long silent stretch is normal for deep research, where the
+    // turn sits unchanged for minutes while the model works, so callers running
+    // one must be able to turn the recovery off.
+    const allowStallReload = options.allowStallReload ?? true;
     const started = Date.now();
     let lastText = "";
     let responseStarted = false;
@@ -881,7 +887,7 @@ export class ResponseMonitor {
           : 0;
         lastText = status.text;
       }
-      if (quietPolls >= 30 && !attemptedReloadRecovery) {
+      if (allowStallReload && quietPolls >= 30 && !attemptedReloadRecovery) {
         attemptedReloadRecovery = true;
         quietPolls = 0;
         await this.session.send("Page.reload", { ignoreCache: false });

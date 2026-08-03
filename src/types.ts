@@ -35,7 +35,7 @@ export interface ConsultRequest {
    */
   accountMemory?: string;
   /** Composer tool to engage for this turn; backends that cannot honour it fail. */
-  tool?: "web-search";
+  tool?: "web-search" | "deep-research";
   preset?: string;
   systemPrompt?: string;
   cwd?: string;

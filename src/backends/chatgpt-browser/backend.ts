@@ -7,7 +7,11 @@ import type {
   ExecutionBackendRequest,
   ExecutionBackendResponse
 } from "../backend.js";
-import { COMPOSER_TOOL_LABELS, type ChatGptBrowserConfig } from "./types.js";
+import {
+  COMPOSER_TOOL_LABELS,
+  COMPOSER_TOOL_MIN_TIMEOUT_MS,
+  type ChatGptBrowserConfig
+} from "./types.js";
 import { ChromeLauncher, ensureWindowNotMinimized, findOrCreatePageTarget } from "./chrome.js";
 import {
   CdpSession,
@@ -185,7 +189,12 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
         }
       }
 
-      const timeoutMs = this.config.timeoutMs ?? 180000;
+      const configuredTimeoutMs = this.config.timeoutMs ?? 180000;
+      // A tool may need far longer than the ordinary turn budget; take the
+      // larger of the two rather than letting the default cut research short.
+      const timeoutMs = request.tool
+        ? Math.max(configuredTimeoutMs, COMPOSER_TOOL_MIN_TIMEOUT_MS[request.tool])
+        : configuredTimeoutMs;
       let memoryInputTokens = 0;
       let memoryOutputTokens = 0;
       let memoryVerification: AccountMemoryVerification = "not-attempted";
@@ -261,7 +270,11 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
 
       const baseline = await monitor.fillPromptAndSend(fullPrompt);
 
-      const text = await monitor.waitForResponse(baseline, timeoutMs);
+      const text = await monitor.waitForResponse(baseline, timeoutMs, {
+        // Deep research sits unchanged for minutes at a time; the stall reload
+        // that rescues a wedged UI would throw the research away instead.
+        allowStallReload: request.tool !== "deep-research"
+      });
       const responseId = await monitor.currentConversationUrl();
       const captured = await monitor.captureAssistantImages();
       const images = captured.images.length > 0

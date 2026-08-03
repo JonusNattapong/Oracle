@@ -141,6 +141,7 @@ program
   .option("--include-docs", "Search .oracle/docs/ for relevant documentation")
   .option("--no-memory", "Answer without recalling stored project memory")
   .option("--web-search", "Turn on ChatGPT's Web search for this answer (chatgpt-browser only)")
+  .option("--deep-research", "Turn on ChatGPT's Deep research for this answer; takes many minutes (chatgpt-browser only)")
   .option("-m, --model <model>", "Model override")
   .option("--backend <backend>", "Backend override (codex, openai, anthropic, gemini, opencode, browser, chatgpt-browser, azure, openrouter)")
   .option("--provider <provider>", "Provider override (deprecated: use --backend)")
@@ -275,7 +276,9 @@ program
     const result = await service.consult({
       prompt: `${ctxBlock}\n\n## Question\n${question}`,
       title: question,
-      tool: options.webSearch ? "web-search" : undefined,
+      tool: options.deepResearch
+        ? "deep-research"
+        : options.webSearch ? "web-search" : undefined,
       preset: "review",
       provider: route.provider,
       conversationId: options.conversation,

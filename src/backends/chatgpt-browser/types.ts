@@ -37,11 +37,23 @@ export interface SelectorMap {
 }
 
 /** Tools selectable from the composer's plus menu. */
-export type ChatGptComposerTool = "web-search";
+export type ChatGptComposerTool = "web-search" | "deep-research";
 
 /** Visible label each tool is listed under, and the pill it leaves behind. */
 export const COMPOSER_TOOL_LABELS: Record<ChatGptComposerTool, string> = {
-  "web-search": "Web search"
+  "web-search": "Web search",
+  "deep-research": "Deep research"
+};
+
+/**
+ * Floor for how long a tool's answer may take.
+ *
+ * Deep research runs for many minutes and spends most of them with the turn
+ * unchanged, which the normal three-minute budget treats as a dead session.
+ */
+export const COMPOSER_TOOL_MIN_TIMEOUT_MS: Record<ChatGptComposerTool, number> = {
+  "web-search": 0,
+  "deep-research": 45 * 60_000
 };
 
 export interface BrowserImagePayload {

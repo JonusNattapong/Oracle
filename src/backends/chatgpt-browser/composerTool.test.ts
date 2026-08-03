@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { ResponseMonitor, type CdpClient } from "./response.js";
+import { COMPOSER_TOOL_LABELS, COMPOSER_TOOL_MIN_TIMEOUT_MS } from "./types.js";
 
 interface Recorded {
   method: string;
@@ -42,6 +43,47 @@ function fakeSession(options: { activeAfterClicks: number; hasPlus?: boolean; ha
   };
   return { session, calls, clickCount: () => clicks };
 }
+
+describe("composer tool definitions", () => {
+  test("deep research is given a budget far beyond a normal turn", () => {
+    // The default three-minute turn budget cuts research off partway; the floor
+    // is what stops a tool run from being killed by an unrelated default.
+    expect(COMPOSER_TOOL_MIN_TIMEOUT_MS["deep-research"]).toBeGreaterThan(30 * 60_000);
+    expect(COMPOSER_TOOL_MIN_TIMEOUT_MS["web-search"]).toBe(0);
+  });
+
+  test("every tool has the label it is listed under in the menu", () => {
+    expect(COMPOSER_TOOL_LABELS["web-search"]).toBe("Web search");
+    expect(COMPOSER_TOOL_LABELS["deep-research"]).toBe("Deep research");
+  });
+});
+
+describe("waitForResponse stall recovery", () => {
+  test("can be turned off so a long quiet stretch is not reloaded away", async () => {
+    // Deep research leaves the turn unchanged for minutes. Reloading rescues a
+    // wedged UI, but here it would discard the research in progress.
+    const calls: string[] = [];
+    const session: CdpClient = {
+      async send<T>(method: string): Promise<T> {
+        calls.push(method);
+        return undefined as T;
+      },
+      async evaluate<T>(): Promise<T> {
+        // Always the same text, never streaming, never complete: a stall.
+        return { isStreaming: false, hasCompletionAction: false, count: 1, text: "working" } as unknown as T;
+      },
+      async evaluateAsync<T>(): Promise<T> {
+        return undefined as T;
+      }
+    };
+    const monitor = new ResponseMonitor(session);
+
+    await expect(
+      monitor.waitForResponse({ count: 0, lastText: "" }, 3_000, { allowStallReload: false })
+    ).rejects.toThrow();
+    expect(calls).not.toContain("Page.reload");
+  });
+});
 
 describe("selectComposerTool", () => {
   test("does nothing when the tool is already on", async () => {
