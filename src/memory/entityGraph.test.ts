@@ -80,6 +80,67 @@ describe("EntityGraph", () => {
     expect(stats.edgeCount).toBeGreaterThanOrEqual(1);
   });
 
+  // ── extraction quality ────────────────────────────────────────────────
+
+  it("does not turn generic heading words into entities", async () => {
+    // Real memories are full of bullet headings. These became first-class nodes
+    // purely for being capitalised and leading their line.
+    await graph.indexMemory(
+      "mem-1",
+      "Status: shipped.\nKey Planning Documents Created.\nContains the Redis client.",
+      []
+    );
+    const names = (await graph.listEntities(50)).map((e) => e.name);
+
+    expect(names).not.toContain("Status");
+    expect(names).not.toContain("Contains");
+    expect(names).toContain("Redis");
+  });
+
+  it("keeps a real subject that happens to open a sentence", async () => {
+    // The mirror of the rule above: technical notes routinely lead with their
+    // subject, so position alone must not disqualify a name.
+    await graph.indexMemory("mem-1", "Redis is fast", []);
+    expect((await graph.listEntities(20)).map((e) => e.name)).toContain("Redis");
+  });
+
+  it("rejects inflected verb forms", async () => {
+    await graph.indexMemory("mem-1", "The team Implemented and Verified the Redis cache", []);
+    const names = (await graph.listEntities(20)).map((e) => e.name);
+
+    expect(names).not.toContain("Implemented");
+    expect(names).not.toContain("Verified");
+  });
+
+  it("does not split a multi-word phrase into its own member words", async () => {
+    await graph.indexMemory("mem-1", "We shipped Browser Mode this week", []);
+    const names = (await graph.listEntities(20)).map((e) => e.name);
+
+    expect(names).toContain("Browser Mode");
+    expect(names).not.toContain("Mode");
+  });
+
+  it("treats an entity as one node regardless of case", async () => {
+    await graph.indexMemory("mem-1", "The CLI ships today", ["cli"]);
+    const names = (await graph.listEntities(20)).map((e) => e.name.toLowerCase());
+
+    expect(names.filter((n) => n === "cli")).toHaveLength(1);
+  });
+
+  it("links entities within a sentence, not across the whole memory", async () => {
+    // The full cross-product made one long memory a complete graph, where every
+    // pair read as a discovered relation.
+    await graph.indexMemory(
+      "mem-1",
+      "Redis caches sessions. PostgreSQL stores orders. Docker runs both.",
+      []
+    );
+    const stats = await graph.getStats();
+
+    // Three sentences of two entities each, not every pair across the memory.
+    expect(stats.edgeCount).toBeLessThan(6);
+  });
+
   // ── expandQuery ───────────────────────────────────────────────────────
 
   it("expandQuery returns direct matches", async () => {

@@ -149,35 +149,108 @@ function guessType(name: string): EntityType {
   return "concept";
 }
 
+/**
+ * Generic words that are entities only by accident of capitalisation. They lead
+ * sentences and bullet headings in stored memories ("Status: ...", "Key Planning
+ * Documents Created", "Contains ...") and became first-class graph nodes that
+ * then cross-linked with everything else.
+ *
+ * Only applied to sentence-initial single words: technical notes routinely open
+ * with their real subject ("Redis is fast"), so position alone cannot disqualify
+ * a name.
+ */
+const GENERIC_LEAD_WORDS = new Set([
+  "status", "key", "keys", "item", "items", "document", "documents",
+  "development", "planning", "primary", "secondary", "mode", "engine",
+  "branch", "draft", "commit", "commits", "contains", "created", "note",
+  "notes", "summary", "result", "results", "current", "next", "previous",
+  "done", "todo", "overview", "details", "detail", "changes", "change",
+  "files", "file", "tests", "test", "live", "core", "final", "initial",
+  "added", "removed", "updated", "verified", "confirmed", "phase", "step",
+  "steps", "goal", "goals", "scope", "impact", "reason", "context",
+  "example", "examples", "output", "input", "value", "values", "state"
+]);
+
+/**
+ * True when the capital at `index` is only there because a sentence started.
+ */
+function isSentenceInitial(content: string, index: number): boolean {
+  for (let i = index - 1; i >= 0; i--) {
+    const char = content[i];
+    if (char === " " || char === "\t" || char === '"' || char === "'" || char === "(") continue;
+    return char === "." || char === "!" || char === "?" || char === "\n"
+      || char === ":" || char === ";" || char === "-" || char === "*";
+  }
+  return true; // start of content
+}
+
+/** Inflected verb forms are never entity names, however they are capitalised. */
+function looksLikeVerbForm(name: string): boolean {
+  return /^[A-Za-z]+(ed|ing)$/.test(name) && !TECH_KEYWORDS.has(name.toLowerCase());
+}
+
 function extractEntities(content: string, tags: string[]): [string, EntityType][] {
   const entities: Map<string, EntityType> = new Map();
+  const seen = new Set<string>();
   const add = (raw: string, type: EntityType) => {
     const name = canonical(raw);
-    if (!entities.has(name)) entities.set(name, type);
+    const lower = name.toLowerCase();
+    // One memory can mention "CLI" and also carry a "cli" tag; they are one
+    // entity, and keeping both split its edges across two half-populated nodes.
+    if (seen.has(lower)) return;
+    seen.add(lower);
+    entities.set(name, type);
   };
 
   for (const tag of tags) add(tag, guessType(tag));
 
   // Multi-word capitalized phrases
   const capitalPattern = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b/g;
+  // Spans covered by an accepted multi-word phrase. Their individual words are
+  // not separate entities: "Browser Mode" was also yielding "Mode", and
+  // "Key Planning Documents Created" yielded four more, each then cross-linked
+  // as though it were a subject in its own right.
+  const phraseSpans: Array<[number, number]> = [];
   let match: RegExpExecArray | null;
   while ((match = capitalPattern.exec(content)) !== null) {
     const name = match[1];
-    if (name.length > 2 && !STOP_WORDS.has(name.toLowerCase())) add(name, guessType(name));
+    if (name.includes(" ")) phraseSpans.push([match.index, match.index + name.length]);
+    if (name.length <= 2 || STOP_WORDS.has(name.toLowerCase())) continue;
+    // A multi-word phrase is evidence in itself, but a single word that merely
+    // opened a sentence is not.
+    if (
+      !name.includes(" ")
+      && isSentenceInitial(content, match.index)
+      && GENERIC_LEAD_WORDS.has(name.toLowerCase())
+    ) continue;
+    if (looksLikeVerbForm(name)) continue;
+    add(name, guessType(name));
   }
 
   // Single capitalized words (3+ chars)
   const singlePattern = /\b([A-Z][a-z]{2,})\b/g;
   while ((match = singlePattern.exec(content)) !== null) {
     const name = match[1];
-    if (!STOP_WORDS.has(name.toLowerCase())) add(name, guessType(name));
+    const at = match.index;
+    if (phraseSpans.some(([start, end]) => at >= start && at < end)) continue;
+    if (STOP_WORDS.has(name.toLowerCase())) continue;
+    if (
+      isSentenceInitial(content, match.index)
+      && GENERIC_LEAD_WORDS.has(name.toLowerCase())
+    ) continue;
+    if (looksLikeVerbForm(name)) continue;
+    add(name, guessType(name));
   }
 
   // Acronyms
   const acronymPattern = /\b([A-Z]{2,6})\b/g;
   while ((match = acronymPattern.exec(content)) !== null) {
     const name = match[1];
-    if (!STOP_WORDS.has(name.toLowerCase())) add(name, guessType(name));
+    const lower = name.toLowerCase();
+    // Shouted headings ("PHASE", "STATUS") match the acronym shape but are the
+    // same generic words rejected elsewhere.
+    if (STOP_WORDS.has(lower) || GENERIC_LEAD_WORDS.has(lower)) continue;
+    add(name, guessType(name));
   }
 
   // Tech keywords (case-insensitive)
@@ -187,6 +260,18 @@ function extractEntities(content: string, tags: string[]): [string, EntityType][
   }
 
   return Array.from(entities.entries());
+}
+
+/**
+ * Splits content into co-occurrence windows. Newlines count as boundaries
+ * because stored memories are often bullet lists, where separate bullets are no
+ * more related than separate sentences.
+ */
+function splitSentences(content: string): string[] {
+  return content
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
 }
 
 function firstIndexOf(content: string, name: string): number {
@@ -306,11 +391,20 @@ export class EntityGraph {
         this.upsertEntity(data, name, type, memoryId, ts);
       }
 
-      const names = entities.map(([name]) => name);
-      for (let i = 0; i < names.length; i++) {
-        for (let j = i + 1; j < names.length; j++) {
-          const { from, to, relation } = inferRelation(content, names[i], names[j]);
-          this.upsertEdge(data, from, to, relation, memoryId);
+      // Link entities that actually appear together in a sentence, not every
+      // pair in the memory. The full cross-product turned one long memory into
+      // a complete graph — 25 entities produced 300 edges, and every one of
+      // them read as a discovered relation — which swamped the real relations
+      // and made traversal scores meaningless.
+      for (const sentence of splitSentences(content)) {
+        const present = entities
+          .map(([name]) => name)
+          .filter((name) => firstIndexOf(sentence, name) !== -1);
+        for (let i = 0; i < present.length; i++) {
+          for (let j = i + 1; j < present.length; j++) {
+            const { from, to, relation } = inferRelation(sentence, present[i], present[j]);
+            this.upsertEdge(data, from, to, relation, memoryId);
+          }
         }
       }
 
@@ -604,6 +698,13 @@ export class EntityGraph {
   // ── Internal helpers ────────────────────────────────────────────────────
 
   /** Upsert an entity node, merging by canonical name. */
+  /** Existing entity key matching `name` case-insensitively, if any. */
+  private findExistingName(data: GraphData, name: string): string | undefined {
+    if (data.entities[name]) return name;
+    const lower = name.toLowerCase();
+    return Object.keys(data.entities).find((key) => key.toLowerCase() === lower);
+  }
+
   private upsertEntity(
     data: GraphData,
     rawName: string,
@@ -611,7 +712,11 @@ export class EntityGraph {
     memoryId: string,
     ts: string,
   ): void {
-    const name = canonical(rawName);
+    // Entity identity is case-insensitive: a tag "cli" and the word "CLI" in
+    // content are the same thing, and keeping them apart split one entity's
+    // edges and memories across two half-populated nodes.
+    const canonicalName = canonical(rawName);
+    const name = this.findExistingName(data, canonicalName) ?? canonicalName;
     const existing = data.entities[name];
     if (existing) {
       existing.lastSeen = ts;
@@ -638,9 +743,11 @@ export class EntityGraph {
     relation: string,
     memoryId: string,
   ): void {
-    const from = canonical(rawFrom);
-    const to = canonical(rawTo);
-    if (from === to) return;
+    // Resolve to the stored entity key so edges attach to the same node the
+    // entity was merged into, rather than creating a case-variant orphan.
+    const from = this.findExistingName(data, canonical(rawFrom)) ?? canonical(rawFrom);
+    const to = this.findExistingName(data, canonical(rawTo)) ?? canonical(rawTo);
+    if (from.toLowerCase() === to.toLowerCase()) return;
     const edge = this.findEdge(data.edges, from, to, relation);
     if (edge) {
       if (!edge.memoryIds.includes(memoryId)) edge.memoryIds.push(memoryId);
