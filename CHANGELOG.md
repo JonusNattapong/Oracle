@@ -62,6 +62,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `oracle memory store [local|chatgpt|hybrid]` shows or sets the mode.
 
 ### Removed
+- **Fifteen of the nineteen memory tools.** Reading was split across
+  `oracle_memory_list`, `_search` and `_scored_search`; tidying across
+  `_consolidate`, `_prune`, `_promote`, `_maintenance`, `_clear` and
+  `_graph_prune` — many ways for a client to make the same decision wrong.
+  Reading is now `oracle_memory_search` (omit `query` to list recent,
+  `mode: "graph"` for entity expansion) and housekeeping is
+  `oracle_memory_maintain` with an `action`, which also covers `stats` and
+  `reflect`. Entity-graph browsing and the wiki left the MCP surface entirely:
+  they are for a person exploring what Oracle knows, and `oracle memory graph`
+  and `oracle wiki` already serve that. With the earlier trim the default
+  server now advertises 28 tools, down from 75.
+
 - **Messaging, task and GitHub tools from the default MCP surface.** `oracle-mcp`
   advertised 75 tools; 31 of them were `oracle_msg_*`, `oracle_task_*` and
   `oracle_github_*`. Every tool a connected client loads costs it context and

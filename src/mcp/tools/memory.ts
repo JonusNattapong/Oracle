@@ -1,8 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import type { MemoryPort } from "../../orchestrator/ports.js";
-import { OracleError, serializeOracleError } from "../../errors.js";
-import { buildWiki, getWikiPage, listWikiTopics } from "../../wiki/compile.js";
+import { serializeOracleError } from "../../errors.js";
 
 function success(text: string, structuredContent: Record<string, unknown>) {
   return { content: [{ type: "text" as const, text }], structuredContent };
@@ -17,11 +16,28 @@ function failure(error: unknown) {
   };
 }
 
+const SCOPE = z.enum(["project", "global"]).default("project");
+const MEMORY_TYPE = z.enum(["fact", "insight", "chunk", "working"]);
+
+/**
+ * Four memory tools, down from nineteen.
+ *
+ * The old surface split one concept across many entries — list, search and
+ * scored_search all read memory; consolidate, prune, promote and maintenance
+ * all tidy it — which cost every connected client context and gave it four ways
+ * to make the same decision wrong. Reading is now one tool with a mode, and
+ * housekeeping is one tool with an action.
+ *
+ * Entity-graph browsing and the compiled wiki are not here: they are for a
+ * person exploring what Oracle knows, and `oracle memory graph` and
+ * `oracle wiki` already serve that on the CLI.
+ */
 export function registerMemoryTools(
   server: McpServer,
   deps: { memory: MemoryPort; globalMemory: MemoryPort; workspaceRoot: string }
 ): void {
   const { memory, globalMemory } = deps;
+  const store = (scope: "project" | "global") => (scope === "global" ? globalMemory : memory);
 
   server.registerTool(
     "oracle_memory_remember",
@@ -29,9 +45,9 @@ export function registerMemoryTools(
       title: "Save Memory",
       description: "Save a memory (project by default, global for cross-project knowledge).",
       inputSchema: {
-        scope: z.enum(["project", "global"]).default("project"),
+        scope: SCOPE,
         agent: z.string().min(1),
-        type: z.enum(["fact", "insight", "chunk", "working"]),
+        type: MEMORY_TYPE,
         content: z.string().min(1).max(20_000),
         tags: z.array(z.string().min(1)).max(50).optional(),
         importance: z.number().min(0).max(1).optional()
@@ -39,23 +55,8 @@ export function registerMemoryTools(
     },
     async ({ scope, agent, type, content, tags, importance }) => {
       try {
-        const entry = await (scope === "global" ? globalMemory : memory).remember(agent, type, content, { tags, importance });
+        const entry = await store(scope).remember(agent, type, content, { tags, importance });
         return success(`Saved ${scope} memory ${entry.id}.`, { scope, memory: entry });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_list",
-    {
-      title: "List Memory",
-      description: "List memory entries (project or global).",
-      inputSchema: { scope: z.enum(["project", "global"]).default("project"), agent: z.string().optional(), type: z.enum(["fact", "insight", "chunk", "working"]).optional(), limit: z.number().int().min(1).max(100).default(10) }
-    },
-    async ({ scope, agent, type, limit }) => {
-      try {
-        const entries = await (scope === "global" ? globalMemory : memory).recall({ type, agent: agent ?? undefined, limit });
-        return success(JSON.stringify(entries, null, 2), { scope, entries });
       } catch (error) { return failure(error); }
     }
   );
@@ -64,13 +65,34 @@ export function registerMemoryTools(
     "oracle_memory_search",
     {
       title: "Search Memory",
-      description: "Search memory by keyword.",
-      inputSchema: { scope: z.enum(["project", "global"]).default("project"), query: z.string().min(1), agent: z.string().optional(), type: z.enum(["fact", "insight", "chunk", "working"]).optional(), limit: z.number().int().min(1).max(200).default(20) }
+      description:
+        "Read memory. With `query`, searches by relevance; without it, returns the most recent entries. "
+        + "`mode: \"graph\"` expands the query with related entities from the knowledge graph.",
+      inputSchema: {
+        scope: SCOPE,
+        query: z.string().min(1).optional().describe("Omit to list recent entries instead of searching"),
+        mode: z.enum(["text", "graph"]).default("text"),
+        agent: z.string().optional(),
+        type: MEMORY_TYPE.optional(),
+        tags: z.array(z.string().min(1)).optional().describe("Only applies when listing (no query)"),
+        limit: z.number().int().min(1).max(200).default(20)
+      }
     },
-    async ({ scope, query, agent, type, limit }) => {
+    async ({ scope, query, mode, agent, type, tags, limit }) => {
       try {
-        const entries = await (scope === "global" ? globalMemory : memory).searchMemories(query, { type: type as any, agent: agent ?? undefined, limit });
-        return success(JSON.stringify(entries, null, 2), { scope, count: entries.length, entries });
+        const target = store(scope);
+        const options = { type, agent: agent ?? undefined, limit };
+        const entries = !query
+          ? await target.recall({ ...options, tags })
+          : mode === "graph"
+            ? (await target.graphQuery?.(query, { agent: agent ?? undefined, limit })) ?? []
+            : await target.searchMemories(query, options);
+        return success(JSON.stringify(entries, null, 2), {
+          scope,
+          mode: query ? mode : "recent",
+          count: entries.length,
+          entries
+        });
       } catch (error) { return failure(error); }
     }
   );
@@ -79,12 +101,19 @@ export function registerMemoryTools(
     "oracle_memory_update",
     {
       title: "Update Memory",
-      description: "Update content, tags, or importance of a memory entry.",
-      inputSchema: { scope: z.enum(["project", "global"]).default("project"), id: z.string(), type: z.enum(["fact", "insight", "chunk", "working"]), content: z.string().optional(), tags: z.array(z.string()).optional(), importance: z.number().min(0).max(1).optional() }
+      description: "Correct the content, tags, or importance of a stored memory.",
+      inputSchema: {
+        scope: SCOPE,
+        id: z.string(),
+        type: MEMORY_TYPE,
+        content: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+        importance: z.number().min(0).max(1).optional()
+      }
     },
     async ({ scope, id, type, content, tags, importance }) => {
       try {
-        const updated = await (scope === "global" ? globalMemory : memory).updateMemory(id, type as any, { content, tags, importance });
+        const updated = await store(scope).updateMemory(id, type, { content, tags, importance });
         if (!updated) return failure(new Error("Memory not found"));
         return success(JSON.stringify(updated, null, 2), { scope, memory: updated });
       } catch (error) { return failure(error); }
@@ -92,252 +121,87 @@ export function registerMemoryTools(
   );
 
   server.registerTool(
-    "oracle_memory_stats",
+    "oracle_memory_maintain",
     {
-      title: "Memory Stats",
-      description: "Memory counts by type and agent.",
-      inputSchema: { scope: z.enum(["project", "global"]).default("project") }
-    },
-    async ({ scope }) => {
-      try {
-        const stats = await (scope === "global" ? globalMemory : memory).getStats();
-        return success(JSON.stringify(stats, null, 2), { scope, stats });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_clear",
-    {
-      title: "Clear Memory",
-      description: "Clear working memory.",
-      inputSchema: { scope: z.enum(["project", "global"]).default("project"), agent: z.string().optional() }
-    },
-    async ({ scope, agent }) => {
-      try {
-        const count = await (scope === "global" ? globalMemory : memory).clearWorking(agent ?? undefined);
-        return success(`Cleared ${count} working memory entries.`, { scope, cleared: count });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_scored_search",
-    {
-      title: "Scored Memory Search",
-      description: "Ranked memory search with recency-weighted scoring.",
+      title: "Maintain Memory",
+      description:
+        "Housekeeping and health. `stats` reports counts; `consolidate` merges near-duplicates; "
+        + "`prune` soft-archives stale low-importance entries; `promote` turns often-retrieved working "
+        + "memories into insights; `clear_working` drops working memory; `prune_graph` removes stale "
+        + "entities; `reflect` distils new insights (needs ANTHROPIC_API_KEY); `all` runs prune + promote.",
       inputSchema: {
-        query: z.string().min(1),
-        agent: z.string().optional(),
-        type: z.enum(["fact", "insight", "chunk", "working"]).optional(),
-        limit: z.number().int().min(1).max(200).default(20)
+        scope: SCOPE,
+        action: z.enum([
+          "stats",
+          "consolidate",
+          "prune",
+          "promote",
+          "clear_working",
+          "prune_graph",
+          "reflect",
+          "all"
+        ]).default("stats"),
+        agent: z.string().optional().describe("clear_working and reflect only"),
+        min_importance: z.number().min(0).max(1).optional().describe("prune/all: decayed-importance floor"),
+        min_stale_days: z.number().int().min(1).optional().describe("prune/all: untouched days threshold"),
+        min_access_count: z.number().int().min(1).max(100).optional().describe("promote/all: min retrievals"),
+        max_age_days: z.number().int().min(1).optional().describe("prune_graph: max age for isolated nodes")
       }
     },
-    async ({ query, agent, type, limit }) => {
+    async ({ scope, action, agent, min_importance, min_stale_days, min_access_count, max_age_days }) => {
+      const target = store(scope);
       try {
-        const entries = await memory.scoredSearchMemories(query, { agent: agent ?? undefined, type: type as any, limit });
-        return success(JSON.stringify(entries, null, 2), { count: entries.length, entries });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_graph_query",
-    {
-      title: "Entity Graph Search",
-      description: "Entity-aware search — expands query with related graph entities.",
-      inputSchema: {
-        query: z.string().min(1),
-        agent: z.string().optional(),
-        limit: z.number().int().min(1).max(200).default(20)
-      }
-    },
-    async ({ query, agent, limit }) => {
-      try {
-        const entries = await memory.graphQuery?.(query, { agent: agent ?? undefined, limit }) ?? [];
-        return success(JSON.stringify(entries, null, 2), { count: entries.length, entries });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_graph_path",
-    {
-      title: "Entity Relationship Path",
-      description: "Shortest path between two entities in the knowledge graph.",
-      inputSchema: {
-        from: z.string().min(1),
-        to: z.string().min(1)
-      }
-    },
-    async ({ from, to }) => {
-      try {
-        const path = await memory.graphFindPath?.(from, to) ?? [];
-        return success(JSON.stringify(path, null, 2), { hops: path.length, path });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_graph_stats",
-    {
-      title: "Entity Graph Stats",
-      description: "Knowledge-graph entity and edge counts.",
-      inputSchema: {}
-    },
-    async () => {
-      try {
-        const stats = await memory.getGraphStats?.() ?? { entityCount: 0, edgeCount: 0 };
-        return success(JSON.stringify(stats, null, 2), { stats });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_graph_prune",
-    {
-      title: "Prune Entity Graph",
-      description: "Prune stale isolated entities and orphaned edges from the graph.",
-      inputSchema: {
-        max_age_days: z.number().int().min(1).optional().describe("Max age in days for isolated nodes (default 90)")
-      }
-    },
-    async ({ max_age_days }) => {
-      try {
-        const result = await memory.graphPrune?.(max_age_days) ?? { removedEntities: 0, removedEdges: 0 };
-        return success(`Pruned ${result.removedEntities} entities and ${result.removedEdges} edges.`, { ...result });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_consolidate",
-    {
-      title: "Consolidate Memories",
-      description: "Merge near-duplicate memories with overlapping tags.",
-      inputSchema: {}
-    },
-    async () => {
-      try {
-        const result = await memory.consolidate?.() ?? { consolidated: 0, created: null, archived: [] };
-        return success(JSON.stringify(result, null, 2), { ...result });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_prune",
-    {
-      title: "Prune Stale Memories",
-      description: "Soft-archive stale low-importance memories (recoverable).",
-      inputSchema: {
-        min_importance: z.number().min(0).max(1).optional().describe("Decayed-importance floor (default 0.2)"),
-        min_stale_days: z.number().int().min(1).optional().describe("Untouched days threshold (default 30)")
-      }
-    },
-    async ({ min_importance, min_stale_days }) => {
-      try {
-        const pruned = await memory.pruneStale?.({ minImportance: min_importance, minStaleDays: min_stale_days }) ?? [];
-        return success(`Pruned ${pruned.length} memories.`, { count: pruned.length, ids: pruned });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_promote",
-    {
-      title: "Promote Working Memories",
-      description: "Promote working memories with 3+ retrievals into durable insights.",
-      inputSchema: {
-        min_access_count: z.number().int().min(1).max(100).optional().describe("Min retrievals to promote (default 3)")
-      }
-    },
-    async ({ min_access_count }) => {
-      try {
-        const promoted = await memory.promoteWorking?.({ minAccessCount: min_access_count }) ?? [];
-        return success(`Promoted ${promoted.length} working memories to insight.`, { count: promoted.length, ids: promoted });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_maintenance",
-    {
-      title: "Run Memory Maintenance",
-      description: "Run prune + promote in one call.",
-      inputSchema: {
-        min_importance: z.number().min(0).max(1).optional(),
-        min_stale_days: z.number().int().min(1).optional(),
-        min_access_count: z.number().int().min(1).max(100).optional()
-      }
-    },
-    async ({ min_importance, min_stale_days, min_access_count }) => {
-      try {
-        const result = await memory.runMaintenance?.({ minImportance: min_importance, minStaleDays: min_stale_days, minAccessCount: min_access_count }) ?? { pruned: [], promoted: [] };
-        return success(`Pruned ${result.pruned.length}, promoted ${result.promoted.length}.`, { ...result });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_reflect",
-    {
-      title: "Memory Reflection",
-      description: "LLM insight synthesis: cluster related memories, distill new insights. Requires ANTHROPIC_API_KEY.",
-      inputSchema: {
-        agent: z.string().optional().describe("Agent name for the reflection")
-      }
-    },
-    async ({ agent }) => {
-      try {
-        const insights = await memory.reflect?.({ agent: agent ?? undefined }) ?? [];
-        return success(JSON.stringify(insights, null, 2), { count: insights.length, insights });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_wiki_build",
-    {
-      title: "Build Memory Wiki",
-      description: "Compile facts/insights into topic-grouped wiki pages.",
-      inputSchema: {}
-    },
-    async () => {
-      try {
-        const result = await buildWiki(memory, deps.workspaceRoot);
-        return success(`Compiled ${result.topics.length} topic(s).`, { ...result });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_wiki_list",
-    {
-      title: "List Wiki Topics",
-      description: "List compiled wiki topics.",
-      inputSchema: {}
-    },
-    async () => {
-      try {
-        const topics = await listWikiTopics(deps.workspaceRoot);
-        return success(JSON.stringify(topics, null, 2), { topics });
-      } catch (error) { return failure(error); }
-    }
-  );
-
-  server.registerTool(
-    "oracle_memory_wiki_get",
-    {
-      title: "Get Wiki Page",
-      description: "Read a compiled wiki page. Build first if missing.",
-      inputSchema: { topic: z.string().min(1) }
-    },
-    async ({ topic }) => {
-      try {
-        const page = await getWikiPage(deps.workspaceRoot, topic);
-        if (!page) throw new OracleError("ORACLE_INVALID_REQUEST", `Wiki topic not found: ${topic}`, "Run oracle_memory_wiki_build or oracle_memory_wiki_list.");
-        return success(page, { topic });
+        switch (action) {
+          case "stats": {
+            const stats = await target.getStats();
+            const graph = await target.getGraphStats?.();
+            return success(JSON.stringify({ ...stats, graph }, null, 2), { scope, stats, graph });
+          }
+          case "consolidate": {
+            const result = await target.consolidate?.() ?? { consolidated: 0, created: null, archived: [] };
+            return success(`Consolidated ${result.consolidated} memories.`, { scope, ...result });
+          }
+          case "prune": {
+            const pruned = await target.pruneStale?.({
+              minImportance: min_importance,
+              minStaleDays: min_stale_days
+            }) ?? [];
+            return success(`Pruned ${pruned.length} memories.`, { scope, count: pruned.length, ids: pruned });
+          }
+          case "promote": {
+            const promoted = await target.promoteWorking?.({ minAccessCount: min_access_count }) ?? [];
+            return success(
+              `Promoted ${promoted.length} working memories to insight.`,
+              { scope, count: promoted.length, ids: promoted }
+            );
+          }
+          case "clear_working": {
+            const cleared = await target.clearWorking(agent ?? undefined);
+            return success(`Cleared ${cleared} working memory entries.`, { scope, cleared });
+          }
+          case "prune_graph": {
+            const result = await target.graphPrune?.(max_age_days) ?? { removedEntities: 0, removedEdges: 0 };
+            return success(
+              `Pruned ${result.removedEntities} entities and ${result.removedEdges} edges.`,
+              { scope, ...result }
+            );
+          }
+          case "reflect": {
+            const insights = await target.reflect?.({ agent: agent ?? undefined }) ?? [];
+            return success(JSON.stringify(insights, null, 2), { scope, count: insights.length, insights });
+          }
+          case "all": {
+            const result = await target.runMaintenance?.({
+              minImportance: min_importance,
+              minStaleDays: min_stale_days,
+              minAccessCount: min_access_count
+            }) ?? { pruned: [], promoted: [] };
+            return success(
+              `Pruned ${result.pruned.length}, promoted ${result.promoted.length}.`,
+              { scope, ...result }
+            );
+          }
+        }
       } catch (error) { return failure(error); }
     }
   );

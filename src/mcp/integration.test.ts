@@ -144,9 +144,9 @@ describe("Oracle MCP tools", () => {
     expect(tools).toContain("oracle_skills");
     expect(tools).toContain("oracle_oracle_list");
     expect(tools).toContain("oracle_oracle_register");
-    expect(tools).toContain("oracle_memory_list");
+    expect(tools).toContain("oracle_memory_search");
     expect(tools).toContain("oracle_memory_remember");
-    expect(tools).toContain("oracle_memory_clear");
+    expect(tools).toContain("oracle_memory_maintain");
     expect(tools).toContain("oracle_identity_show");
     expect(tools).toContain("oracle_identity_setup");
     expect(tools).toContain("oracle_awareness_show");
@@ -205,6 +205,43 @@ describe("Oracle MCP tools", () => {
       arguments: { scope: "project", query: "shared release checklist" }
     });
     expect((project.structuredContent as { count: number }).count).toBe(0);
+  });
+
+  test("search without a query lists recent entries instead of failing", async () => {
+    // The old surface had a separate oracle_memory_list; folding it in means an
+    // omitted query has to mean "recent", not "bad request".
+    await client.callTool({
+      name: "oracle_memory_remember",
+      arguments: { agent: "tester", type: "fact", content: "Recent-listing probe entry." }
+    });
+
+    const listed = await client.callTool({
+      name: "oracle_memory_search",
+      arguments: { type: "fact", limit: 5 }
+    });
+
+    expect(listed.isError).not.toBe(true);
+    const body = listed.structuredContent as { mode: string; count: number };
+    expect(body.mode).toBe("recent");
+    expect(body.count).toBeGreaterThan(0);
+  });
+
+  test("maintain reports stats and runs housekeeping actions", async () => {
+    const stats = await client.callTool({
+      name: "oracle_memory_maintain",
+      arguments: { action: "stats" }
+    });
+    expect(stats.isError).not.toBe(true);
+    expect((stats.structuredContent as { stats: { total: number } }).stats.total)
+      .toBeGreaterThanOrEqual(0);
+
+    // clear_working replaced a tool of its own; it must still be reachable.
+    const cleared = await client.callTool({
+      name: "oracle_memory_maintain",
+      arguments: { action: "clear_working", agent: "tester" }
+    });
+    expect(cleared.isError).not.toBe(true);
+    expect(cleared.structuredContent).toHaveProperty("cleared");
   });
 
   test("register onboards an agent: roster + unread in one call, presence tracked", async () => {
