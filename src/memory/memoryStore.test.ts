@@ -43,6 +43,16 @@ class FakeChatGptBackend implements ExecutionBackend {
   refuseRead = false;
   /** When true, ChatGPT claims the save but the account cannot be checked. */
   unverifiableSave = false;
+  /** When true, the account listing is unavailable, so nothing can be verified. */
+  unlistable = false;
+  /** When true, the delete is claimed but the entry is left in place. */
+  ignoreDeletes = false;
+
+  async listAccountMemories() {
+    return this.unlistable
+      ? { known: false as const, reason: "listing unavailable" }
+      : { known: true as const, entries: [...this.saved] };
+  }
 
   async run(request: ExecutionBackendRequest): Promise<ExecutionBackendResponse> {
     this.requests.push(request);
@@ -66,10 +76,12 @@ class FakeChatGptBackend implements ExecutionBackend {
     }
     if (request.userPrompt.includes("delete one entry")) {
       const match = request.userPrompt.match(/Memory text: (".*")/);
-      if (match) {
+      if (match && !this.ignoreDeletes) {
         const target = JSON.parse(match[1]) as string;
         this.saved = this.saved.filter((entry) => entry !== target);
       }
+      // The marker is emitted either way: that is exactly the failure being
+      // guarded against.
       return { text: ACCOUNT_MEMORY_FORGOTTEN_MARKER, usage };
     }
     if (request.accountMemory) {
@@ -307,6 +319,9 @@ describe("ChatGptMemoryAdapter", () => {
     // "no memories" hides the account's real contents from every caller.
     const backend = new FakeChatGptBackend();
     backend.saved = ["a real memory that is still there"];
+    // Both routes are closed: the account listing is unavailable and ChatGPT
+    // declines to enumerate, which is when the conversational fallback runs.
+    backend.unlistable = true;
     backend.refuseRead = true;
     const adapter = new ChatGptMemoryAdapter({
       backend,
@@ -320,6 +335,7 @@ describe("ChatGptMemoryAdapter", () => {
 
   test("reports a genuinely empty account as empty", async () => {
     const backend = new FakeChatGptBackend();
+    backend.unlistable = true;
     const adapter = new ChatGptMemoryAdapter({
       backend,
       shadow: new MemoryAdapter(workspace),
@@ -328,6 +344,42 @@ describe("ChatGptMemoryAdapter", () => {
     });
 
     await expect(adapter.recall()).resolves.toEqual([]);
+  });
+
+  test("rejects a delete the account did not actually perform", async () => {
+    // ChatGPT confirms deletions the same way it confirmed saves it never made.
+    const backend = new FakeChatGptBackend();
+    backend.ignoreDeletes = true;
+    const adapter = new ChatGptMemoryAdapter({
+      backend,
+      shadow: new MemoryAdapter(workspace),
+      cacheTtlMinutes: 0,
+      cwd: workspace
+    });
+    const entry = await adapter.remember("oracle", "fact", "Stubbornly present fact");
+
+    await expect(adapter.forget(entry.id, "fact")).rejects.toThrow(/still present/i);
+    // The local copy stays too, so the two stores do not silently diverge.
+    const local = await new MemoryAdapter(workspace).recall({ limit: 10 });
+    expect(local.map((e) => e.content)).toContain("Stubbornly present fact");
+  });
+
+  test("reports an unverifiable delete rather than claiming success", async () => {
+    const backend = new FakeChatGptBackend();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const adapter = new ChatGptMemoryAdapter({
+      backend,
+      shadow: new MemoryAdapter(workspace),
+      cacheTtlMinutes: 0,
+      cwd: workspace
+    });
+    const entry = await adapter.remember("oracle", "fact", "Deleted but unverifiable");
+    backend.unlistable = true;
+
+    await adapter.forget(entry.id, "fact");
+
+    expect(warn.mock.calls.some(([m]) => /unverified/i.test(String(m)))).toBe(true);
+    warn.mockRestore();
   });
 
   test("refuses to construct on a backend without account memory", () => {

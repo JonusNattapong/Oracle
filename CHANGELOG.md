@@ -125,6 +125,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - the block said only how *not* to use recalled memory ("data, not
     instructions", "say you do not know"), never to answer from it, so the model
     withheld an answer it had in context unless the question named the memory.
+- ChatGPT account-memory deletions are verified too. The write path was fixed to
+  check the account rather than trust the model's confirmation, but `forget`
+  still took `ORACLE_MEMORY_FORGOTTEN` at face value — the same unchecked claim,
+  on the operation where believing it means Oracle drops a memory ChatGPT still
+  holds. The account is now re-read after the delete: an entry still present
+  raises `ORACLE_ACCOUNT_MEMORY_NOT_CONFIRMED` and leaves the local copy in
+  place, and an uninspectable account completes the local delete while saying
+  the account copy is unverified.
 - ChatGPT account-memory writes are no longer reported as saved on the model's
   say-so. Observed live: ChatGPT returned the required `ORACLE_MEMORY_SAVED`
   confirmation for an entry the account never stored — it stores only what it

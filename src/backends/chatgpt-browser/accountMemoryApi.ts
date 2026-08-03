@@ -117,16 +117,3 @@ export async function verifyAccountMemoryWrite(
     ? { verified: true }
     : { verified: false, conclusive: true };
 }
-
-/** Mirror of {@link verifyAccountMemoryWrite} for deletions. */
-export async function verifyAccountMemoryDeletion(
-  page: PageEvaluator,
-  text: string,
-  timeoutMs = 30_000
-): Promise<WriteVerification> {
-  const snapshot = await readAccountMemories(page, timeoutMs);
-  if (!snapshot.known) return { verified: false, conclusive: false, reason: snapshot.reason };
-  return snapshotContains(snapshot, text)
-    ? { verified: false, conclusive: true }
-    : { verified: true };
-}

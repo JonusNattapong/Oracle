@@ -7,7 +7,10 @@ import {
   MAX_ACCOUNT_MEMORY_CHARS
 } from "../backends/chatgpt-browser/accountMemory.js";
 import type { ExecutionBackend } from "../backends/backend.js";
-import type { AccountMemorySnapshot } from "../backends/chatgpt-browser/accountMemoryApi.js";
+import {
+  snapshotContains,
+  type AccountMemorySnapshot
+} from "../backends/chatgpt-browser/accountMemoryApi.js";
 import { OracleError } from "../errors.js";
 import type { MemoryPort } from "../orchestrator/ports.js";
 import type { MemoryStoreEntry, MemoryType } from "./adapter.js";
@@ -291,23 +294,52 @@ export class ChatGptMemoryAdapter implements MemoryPort {
     return this.shadow.updateMemory(id, type, updates);
   }
 
-  private async forgetRemote(content: string): Promise<boolean> {
+  /**
+   * Asks the account to delete an entry, then checks whether it is really gone.
+   *
+   * ChatGPT's confirmation is its own claim, and on the write side that claim
+   * was observed arriving for an entry the account never stored. The deletion
+   * side has no reason to be more trustworthy, so the account is re-read rather
+   * than taken at its word. `verified: false` means the account could not be
+   * inspected — neither a success nor a failure.
+   */
+  private async forgetRemote(
+    content: string
+  ): Promise<{ removed: boolean; verified: boolean; reason?: string }> {
     const reply = await this.askText(buildAccountMemoryForgetPrompt(content));
-    const confirmed = isAccountMemoryForgetConfirmed(reply);
-    if (confirmed) this.cache = null;
-    return confirmed;
+    const claimed = isAccountMemoryForgetConfirmed(reply);
+    this.cache = null;
+
+    const reader = this.backend as Partial<AccountMemoryReader>;
+    if (typeof reader.listAccountMemories !== "function") {
+      return { removed: claimed, verified: false, reason: "backend cannot list account memory" };
+    }
+    const snapshot = await reader.listAccountMemories();
+    if (!snapshot.known) {
+      return { removed: claimed, verified: false, reason: snapshot.reason };
+    }
+    return { removed: !snapshotContains(snapshot, content), verified: true };
   }
 
   async forget(id: string, type: MemoryType): Promise<void> {
     const existing = (await this.shadow.recall({ type, limit: 1_000 }))
       .find((entry) => entry.id === id);
     if (existing && this.isRemoteType(type)) {
-      const confirmed = await this.forgetRemote(existing.content);
-      if (!confirmed) {
+      const outcome = await this.forgetRemote(existing.content);
+      if (!outcome.removed) {
         throw new OracleError(
           "ORACLE_ACCOUNT_MEMORY_NOT_CONFIRMED",
-          "ChatGPT did not confirm the memory was deleted.",
+          outcome.verified
+            ? "The memory is still present in the ChatGPT account after the delete."
+            : "ChatGPT did not confirm the memory was deleted.",
           "Delete it from ChatGPT settings → Personalization → Manage memory, then retry."
+        );
+      }
+      if (!outcome.verified) {
+        // The local copy still goes, but say plainly that the account copy is
+        // unaccounted for rather than reporting a clean delete.
+        console.warn(
+          `[memory] ChatGPT reported the delete, but the account could not be checked (${outcome.reason ?? "unknown reason"}). The account copy is unverified.`
         );
       }
     }

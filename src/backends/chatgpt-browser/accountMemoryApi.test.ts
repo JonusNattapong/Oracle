@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import {
   readAccountMemories,
   snapshotContains,
-  verifyAccountMemoryDeletion,
   verifyAccountMemoryWrite,
   type PageEvaluator
 } from "./accountMemoryApi.js";
@@ -73,22 +72,6 @@ describe("verifyAccountMemoryWrite", () => {
 
   test("inconclusive when the account cannot be read", async () => {
     const result = await verifyAccountMemoryWrite(page(new Error("no session")), "anything");
-    expect(result).toMatchObject({ verified: false, conclusive: false });
-  });
-});
-
-describe("verifyAccountMemoryDeletion", () => {
-  test("verified once the entry is absent", async () => {
-    expect(await verifyAccountMemoryDeletion(ok(["other"]), "gone")).toEqual({ verified: true });
-  });
-
-  test("conclusively unverified while the entry is still stored", async () => {
-    expect(await verifyAccountMemoryDeletion(ok(["still here"]), "still here"))
-      .toEqual({ verified: false, conclusive: true });
-  });
-
-  test("inconclusive when the account cannot be read", async () => {
-    const result = await verifyAccountMemoryDeletion(page("not json"), "anything");
     expect(result).toMatchObject({ verified: false, conclusive: false });
   });
 });
