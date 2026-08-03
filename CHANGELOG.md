@@ -71,6 +71,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `mcpServers` integration is unaffected.
 
 ### Fixed
+- Assistant image capture no longer warns about citation favicons. Web-search
+  and deep-research answers embed 128x128 favicons from every site they cite;
+  those cleared the size floor, could not be fetched from the page's own origin,
+  and produced a "Failed to fetch" warning apiece about images nobody wanted
+  saved. Only same-origin, blob: and data: images — the ones the assistant
+  actually produced — are candidates now.
 - Recalled project memory now actually reaches the answer. Two defects in the
   new grounding block, both found by asking a question whose answer was already
   stored and getting "I do not know":

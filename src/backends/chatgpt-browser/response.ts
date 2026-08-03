@@ -576,6 +576,16 @@ export class ResponseMonitor {
               || (image.naturalWidth < 128 && image.naturalHeight < 128)
               || seenSources.has(source)
             ) return false;
+            // Third-party images in an answer are citation chrome, not content
+            // the assistant produced: web-search and deep-research answers embed
+            // 128x128 favicons from the sites they cite. They are also
+            // unfetchable from this origin, so every one became a "Failed to
+            // fetch" warning about an image nobody wanted saved.
+            try {
+              const url = new URL(source, location.href);
+              if (url.protocol !== "blob:" && url.protocol !== "data:"
+                  && url.origin !== location.origin) return false;
+            } catch { return false; }
             seenSources.add(source);
             return true;
           })
