@@ -273,6 +273,7 @@ program
     const hasFiles = Boolean(options.file?.length);
     const result = await service.consult({
       prompt: `${ctxBlock}\n\n## Question\n${question}`,
+      title: question,
       preset: "review",
       provider: route.provider,
       conversationId: options.conversation,

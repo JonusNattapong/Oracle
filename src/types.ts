@@ -18,6 +18,12 @@ export interface ImageArtifact {
 
 export interface ConsultRequest {
   prompt: string;
+  /**
+   * The user's own question, when `prompt` also carries retrieved context.
+   * Session ids are slugged from it, so recalled memory prepended to the prompt
+   * does not make every session read as the same thing. Defaults to `prompt`.
+   */
+  title?: string;
   files?: string[];
   model?: string;
   provider?: string;

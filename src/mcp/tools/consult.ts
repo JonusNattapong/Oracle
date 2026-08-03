@@ -131,6 +131,7 @@ export function registerConsultTool(
         const hasFiles = files !== undefined && files.length > 0;
         const result = await deps.service.consult({
           prompt,
+          title: question,
           preset: "review",
           provider: targetBackend,
           conversationId,

@@ -151,7 +151,7 @@ export class ConsultService {
     });
 
     const { systemPrompt, userPrompt, bundle, files, estimatedInputTokens } = bundleResult;
-    const id = createSessionId(request.prompt);
+    const id = createSessionId(request.title?.trim() || request.prompt);
     let record = await this.sessions.create({
       id,
       cwd,

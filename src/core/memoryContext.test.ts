@@ -109,6 +109,43 @@ describe("buildMemoryContext", () => {
     expect(result.block.length).toBeLessThan(1_500);
   });
 
+  test("self-log turns do not starve recall of durable memory", async () => {
+    // Every --conversation turn writes a self-log entry, and those rank against
+    // the same words as the question. With a small search pool they filled it
+    // entirely, so an active conversation silently lost its own grounding.
+    await memory.remember("oracle", "fact", "Deploys happen on Tuesdays", {});
+    for (let i = 0; i < 20; i++) {
+      await recordSelfLog(memory, "session-x", {
+        question: `deploys question ${i}`,
+        answerSummary: `deploys answer ${i}`
+      });
+    }
+
+    const result = await buildMemoryContext(memory, "deploys");
+
+    expect(result.block).toContain("Deploys happen on Tuesdays");
+  });
+
+  test("counts the heading against the token budget", async () => {
+    await memory.remember("oracle", "fact", "Short fact", {});
+
+    // A budget smaller than the fixed heading cannot fit anything, and must not
+    // emit a block that silently exceeds the documented ceiling.
+    const result = await buildMemoryContext(memory, "short fact", { maxTokens: 10 });
+
+    expect(result.used).toBe(0);
+    expect(result.block).toBe("");
+  });
+
+  test("clamps a nonsensical limit instead of slicing from the tail", async () => {
+    await memory.remember("oracle", "fact", "Reachable fact", {});
+
+    const result = await buildMemoryContext(memory, "reachable", { limit: -5 });
+
+    expect(result.omitted).toBeGreaterThanOrEqual(0);
+    expect(result.used).toBeGreaterThan(0);
+  });
+
   test("reports the count when the budget fits nothing at all", async () => {
     await memory.remember("oracle", "fact", `Oversized: ${"long ".repeat(200)}`, {});
 
