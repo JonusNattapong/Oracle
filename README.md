@@ -72,7 +72,7 @@ tasks.
 | **Consult** | Bundles selected files and context, scans outbound content, calls the chosen backend, and records a replayable session. | `oracle ask` · `oracle_ask` |
 | **Remember** | Maintains project/global facts, insights, local docs, entity links, and ranked retrieval when configured. | `oracle memory` · `oracle_memory_*` |
 | **Act** | Runs a checkpointed coding loop with workspace tools, read-only mode, policy checks, approval gates, and audit evidence. | `oracle agent` · `oracle_agent` |
-| **Coordinate** | Connects agents through messages, presence, checklist-gated tasks, consensus, and recovery. | `oracle msg` / `oracle task` · `oracle_msg_*` / `oracle_task_*` |
+| **Coordinate** | Connects agents through messages, presence, checklist-gated tasks, consensus, and recovery. | `oracle msg` / `oracle task` · `oracle-msg-mcp` |
 | **Operate** | Owns long-lived schedules, approvals, SQLite state, HTTP APIs, WebSocket events, and the human Control Center. | `oracle daemon` · `oracle control` |
 | **Companion** | Turns fresh semantic presence into an explainable `speak` or `silence` intent without storing raw coordinates, and can raise an opt-in local notification. | `oracle companion` · Runtime API |
 | **Govern** | Exposes Awareness, Control, Transform, and Boundary signals without presenting them as a security certification. | `oracle governance` · audit and approval tools |
@@ -82,7 +82,7 @@ tasks.
 | Surface | Use it when | Entry point |
 |---|---|---|
 | **CLI** | A human or script needs direct consult, agent, memory, task, or Runtime commands. | `oracle` |
-| **Full MCP server** | Claude Code, Codex, or another MCP host needs the complete Oracle tool surface. | `oracle-mcp` |
+| **MCP server** | Claude Code, Codex, or another MCP host needs Oracle as a consultant: ask, agent, memory, docs, web, diagnostics. 18 focused tools rather than everything the CLI can do. | `oracle-mcp` |
 | **Coordination-only MCP server** | Agents need messaging and verified tasks without loading provider, memory, or agent dependencies. | `oracle-msg-mcp` |
 | **Runtime API + Control Center** | Scheduling, remote coordination, approvals, or event replay must survive individual CLI sessions. | `oracle-daemon` |
 
@@ -396,6 +396,18 @@ oracle github               pull requests and issues through gh
 oracle browser              experimental ChatGPT Browser Mode
 ```
 
+Frequently useful flags:
+
+```bash
+oracle ask --web-search "..."      # turn on ChatGPT's Web search for one answer
+oracle ask --deep-research "..."   # run Deep research; takes many minutes
+oracle ask --no-memory "..."       # answer without recalling stored memory
+oracle memory store hybrid         # choose where durable memory lives
+oracle memory graph rebuild        # re-index the entity graph from every memory
+oracle browser status --selectors  # check the ChatGPT DOM handles still resolve
+oracle browser stop                # close the Chrome instance and reclaim memory
+```
+
 Run `oracle --help` or open the
 [complete CLI reference](docs/cli-reference.md) for command-specific options.
 
@@ -432,11 +444,23 @@ Run the complete release gate before publishing:
 npm run verify
 ```
 
+`npm run verify` is offline. Changes that touch ChatGPT Browser Mode also need
+the live gate, which drives the real signed-in account and asserts on what
+actually happened — the bundle sent, the session written, the account read back:
+
+```bash
+npm run verify:live
+```
+
+It is deliberately separate: it costs real time and a real ChatGPT session. Unit
+tests pass on code that does not work, and every browser-backend defect found so
+far shipped green.
+
 The package exposes four binaries:
 
 ```text
 oracle            main CLI
-oracle-mcp        full stdio MCP server
+oracle-mcp        stdio MCP server (18 focused tools)
 oracle-msg-mcp    coordination-only stdio MCP server
 oracle-daemon     persistent Runtime
 ```
