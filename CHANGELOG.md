@@ -62,6 +62,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `oracle memory store [local|chatgpt|hybrid]` shows or sets the mode.
 
 ### Removed
+- **Messaging, task and GitHub tools from the default MCP surface.** `oracle-mcp`
+  advertised 75 tools; 31 of them were `oracle_msg_*`, `oracle_task_*` and
+  `oracle_github_*`. Every tool a connected client loads costs it context and
+  adds one more way to pick the wrong one, and all three groups are reachable
+  through means an agent already has — `oracle msg` / `oracle task` on the CLI,
+  and the `gh` CLI. The surface is now 43 tools. Nothing was deleted: the
+  implementations still drive the CLI, and `oracle-msg-mcp` continues to serve
+  messaging and tasks over MCP for clients that want them.
+
 - **`oracle-memory` MCP sidecar orchestration.** The package is retired, and the
   local file adapter always owned the `.oracle-memory/` on-disk format the
   sidecar merely shared — so the supervisor could only ever spawn, fail, and

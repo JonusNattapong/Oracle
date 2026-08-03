@@ -13,13 +13,6 @@ import { AgentService } from "../agent/service.js";
 import { SkillRegistry } from "../skills/registry.js";
 import { OracleRegistry } from "../oracles/registry.js";
 import { ProfileStore } from "../identity/profile.js";
-import { MessageStore } from "../messaging/store.js";
-import { AgentRegistry } from "../messaging/registry.js";
-import { TaskStore } from "../tasks/store.js";
-import { SwarmStore } from "../orchestrator/swarmStore.js";
-import { CoordinationService } from "../coordination/service.js";
-import { MESSAGING_INSTRUCTIONS } from "./messagingTools.js";
-import { TASK_INSTRUCTIONS } from "./taskTools.js";
 import { OrchestratorFactory } from "../orchestrator/factory.js";
 import { MemoryAdapter } from "../memory/adapter.js";
 import { VERSION } from "../version.js";
@@ -70,9 +63,6 @@ export async function createOracleMcpServer(
     // ── Init ──
     "oracle_init bootstraps .oracle/ in a new project with policy.json (zero-trust rules), config.json, docs/, and skills/.",
     "",
-    // ── Messaging & tasks (from below) ──
-    MESSAGING_INSTRUCTIONS,
-    TASK_INSTRUCTIONS,
   ].join("\n");
 
   const server = new McpServer(
@@ -121,10 +111,6 @@ export async function createOracleMcpServer(
     agentUnavailableReason = error instanceof Error ? error.message : String(error);
   }
 
-  const messages = new MessageStore(homeDir);
-  const tasks = new TaskStore(homeDir);
-  const coordination = new CoordinationService(tasks, messages, new SwarmStore(homeDir));
-
   registerOracleTools({
     server,
     service: new ConsultService(
@@ -142,10 +128,6 @@ export async function createOracleMcpServer(
     memory,
     globalMemory,
     profile: new ProfileStore(homeDir),
-    messages,
-    agentRegistry: new AgentRegistry(homeDir),
-    tasks,
-    coordination,
     agent,
     agentUnavailableReason
   });

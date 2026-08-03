@@ -16,6 +16,8 @@ import { MessageStore } from "../messaging/store.js";
 import { AgentRegistry } from "../messaging/registry.js";
 import { TaskStore } from "../tasks/store.js";
 import { registerOracleTools } from "./server.js";
+import { registerMessagingTools } from "./messagingTools.js";
+import { registerTaskTools } from "./taskTools.js";
 
 const provider: Provider = {
   id: "codex",
@@ -109,11 +111,17 @@ beforeAll(async () => {
     memory: new MemoryAdapter(root),
     globalMemory: new MemoryAdapter(root, "global-memory"),
     profile: new ProfileStore(root),
-    messages: (messages = new MessageStore(root)),
-    agentRegistry: (agentRegistry = new AgentRegistry(root)),
-    tasks: (tasks = new TaskStore(root)),
     providerChecks: async () => [{ name: "provider", ok: true, detail: "test" }]
   });
+
+  // Messaging and task tools are no longer part of the default MCP surface;
+  // they ship in `oracle-msg-mcp`. Register them here the way that binary does,
+  // so the behaviour below is still covered where it actually lives.
+  messages = new MessageStore(root);
+  agentRegistry = new AgentRegistry(root);
+  tasks = new TaskStore(root);
+  registerMessagingTools(server, messages, agentRegistry);
+  registerTaskTools(server, tasks, messages, agentRegistry);
   client = new Client({ name: "oracle-test-client", version: "1.0.0" });
   await server.connect(serverTransport);
   await client.connect(clientTransport);
@@ -144,19 +152,39 @@ describe("Oracle MCP tools", () => {
     expect(tools).toContain("oracle_awareness_show");
     expect(tools).toContain("oracle_persona_set");
     expect(tools).toContain("oracle_msg_send");
-    expect(tools).toContain("oracle_msg_inbox");
-    expect(tools).toContain("oracle_msg_ack");
-    expect(tools).toContain("oracle_msg_thread");
     expect(tools).toContain("oracle_task_create");
-    expect(tools).toContain("oracle_task_list");
-    expect(tools).toContain("oracle_task_get");
-    expect(tools).toContain("oracle_task_update");
-    expect(tools).toContain("oracle_task_checklist");
-    expect(tools).toContain("oracle_task_submit");
-    expect(tools).toContain("oracle_task_close");
-    expect(tools).toContain("oracle_task_propose");
-    expect(tools).toContain("oracle_task_vote");
-    expect(tools).toContain("oracle_coordination_recover");
+  });
+
+  test("the default surface leaves out messaging, tasks and GitHub", async () => {
+    // Every tool a client loads costs it context and one more way to pick the
+    // wrong one. These three groups are reachable through the CLI and `gh`, so
+    // they are not part of what `oracle-mcp` advertises.
+    const bare = new McpServer({ name: "oracle-bare", version: "1.0.0" });
+    registerOracleTools({
+      server: bare,
+      service: new ConsultService(provider, new FileSessionStore(path.join(root, ".sessions2"))),
+      config: { ...DEFAULT_PROJECT_CONFIG, include: ["src/**/*.ts"], exclude: [] },
+      workspaceRoot: root,
+      providerId: "codex",
+      skills: new SkillRegistry(root, path.join(root, ".oracle", "skills")),
+      oracles: new OracleRegistry(root, root),
+      memory: new MemoryAdapter(root),
+      profile: new ProfileStore(root),
+      providerChecks: async () => [{ name: "provider", ok: true, detail: "test" }]
+    });
+
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const bareClient = new Client({ name: "bare-client", version: "1.0.0" });
+    await bare.connect(st);
+    await bareClient.connect(ct);
+    try {
+      const names = (await bareClient.listTools()).tools.map((tool) => tool.name);
+      expect(names).toContain("oracle_ask");
+      expect(names.filter((n) => /_msg_|_task_|_github_/.test(n))).toEqual([]);
+    } finally {
+      await bareClient.close();
+      await bare.close();
+    }
   });
 
   test("keeps project and global memory scopes separate", async () => {

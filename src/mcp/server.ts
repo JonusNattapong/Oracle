@@ -9,12 +9,6 @@ import type { OracleRegistry } from "../oracles/registry.js";
 import { ProfileStore } from "../identity/profile.js";
 import type { MemoryPort } from "../orchestrator/ports.js";
 import type { AgentService } from "../agent/service.js";
-import type { MessageStore } from "../messaging/store.js";
-import type { AgentRegistry } from "../messaging/registry.js";
-import type { TaskStore } from "../tasks/store.js";
-import type { CoordinationService } from "../coordination/service.js";
-import { registerMessagingTools } from "./messagingTools.js";
-import { registerTaskTools } from "./taskTools.js";
 import { registerAgentTools } from "./tools/agent.js";
 import { registerConsultTool } from "./tools/consult.js";
 import { registerMemoryTools } from "./tools/memory.js";
@@ -24,7 +18,6 @@ import { registerIdentityTools } from "./tools/identity.js";
 import { registerOracleProfileTools } from "./tools/oracle.js";
 import { registerSessionTools } from "./tools/session.js";
 import { registerHistoryTools } from "./tools/history.js";
-import { registerGitHubTools } from "./tools/github.js";
 import { registerUtilTool } from "./tools/util.js";
 
 interface OracleServerDependencies {
@@ -38,10 +31,6 @@ interface OracleServerDependencies {
   memory: MemoryPort;
   globalMemory?: MemoryPort;
   profile: ProfileStore;
-  messages: MessageStore;
-  agentRegistry: AgentRegistry;
-  tasks: TaskStore;
-  coordination?: CoordinationService;
   providerChecks?: typeof checkBackend;
   agent?: AgentService;
   agentUnavailableReason?: string;
@@ -55,7 +44,7 @@ const SOULS_DIR = path.join(oracleHomeDir, "souls");
  * registration functions in src/mcp/tools/ so the surface stays organised.
  *
  * Registration order is stable and grouped by category (agent, consult, memory,
- * docs, web, identity, oracle profiles, sessions, doctor, messaging, tasks,
+ * docs, web, identity, oracle profiles, sessions, doctor,
  * history, GitHub).
  */
 export function registerOracleTools(deps: OracleServerDependencies): void {
@@ -70,10 +59,6 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
     memory,
     globalMemory = memory,
     profile,
-    messages,
-    agentRegistry,
-    tasks,
-    coordination,
     providerChecks = checkBackend,
     agent,
     agentUnavailableReason,
@@ -124,14 +109,15 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
     homeDir: oracleHomeDir
   });
 
-  // ── Inter-agent messaging & tasks ─────────────────────────────────
-  // (already separated — these register in their own category files)
-  registerMessagingTools(server, messages, agentRegistry);
-  registerTaskTools(server, tasks, messages, agentRegistry, coordination);
-
   // History tools (oracle_history_*)
   registerHistoryTools(server);
 
-  // GitHub tools (oracle_github_*)
-  registerGitHubTools(server, { workspaceRoot, service, providerId, config });
+  // Messaging (10), task tracking (10) and GitHub (11) tools are deliberately
+  // not exposed here. Every tool a client loads costs it context and one more
+  // way to pick the wrong one, and these three groups are all reachable by
+  // other means an agent already has: `oracle msg`/`oracle task` on the CLI,
+  // and the `gh` CLI for GitHub. Trimming them takes the MCP surface from 75
+  // tools to 44. The implementations are untouched and still drive the CLI;
+  // `oracle-msg-mcp` continues to serve messaging and tasks over MCP for
+  // clients that specifically want them.
 }
