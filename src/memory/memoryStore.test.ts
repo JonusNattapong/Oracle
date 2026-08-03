@@ -463,7 +463,9 @@ describe("HybridMemoryAdapter", () => {
     expect(entry.meta.mirrored).toBe(false);
     expect(entry.meta.mirrorVerification).toBe("unverified");
     expect(outcomes[0].verification).toBe("unverified");
-    expect(warn.mock.calls[0][0]).toMatch(/unverified/i);
+    // Scan every call rather than indexing the first: console is global, so a
+    // parallel test file can land a warning in between.
+    expect(warn.mock.calls.some(([message]) => /unverified/i.test(String(message)))).toBe(true);
     // The local write is untouched either way.
     const stored = await local.recall({ limit: 10 });
     expect(stored.map((e) => e.content)).toContain("Claimed but unconfirmed");
