@@ -6,13 +6,7 @@ import { HybridMemoryAdapter } from "../memory/hybridMemoryAdapter.js";
 import { loadProjectConfig, type MemoryConfig } from "../config/project.js";
 import { createExecutionBackend } from "../providers/factory.js";
 import type { ExecutionBackend } from "../backends/backend.js";
-import { McpMemoryAdapter } from "./mcp-clients.js";
-import { ProcessSupervisor } from "./supervisor.js";
-import type { MemoryPort, ProcessStatus } from "./ports.js";
-
-function debugOrchestrator(message: string): void {
-  if (process.env.ORACLE_DEBUG) console.debug(message);
-}
+import type { MemoryPort } from "./ports.js";
 
 export interface OrchestratorFactoryOptions {
   /** Overrides the memory section of .oracle/config.json (used by tests). */
@@ -22,24 +16,24 @@ export interface OrchestratorFactoryOptions {
 }
 
 /**
- * OrchestratorFactory creates memory adapters, preferring an MCP-backed server
- * and falling back to direct file storage when the server is unavailable.
- *
- * Where memory ultimately lives is a config decision (`memory.store`):
+ * OrchestratorFactory builds the memory adapter for the configured store:
  * `local` (default), `chatgpt` (account Saved Memory), or `hybrid`.
+ *
+ * Local memory is written directly to `.oracle-memory/`. Earlier versions first
+ * tried to spawn an `oracle-memory` MCP sidecar and fell back to the same file
+ * adapter when it was absent; that package is retired, and the file adapter
+ * always owned the on-disk format, so the sidecar path was removed rather than
+ * left attempting a spawn that could only fail.
  */
 export class OrchestratorFactory {
-  private supervisor: ProcessSupervisor;
   private rootDir: string;
   private homeDir: string;
   private options: OrchestratorFactoryOptions;
-  private memoryStatus: Map<string, ProcessStatus> = new Map();
 
   constructor(rootDir: string, homeDir?: string, options: OrchestratorFactoryOptions = {}) {
     this.rootDir = rootDir;
     this.homeDir = homeDir ?? path.join(os.homedir(), ".oracle");
     this.options = options;
-    this.supervisor = new ProcessSupervisor(this.homeDir);
   }
 
   /**
@@ -50,7 +44,7 @@ export class OrchestratorFactory {
    */
   async createMemoryAdapter(): Promise<MemoryPort> {
     const config = this.options.memory ?? (await this.loadMemoryConfig());
-    const local = await this.createLocalAdapter();
+    const local = new MemoryAdapter(this.rootDir);
     if (config.store === "local") return local;
 
     let backend: ExecutionBackend;
@@ -107,49 +101,5 @@ export class OrchestratorFactory {
         mirror: { minImportance: 0.7, types: ["fact", "insight"] }
       };
     }
-  }
-
-  /**
-   * The local adapter — MCP-backed sidecar when available, file-based otherwise.
-   */
-  private async createLocalAdapter(): Promise<MemoryPort> {
-    const sessionKey = `mem-${Date.now()}`; // Session-scoped status
-
-    try {
-      const info = await this.supervisor.ensureRunning("memory");
-      if (info) {
-        this.memoryStatus.set(sessionKey, {
-          transport: "mcp",
-          endpoint: info.endpoint,
-          pid: info.pid,
-          port: info.port,
-        });
-        debugOrchestrator(`[orchestrator] memory: MCP backend ready at ${info.endpoint}`);
-        try {
-          return new McpMemoryAdapter(info.endpoint);
-        } catch (err) {
-          const reason = err instanceof Error ? err.message : String(err);
-          debugOrchestrator(`[orchestrator] memory MCP client init failed: ${reason} — falling back to file adapter`);
-        }
-      }
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err);
-      debugOrchestrator(`[orchestrator] memory MCP spawn failed: ${reason}`);
-    }
-
-    // Fallback to file-based
-    this.memoryStatus.set(sessionKey, {
-      transport: "fallback",
-      reason: "MCP server unavailable",
-    });
-    debugOrchestrator(`[orchestrator] memory: falling back to file adapter`);
-    return new MemoryAdapter(this.rootDir);
-  }
-
-
-  /** Get the current memory adapter status for diagnostic/debugging. */
-  getStatus(): ProcessStatus | null {
-    const entries = Array.from(this.memoryStatus.entries());
-    return entries.length > 0 ? entries[entries.length - 1][1] : null;
   }
 }

@@ -38,7 +38,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     memory instead of losing writes.
   - `oracle memory store [local|chatgpt|hybrid]` shows or sets the mode.
 
+### Removed
+- **`oracle-memory` MCP sidecar orchestration.** The package is retired, and the
+  local file adapter always owned the `.oracle-memory/` on-disk format the
+  sidecar merely shared — so the supervisor could only ever spawn, fail, and
+  fall back to the adapter it would have used anyway. `ProcessSupervisor` and
+  `McpMemoryAdapter` are gone along with the `ORACLE_MEMORY_BIN` lookup and the
+  per-command spawn attempt. Memory behaviour is unchanged; the general
+  `mcpServers` integration is unaffected.
+
 ### Fixed
+- `detectSandboxMode` no longer fails intermittently: the docker probe is given
+  5s of its own, exactly vitest's default test budget, so on a host where
+  `docker info` runs to that limit the test raced its own probe.
 - Browser Mode no longer stalls with unexplained `CDP command ... timed out`
   errors when its Chrome window is minimized or fully covered. Chrome freezes
   the renderers of backgrounded and occluded windows, and a frozen renderer

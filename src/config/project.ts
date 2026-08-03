@@ -17,8 +17,8 @@ export interface McpServerConfig {
 
 /**
  * Where durable memory lives.
- * - `local`  — this machine only (SQLite/file store, optionally via the
- *   oracle-memory MCP sidecar). Full fidelity: ids, tags, importance, search.
+ * - `local`  — this machine only, written to `.oracle-memory/`. Full fidelity:
+ *   ids, tags, importance, search.
  * - `chatgpt` — the signed-in ChatGPT account's Saved Memory is the store.
  *   Requires the `chatgpt-browser` backend. Saved Memory has no ids, tags,
  *   timestamps, or reliable ordering, so this mode is best-effort: entries are

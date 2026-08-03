@@ -301,7 +301,7 @@ oracle memory store hybrid       # local canonical + mirror to ChatGPT
 
 | Store | Durable copy lives in | Use when |
 |---|---|---|
-| `local` (default) | This machine (SQLite/file, optionally the `oracle-memory` MCP sidecar) | You want full fidelity and nothing leaving the machine. |
+| `local` (default) | This machine, under `.oracle-memory/` | You want full fidelity and nothing leaving the machine. |
 | `chatgpt` | The signed-in ChatGPT account's Saved Memory | You want ChatGPT web conversations to be the single source of memory. |
 | `hybrid` | This machine, plus a mirror of selected entries in Saved Memory | You want local search and graph features *and* shared context on chatgpt.com. |
 

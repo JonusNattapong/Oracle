@@ -71,12 +71,3 @@ export interface MemoryPort {
   stopAutoMaintenance?(): void;
 }
 
-export type ServiceType = "memory";
-
-export interface ProcessStatus {
-  transport: "mcp" | "fallback";
-  endpoint?: string;
-  pid?: number;
-  port?: number;
-  reason?: string; // for fallback: why MCP failed
-}

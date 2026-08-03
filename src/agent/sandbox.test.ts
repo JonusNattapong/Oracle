@@ -76,10 +76,14 @@ describe("buildNamespaceArgs", () => {
 });
 
 describe("detectSandboxMode", () => {
+  // The docker probe is allowed 5s of its own, which is exactly vitest's default
+  // test budget — on a host where `docker info` runs to that limit (no daemon,
+  // or a slow one) the test raced its own probe and failed intermittently. Give
+  // the test more room than the probe it awaits.
   test("returns a supported mode for this host", async () => {
     const mode = await detectSandboxMode();
     expect(["docker", "namespace", "none"]).toContain(mode);
-  });
+  }, 20_000);
 
   test("namespaces are never reported as available off Linux", async () => {
     const available = await isNamespaceAvailable();
