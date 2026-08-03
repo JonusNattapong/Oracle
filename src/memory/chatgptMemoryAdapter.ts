@@ -7,12 +7,22 @@ import {
   MAX_ACCOUNT_MEMORY_CHARS
 } from "../backends/chatgpt-browser/accountMemory.js";
 import type { ExecutionBackend } from "../backends/backend.js";
+import type { AccountMemorySnapshot } from "../backends/chatgpt-browser/accountMemoryApi.js";
 import { OracleError } from "../errors.js";
 import type { MemoryPort } from "../orchestrator/ports.js";
 import type { MemoryStoreEntry, MemoryType } from "./adapter.js";
 
 /** Marks entries whose durable copy lives in the ChatGPT account, not on disk. */
 export const CHATGPT_MEMORY_SOURCE = "chatgpt-account";
+
+/** Optional backend capability: list Saved Memory from the account itself. */
+export interface AccountMemoryReader {
+  listAccountMemories(): Promise<AccountMemorySnapshot>;
+}
+
+function debugMemory(message: string): void {
+  if (process.env.ORACLE_DEBUG) console.debug(message);
+}
 
 export interface ChatGptMemoryAdapterOptions {
   /** Backend able to drive the signed-in ChatGPT session. */
@@ -140,15 +150,29 @@ export class ChatGptMemoryAdapter implements MemoryPort {
   /**
    * Reads Saved Memory, honouring the cache window.
    *
-   * An unreadable reply throws rather than resolving to an empty list. Returning
-   * `[]` here would let a refusal to enumerate Saved Memory look exactly like an
-   * empty account, so a recall would quietly report that Oracle remembers
-   * nothing while the entries are still there.
+   * Prefers the account's own listing; asking ChatGPT to describe its memory is
+   * only a fallback, because that route has been observed answering "no
+   * memories" for an account holding four. Either way an unreadable account
+   * throws — resolving to `[]` would let a refusal look exactly like an empty
+   * account and quietly report that Oracle remembers nothing.
    */
   private async readRemote(query?: string): Promise<string[]> {
     if (!query && this.cache && Date.now() - this.cache.at < this.cacheTtlMs) {
       return this.cache.entries;
     }
+
+    const reader = this.backend as Partial<AccountMemoryReader>;
+    if (typeof reader.listAccountMemories === "function") {
+      const snapshot = await reader.listAccountMemories();
+      if (snapshot.known) {
+        if (!query) this.cache = { at: Date.now(), entries: snapshot.entries };
+        return snapshot.entries;
+      }
+      debugMemory(
+        `[memory] account listing unavailable (${snapshot.reason}); asking ChatGPT instead`
+      );
+    }
+
     const reply = await this.askText(buildAccountMemoryRecallPrompt(query));
     const result = parseAccountMemoryRecall(reply);
     if (!result.readable) {

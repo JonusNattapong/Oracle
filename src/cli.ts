@@ -301,6 +301,15 @@ program
     }
 
     console.log(result.output);
+    if (result.accountMemoryRequested) {
+      // "Saved" is only claimed for a write checked against the account; an
+      // unverifiable one must not read as success.
+      console.error(
+        result.accountMemoryVerification === "verified"
+          ? "[memory] saved to your ChatGPT account and confirmed present."
+          : "[memory] ChatGPT reported the save, but it could not be confirmed against your account. Check Settings > Personalization > Manage memories."
+      );
+    }
     for (const image of result.images ?? []) {
       console.log(`[image] ${image.path} (${image.mimeType}, ${image.sizeBytes} bytes)`);
     }

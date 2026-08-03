@@ -190,9 +190,20 @@ Account memory is different from Oracle project memory:
 - Deleting the memory-command chat does not delete the saved memory. To remove
   it, tell ChatGPT to forget it or use **Settings > Personalization > Manage
   memories**. Consult ChatGPT's account UI for the authoritative stored list.
-- `accountMemorySaved: true` means ChatGPT returned the required success
-  confirmation. Browser Mode does not scrape the Manage Memories settings
-  screen for a second independent verification.
+- `accountMemorySaved: true` means the entry was found in the account after the
+  write. ChatGPT's own success confirmation alone is **not** enough: it has been
+  observed returning that confirmation for an entry the account never stored,
+  because ChatGPT decides for itself what is worth remembering. Oracle therefore
+  re-reads the account's own memory listing and only then reports success.
+- `accountMemoryVerification` carries what is actually known:
+  `verified` (checked and present), `unverified` (ChatGPT reported the save but
+  the account could not be inspected — neither success nor failure), or
+  `not-attempted`. A conclusive negative — the account is readable and does not
+  contain the entry — raises `ORACLE_ACCOUNT_MEMORY_NOT_CONFIRMED`.
+- The verification uses ChatGPT's internal memories endpoint from inside the
+  authenticated page; the session token never leaves the browser. It is not a
+  public API and may change, which is exactly why an unusable check degrades to
+  `unverified` instead of being treated as either answer.
 
 ### Saved Memory as Oracle's memory store
 

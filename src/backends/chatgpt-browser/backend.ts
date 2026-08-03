@@ -1,5 +1,6 @@
 import path from "node:path";
 import type {
+  AccountMemoryVerification,
   DoctorCheck,
   ExecutionBackend,
   ExecutionBackendCapabilities,
@@ -20,6 +21,11 @@ import {
   buildAccountMemoryPrompt,
   isAccountMemorySaveConfirmed
 } from "./accountMemory.js";
+import {
+  readAccountMemories,
+  verifyAccountMemoryWrite,
+  type AccountMemorySnapshot
+} from "./accountMemoryApi.js";
 import {
   persistBrowserImages,
   validateBrowserImage
@@ -51,6 +57,47 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
 
   async healthCheck(): Promise<DoctorCheck[]> {
     return this.diagnostics.runDoctor(this.config);
+  }
+
+  /**
+   * Reads Saved Memory from the account itself rather than by asking ChatGPT to
+   * describe it. The conversational route has been observed answering "no
+   * memories" for an account holding four, so it cannot be used to decide what
+   * is stored. Returns `known: false` when the account cannot be inspected —
+   * never an empty list standing in for an unknown one.
+   */
+  async listAccountMemories(): Promise<AccountMemorySnapshot> {
+    if (!this.config.enabled) {
+      return { known: false, reason: "browser mode is disabled" };
+    }
+    const launcher = new ChromeLauncher();
+    let session: CdpSession | undefined;
+    try {
+      const processInfo = await launcher.launch(this.config);
+      const target = await findOrCreatePageTarget(processInfo.port);
+      if (!target.webSocketDebuggerUrl) {
+        return { known: false, reason: "target page exposes no debugger URL" };
+      }
+      await ensureWindowNotMinimized(processInfo.port, target.id, async (wsUrl) => {
+        const browserSession = new CdpSession(wsUrl);
+        await browserSession.connect(5_000);
+        return {
+          send: (method, params, timeoutMs) => browserSession.send(method, params, timeoutMs),
+          close: () => browserSession.close()
+        };
+      });
+      session = new CdpSession(target.webSocketDebuggerUrl);
+      await session.connect();
+      await new ResponseMonitor(session).navigateToChatGPT("https://chatgpt.com", 60_000);
+      return await readAccountMemories(session);
+    } catch (error) {
+      return {
+        known: false,
+        reason: error instanceof Error ? error.message : String(error)
+      };
+    } finally {
+      session?.close();
+    }
   }
 
   async run(request: ExecutionBackendRequest): Promise<ExecutionBackendResponse> {
@@ -141,6 +188,7 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
       const timeoutMs = this.config.timeoutMs ?? 180000;
       let memoryInputTokens = 0;
       let memoryOutputTokens = 0;
+      let memoryVerification: AccountMemoryVerification = "not-attempted";
       if (request.accountMemory) {
         const memoryPrompt = buildAccountMemoryPrompt(request.accountMemory);
         await monitor.navigateToChatGPT("https://chatgpt.com", 60_000);
@@ -153,6 +201,27 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
             "ORACLE_ACCOUNT_MEMORY_NOT_CONFIRMED",
             `ChatGPT did not confirm the Saved Memory update: ${memoryResponse.slice(0, 300)}`,
             "Enable Memory in ChatGPT Settings > Personalization, then retry the explicit memory request."
+          );
+        }
+
+        // The confirmation above is the model's own claim, and it has been
+        // observed to arrive for entries the account never stored — ChatGPT
+        // decides for itself what is worth remembering. Check the account before
+        // reporting success, and treat an unreachable check as unverified rather
+        // than as either outcome.
+        const check = await verifyAccountMemoryWrite(session, request.accountMemory);
+        if (check.verified) {
+          memoryVerification = "verified";
+        } else if (check.conclusive) {
+          throw new OracleError(
+            "ORACLE_ACCOUNT_MEMORY_NOT_CONFIRMED",
+            "ChatGPT reported the memory as saved, but the account does not contain it.",
+            "ChatGPT stores only what it judges worth remembering; rephrase it as a durable fact or preference, or manage it under Settings > Personalization > Manage memories."
+          );
+        } else {
+          memoryVerification = "unverified";
+          console.warn(
+            `[account-memory] ChatGPT reported the save but the account could not be checked (${check.reason}). Reporting it as unverified.`
           );
         }
         await monitor.navigateToChatGPT(conversationUrl ?? "https://chatgpt.com", 60_000);
@@ -193,7 +262,12 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
       return {
         responseId,
         text,
-        accountMemorySaved: request.accountMemory ? true : undefined,
+        // Only a checked write counts as saved; an unverifiable one is reported
+        // through accountMemoryVerification instead of being claimed as success.
+        accountMemorySaved: request.accountMemory
+          ? memoryVerification === "verified"
+          : undefined,
+        accountMemoryVerification: request.accountMemory ? memoryVerification : undefined,
         images: images.length > 0 ? images : undefined,
         artifactWarnings: captured.warnings.length > 0 ? captured.warnings : undefined,
         usage: {

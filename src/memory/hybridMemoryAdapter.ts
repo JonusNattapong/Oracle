@@ -1,5 +1,5 @@
 import { MAX_ACCOUNT_MEMORY_CHARS } from "../backends/chatgpt-browser/accountMemory.js";
-import type { ExecutionBackend } from "../backends/backend.js";
+import type { AccountMemoryVerification, ExecutionBackend } from "../backends/backend.js";
 import type { MemoryMirrorConfig } from "../config/project.js";
 import type { MemoryPort } from "../orchestrator/ports.js";
 import type { MemoryStoreEntry, MemoryType } from "./adapter.js";
@@ -9,7 +9,14 @@ const MIRROR_ACK_PROMPT = "Reply with exactly: OK";
 
 export interface MirrorOutcome {
   attempted: boolean;
+  /** True only when the entry was confirmed present in the account. */
   saved: boolean;
+  /**
+   * `unverified` means ChatGPT reported the save but the account could not be
+   * inspected. It is neither a success nor a failure, and must not be shown as
+   * either — the entry may or may not be shared with chatgpt.com.
+   */
+  verification: AccountMemoryVerification;
   reason?: string;
 }
 
@@ -80,6 +87,7 @@ export class HybridMemoryAdapter implements MemoryPort {
       return {
         attempted: false,
         saved: false,
+        verification: "not-attempted",
         reason: `backend "${this.backend.id}" cannot write account memory`
       };
     }
@@ -95,16 +103,20 @@ export class HybridMemoryAdapter implements MemoryPort {
         cwd: this.cwd,
         accountMemory: entry.content
       });
-      const saved = Boolean(response.accountMemorySaved);
+      const verification = response.accountMemoryVerification ?? "unverified";
       return {
         attempted: true,
-        saved,
-        reason: saved ? undefined : "ChatGPT did not confirm the save"
+        saved: Boolean(response.accountMemorySaved),
+        verification,
+        reason: verification === "verified"
+          ? undefined
+          : "ChatGPT reported the save but the account could not be checked"
       };
     } catch (error) {
       return {
         attempted: true,
         saved: false,
+        verification: "not-attempted",
         reason: error instanceof Error ? error.message : String(error)
       };
     }
@@ -125,12 +137,23 @@ export class HybridMemoryAdapter implements MemoryPort {
     this.onMirror?.(entry, outcome);
     if (!outcome.saved) {
       console.warn(
-        `[memory] mirror to ChatGPT account failed for ${entry.id}: ${outcome.reason ?? "unknown reason"}`
+        outcome.verification === "unverified"
+          ? `[memory] mirror to ChatGPT account is unverified for ${entry.id}: ${outcome.reason ?? "the account could not be checked"}`
+          : `[memory] mirror to ChatGPT account failed for ${entry.id}: ${outcome.reason ?? "unknown reason"}`
       );
     }
     // The returned entry carries the outcome so callers can surface it; the
-    // durable record is the local one, which is already written.
-    return { ...entry, meta: { ...entry.meta, mirrored: outcome.saved } };
+    // durable record is the local one, which is already written. `mirrored` is
+    // true only for a checked write — `mirrorVerification` distinguishes an
+    // unverifiable attempt from an outright failure.
+    return {
+      ...entry,
+      meta: {
+        ...entry.meta,
+        mirrored: outcome.saved,
+        mirrorVerification: outcome.verification
+      }
+    };
   }
 
   // ── Everything else is the local store verbatim ───────────────────

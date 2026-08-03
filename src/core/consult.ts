@@ -191,6 +191,7 @@ export class ConsultService {
         completedAt: new Date().toISOString(),
         responseId: response.responseId,
         accountMemorySaved: response.accountMemorySaved,
+        accountMemoryVerification: response.accountMemoryVerification,
         images: responseImages,
         artifactWarnings: response.artifactWarnings,
         output: response.text,

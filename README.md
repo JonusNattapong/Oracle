@@ -333,7 +333,11 @@ Oracle does not paper over the difference:
   returns an empty list is treated as unreadable and raises an error, because
   that is also what a refusal to enumerate Saved Memory looks like. An
   unreadable account never reports itself as "no memories".
-- Writes and deletes only count as done when ChatGPT confirms them.
+- A write counts as saved only when the entry is found in the account
+  afterwards. ChatGPT's own "saved" confirmation is not sufficient — it has been
+  observed for entries the account never stored, because ChatGPT decides for
+  itself what is worth remembering. When the account cannot be inspected, the
+  write is reported as *unverified* rather than as a success or a failure.
 - `working` memory always stays local — it is short-lived scratch state, and
   Saved Memory is account-wide and user-visible.
 - In `hybrid` mode, `oracle memory forget` removes the local copy only. The

@@ -62,7 +62,10 @@ export interface ConsultResult {
   responseId?: string;
   conversationId?: string;
   accountMemoryRequested?: boolean;
+  /** True only when the write was confirmed against the account itself. */
   accountMemorySaved?: boolean;
+  /** Distinguishes a checked save from one that could not be verified. */
+  accountMemoryVerification?: "verified" | "unverified" | "not-attempted";
   images?: ImageArtifact[];
   artifactWarnings?: string[];
   output: string;

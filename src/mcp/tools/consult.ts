@@ -162,6 +162,7 @@ export function registerConsultTool(
           conversationId: result.conversationId,
           accountMemoryRequested: result.accountMemoryRequested,
           accountMemorySaved: result.accountMemorySaved,
+          accountMemoryVerification: result.accountMemoryVerification,
           filesIncluded: result.files.length,
           images: result.images ?? [],
           artifactWarnings: result.artifactWarnings ?? []

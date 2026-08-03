@@ -18,7 +18,7 @@ import type {
 import { loadProjectConfig } from "../config/project.js";
 import { MemoryAdapter } from "./adapter.js";
 import { ChatGptMemoryAdapter } from "./chatgptMemoryAdapter.js";
-import { HybridMemoryAdapter, shouldMirror } from "./hybridMemoryAdapter.js";
+import { HybridMemoryAdapter, shouldMirror, type MirrorOutcome } from "./hybridMemoryAdapter.js";
 
 /** Scriptable stand-in for the chatgpt-browser backend. */
 class FakeChatGptBackend implements ExecutionBackend {
@@ -41,6 +41,8 @@ class FakeChatGptBackend implements ExecutionBackend {
   refuseSave = false;
   /** When true, the account declines to enumerate Saved Memory. */
   refuseRead = false;
+  /** When true, ChatGPT claims the save but the account cannot be checked. */
+  unverifiableSave = false;
 
   async run(request: ExecutionBackendRequest): Promise<ExecutionBackendResponse> {
     this.requests.push(request);
@@ -77,8 +79,12 @@ class FakeChatGptBackend implements ExecutionBackend {
       if (this.refuseSave) {
         throw new Error("ChatGPT did not confirm the Saved Memory update");
       }
+      if (this.unverifiableSave) {
+        // ChatGPT claimed the save, but the account could not be inspected.
+        return { text: "OK", usage, accountMemorySaved: false, accountMemoryVerification: "unverified" };
+      }
       this.saved.push(request.accountMemory);
-      return { text: "OK", usage, accountMemorySaved: true };
+      return { text: "OK", usage, accountMemorySaved: true, accountMemoryVerification: "verified" };
     }
     return { text: "", usage };
   }
@@ -419,12 +425,66 @@ describe("HybridMemoryAdapter", () => {
 
     expect(entry.meta.mirrored).toBe(false);
     expect(outcomes).toEqual([
-      { attempted: true, saved: false, reason: "chrome profile is locked" }
+      {
+        attempted: true,
+        saved: false,
+        verification: "not-attempted",
+        reason: "chrome profile is locked"
+      }
     ]);
     expect(warn).toHaveBeenCalled();
     const stored = await local.recall({ limit: 10 });
     expect(stored.map((e) => e.content)).toContain("Survives the mirror failure");
     warn.mockRestore();
+  });
+
+  test("does not claim a mirror that could not be verified", async () => {
+    // The live failure this guards: ChatGPT answered ORACLE_MEMORY_SAVED for an
+    // entry the account never stored, and hybrid reported mirrored=true. An
+    // unverifiable write must read as unverified, never as success.
+    const backend = new FakeChatGptBackend();
+    backend.unverifiableSave = true;
+    const local = new MemoryAdapter(workspace);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const outcomes: MirrorOutcome[] = [];
+
+    const adapter = new HybridMemoryAdapter({
+      local,
+      backend,
+      mirror: { minImportance: 0.5, types: ["fact"] },
+      cwd: workspace,
+      onMirror: (_entry, outcome) => outcomes.push(outcome)
+    });
+
+    const entry = await adapter.remember("oracle", "fact", "Claimed but unconfirmed", {
+      importance: 0.9
+    });
+
+    expect(entry.meta.mirrored).toBe(false);
+    expect(entry.meta.mirrorVerification).toBe("unverified");
+    expect(outcomes[0].verification).toBe("unverified");
+    expect(warn.mock.calls[0][0]).toMatch(/unverified/i);
+    // The local write is untouched either way.
+    const stored = await local.recall({ limit: 10 });
+    expect(stored.map((e) => e.content)).toContain("Claimed but unconfirmed");
+    warn.mockRestore();
+  });
+
+  test("marks a verified mirror as mirrored", async () => {
+    const backend = new FakeChatGptBackend();
+    const adapter = new HybridMemoryAdapter({
+      local: new MemoryAdapter(workspace),
+      backend,
+      mirror: { minImportance: 0.5, types: ["fact"] },
+      cwd: workspace
+    });
+
+    const entry = await adapter.remember("oracle", "fact", "Confirmed in the account", {
+      importance: 0.9
+    });
+
+    expect(entry.meta.mirrored).toBe(true);
+    expect(entry.meta.mirrorVerification).toBe("verified");
   });
 
   test("forget removes the local copy and leaves account memory untouched", async () => {

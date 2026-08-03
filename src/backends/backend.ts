@@ -25,12 +25,27 @@ export interface ExecutionBackendRequest {
   artifactsDir?: string;
 }
 
+/**
+ * How much is actually known about an account-memory write.
+ * - `verified`   — the account was inspected and contains the entry.
+ * - `unverified` — the backend was told it saved, but the account could not be
+ *   inspected to confirm it. Not a success claim.
+ * - `not-attempted` — no account memory was requested.
+ */
+export type AccountMemoryVerification = "verified" | "unverified" | "not-attempted";
+
 export interface ExecutionBackendResponse {
   responseId?: string;
   text: string;
   usage: TokenUsage;
-  /** True only when the backend received an explicit successful save confirmation. */
+  /**
+   * True only when the write was confirmed against the account itself. A model
+   * saying "saved" is not sufficient: that claim has been observed for entries
+   * the account never stored. See `accountMemoryVerification` to tell a checked
+   * success from an unverifiable one.
+   */
   accountMemorySaved?: boolean;
+  accountMemoryVerification?: AccountMemoryVerification;
   images?: ImageArtifact[];
   artifactWarnings?: string[];
 }

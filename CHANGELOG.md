@@ -48,6 +48,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `mcpServers` integration is unaffected.
 
 ### Fixed
+- ChatGPT account-memory writes are no longer reported as saved on the model's
+  say-so. Observed live: ChatGPT returned the required `ORACLE_MEMORY_SAVED`
+  confirmation for an entry the account never stored — it stores only what it
+  judges worth remembering — and `hybrid` mode reported `mirrored: true` for a
+  memory that was never shared with chatgpt.com. Writes are now verified against
+  the account's own memory listing; a conclusive negative raises
+  `ORACLE_ACCOUNT_MEMORY_NOT_CONFIRMED`, and an uninspectable account yields
+  `accountMemoryVerification: "unverified"` rather than a success claim.
+- Saved Memory reads now come from the account listing when available, falling
+  back to asking ChatGPT only when it is not.
 - `detectSandboxMode` no longer fails intermittently: the docker probe is given
   5s of its own, exactly vitest's default test budget, so on a host where
   `docker info` runs to that limit the test raced its own probe.

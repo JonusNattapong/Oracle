@@ -81,7 +81,11 @@ Saved Memory is a weaker store than the local one:
   best-effort. Emptiness must be stated with an explicit marker; an empty list,
   a malformed reply, or a refusal all raise an error instead of reporting an
   empty memory, so a full account is never mistaken for an empty one.
-- Writes and deletes count only when ChatGPT confirms them.
+- A write counts as saved only when the entry is verified present in the account
+  afterwards; ChatGPT's own confirmation has been observed to arrive for entries
+  it never stored. An uninspectable account yields *unverified*, not success.
+  In `hybrid` mode the entry carries `meta.mirrored` (verified only) and
+  `meta.mirrorVerification` (`verified` / `unverified` / `not-attempted`).
 - `working` memory never leaves the machine.
 - In `hybrid` mode, `forget` removes the local copy only; the mirrored entry
   stays in the account until deleted from ChatGPT settings → Personalization →
