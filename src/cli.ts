@@ -1023,6 +1023,26 @@ browserCmd
   });
 
 browserCmd
+  .command("stop")
+  .description("Close the Oracle Chrome profile left running for Browser Mode")
+  .action(async () => {
+    const projectConfig = await loadProjectConfig(process.cwd());
+    const runtimeOptions = backendRuntimeOptions(projectConfig);
+    const profileDir = runtimeOptions.browser.profileDir;
+    const { closeActiveOracleChrome } = await import("./backends/chatgpt-browser/chrome.js");
+
+    // Browser Mode deliberately leaves Chrome running so consecutive consults
+    // reuse one session. On a machine short on memory that is worth reclaiming
+    // between runs; the profile — and the login in it — stays on disk.
+    const closed = await closeActiveOracleChrome(profileDir);
+    console.log(
+      closed
+        ? `Closed the Oracle Chrome profile at ${profileDir}. Your ChatGPT login is kept.`
+        : "No Oracle Chrome instance is running."
+    );
+  });
+
+browserCmd
   .command("open")
   .description("Open ChatGPT in Chrome with Oracle profile")
   .action(async () => {

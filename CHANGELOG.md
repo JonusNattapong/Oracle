@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`oracle browser stop`** — closes the Chrome instance Browser Mode leaves
+  running for session reuse, reclaiming its memory. The profile and its ChatGPT
+  login stay on disk; running it with nothing up is a no-op.
+
 - **Automatic project-memory recall in `oracle ask` and `oracle_ask`**
   - Memory relevant to the question is recalled and included as a labelled
     prompt block, so answers are grounded in what Oracle has stored. Previously

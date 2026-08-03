@@ -64,6 +64,12 @@ oracle ask "Review this design" --remember "I prefer concise architecture review
 `oracle browser open` reopens the same isolated profile. Leave that Chrome
 session open while running consults.
 
+`oracle browser stop` closes it. Browser Mode keeps Chrome running on purpose so
+consecutive consults reuse one session, but that instance — profile plus any
+extensions installed in it — holds real memory, which is worth reclaiming on a
+constrained machine. The profile and its ChatGPT login stay on disk, so the next
+consult simply starts a fresh instance; running it when nothing is up is a no-op.
+
 `oracle browser login` is a manual recovery flow. It closes only the verified
 Chrome instance belonging to Oracle's isolated profile, then reopens that
 profile without remote-debugging flags so OAuth providers do not classify the

@@ -150,6 +150,25 @@ session. See the memory storage table in the README for the trade-offs.
 
 ---
 
+### oracle browser
+
+Manage the isolated Chrome profile used by ChatGPT Browser Mode.
+
+```bash
+oracle browser setup            # create the profile and log in
+oracle browser login            # re-open for manual login, no automation flags
+oracle browser status --live    # verify the saved session
+oracle browser open             # open ChatGPT in the Oracle profile
+oracle browser stop             # close it and reclaim the memory
+```
+
+Browser Mode deliberately leaves Chrome running so consecutive consults reuse
+one session. `oracle browser stop` closes it when that memory is worth
+reclaiming; the profile and its ChatGPT login stay on disk, so the next consult
+just starts a fresh instance. Running it when nothing is up is a no-op.
+
+---
+
 ### oracle wiki
 
 Compile memory into topic-grouped wiki pages.
