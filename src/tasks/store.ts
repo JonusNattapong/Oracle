@@ -7,6 +7,7 @@ import {
   type TaskProposal,
   type VoteDecision
 } from "./consensus.js";
+import { breakdownGoal, type BreakdownOptions } from "./breakdown.js";
 
 /**
  * Task tracking for multi-agent work: a lead breaks work into tasks, assigns
@@ -176,6 +177,34 @@ export class TaskStore {
     }));
     await this.writeAtomic(this.filePath(record.id), record);
     return record;
+  }
+
+  async createBreakdown(
+    goal: string,
+    opts: { createdBy: string; defaultAssignee?: string; workflowId?: string }
+  ): Promise<TaskRecord[]> {
+    const items = breakdownGoal(goal, { defaultAssignee: opts.defaultAssignee, createdBy: opts.createdBy, workflowId: opts.workflowId });
+    const records: TaskRecord[] = [];
+    let parentId: string | undefined;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const task = await this.create({
+        title: item.title,
+        description: item.description,
+        createdBy: opts.createdBy,
+        assignee: item.assignee,
+        checklist: item.checklist,
+        parentId,
+        workflowId: opts.workflowId
+      });
+      if (i === 0) {
+        parentId = task.id;
+      }
+      records.push(task);
+    }
+
+    return records;
   }
 
   async get(id: string): Promise<TaskRecord | null> {

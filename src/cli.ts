@@ -1533,6 +1533,22 @@ taskCmd
   });
 
 taskCmd
+  .command("breakdown")
+  .description("Decompose a high-level goal into sub-tasks with verification checklists")
+  .argument("<goal>", "High-level goal prompt")
+  .option("--created-by <agent>", "Your agent name (reviews/closes sub-tasks)", "lead")
+  .option("--assignee <agent>", "Default assignee for work items", "coder")
+  .action(async (goal, options) => {
+    const tasks = new TaskStore(homeDir());
+    const created = await tasks.createBreakdown(goal, {
+      createdBy: options.createdBy,
+      defaultAssignee: options.assignee
+    });
+    console.log(`Decomposed goal into ${created.length} sub-task(s) with verification checklists:`);
+    for (const t of created) printTask(t);
+  });
+
+taskCmd
   .command("list")
   .description("List tasks, optionally filtered")
   .option("--assignee <agent>")

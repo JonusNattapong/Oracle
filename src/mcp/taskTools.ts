@@ -138,6 +138,31 @@ export function registerTaskTools(
   );
 
   server.registerTool(
+    "oracle_task_breakdown",
+    {
+      title: "Breakdown High-Level Goal Into Tasks",
+      description:
+        "Decompose a high-level goal prompt into actionable sub-tasks with verification checklists.",
+      inputSchema: {
+        goal: z.string().min(1).max(2000).describe("High-level goal prompt"),
+        createdBy: z.string().min(1).default("lead").describe("Your agent name"),
+        defaultAssignee: z.string().min(1).default("coder").describe("Target assignee for implementation sub-tasks"),
+        workflowId: z.string().optional().describe("Optional workflow grouping ID")
+      }
+    },
+    async ({ goal, createdBy, defaultAssignee, workflowId }) => {
+      try {
+        const created = await tasks.createBreakdown(goal, { createdBy, defaultAssignee, workflowId });
+        const summary = created.map((t) => formatTask(t)).join("\n");
+        return success(`Created ${created.length} sub-task(s) with verification checklists:\n${summary}`, {
+          count: created.length,
+          tasks: created as unknown as Record<string, unknown>[]
+        });
+      } catch (error) { return failure(error); }
+    }
+  );
+
+  server.registerTool(
     "oracle_task_list",
     {
       title: "List Tasks",
