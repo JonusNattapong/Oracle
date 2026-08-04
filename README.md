@@ -33,12 +33,11 @@ agent request
 
 ## Start in four commands
 
-Oracle requires Node.js 24 or newer. The default backend is the locally
-authenticated Codex CLI.
+Oracle requires Node.js 24 or newer. The default primary backend is **ChatGPT Browser Mode (`chatgpt-browser`)**, controlling Chrome via DevTools CDP with zero API key required.
 
 ```bash
 npm install -g @oraclepersonal/oracle
-codex login
+oracle browser setup
 oracle doctor
 oracle ask "Map the error-handling path and identify one missing test" -f "src/**/*.ts"
 ```
@@ -262,13 +261,13 @@ routing, or environment configuration.
 
 | Backend | Consult | Agent loop | Authentication / note |
 |---|:---:|:---:|---|
-| **Codex CLI** | Yes | Yes | Default; uses `codex login` |
+| **ChatGPT Browser Mode** | Yes | No | **Default**; headed Chrome DevTools CDP with ARIA fallback chain, zero API keys required |
+| **Codex CLI** | Yes | Yes | Local `codex login` |
 | **Anthropic** | Yes | Yes | `ANTHROPIC_API_KEY` or `oracle login --provider anthropic` |
 | **OpenAI** | Yes | No | `OPENAI_API_KEY` |
 | **Gemini** | Yes | No | `GEMINI_API_KEY` or `GOOGLE_API_KEY` |
 | **OpenCode-compatible** | Yes | Yes | OpenAI-compatible endpoint and configured credentials |
 | **Azure OpenAI / OpenRouter** | Yes | No | Provider-specific endpoint and credentials |
-| **ChatGPT Browser Mode** | Yes | No | Experimental, headed Chrome, manual account login, local-interactive use |
 
 Inspect the route before debugging model behavior:
 
@@ -289,7 +288,7 @@ Then edit `.oracle/config.json`:
 
 ```json
 {
-  "backend": "codex",
+  "backend": "chatgpt-browser",
   "model": "auto",
   "include": ["src/**/*.ts", "docs/**/*.md"],
   "exclude": ["**/node_modules/**", "**/dist/**", "**/*.secret"]

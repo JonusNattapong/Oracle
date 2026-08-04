@@ -4,15 +4,13 @@ title: ChatGPT Browser Mode
 
 # ChatGPT Browser Mode
 
-ChatGPT Browser Mode is an experimental execution backend that sends Oracle's
-rendered prompt and file bundle through a visible Chrome session. It uses the
-ChatGPT account that the user logs into manually, so it does not require an API
-key.
+ChatGPT Browser Mode is the **primary default execution backend** in Oracle Ecosystems.
+It sends Oracle's rendered prompt and file bundle through a visible Chrome session using
+the user's manually authenticated ChatGPT account, requiring **zero API keys**.
 
-This is UI automation, not the OpenAI API. The ChatGPT DOM can change without
-notice, structured token usage is unavailable, and the backend is intended for
-interactive local use rather than unattended production workloads. Review the
-service terms that apply to your account before enabling it.
+This UI automation features a robust **W3C ARIA Accessibility Fallback Chain Engine**,
+automated web model selection (e.g. `GPT-4o`, `o3-mini`, `Canvas`), and proactive
+Cloudflare Turnstile challenge diagnostics.
 
 ## Configure
 
