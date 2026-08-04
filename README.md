@@ -285,6 +285,7 @@ oracle agent "Implement rate limiting and update documentation" --plan
 ### ChatGPT Browser Mode Enhancements
 
 The default backend now includes:
+- **Response Streaming** — captures conversation responses directly from the CDP Network domain with incremental SSE parsing, full-message and JSON patch delta support, optional usage metadata, and DOM polling fallback. The stream reader implements reliable request tracking via `Network.requestWillBeSent` events to avoid false positives and includes proper cleanup to prevent memory leaks.
 - **ARIA Fallback Chain** — robust element finding via accessibility tree + DOM selectors
 - **Cloudflare Challenge Diagnostics** — automatic detection and troubleshooting of Cloudflare blocks
 - **Model Switching** — dynamically select Claude, GPT-4, or other available models within ChatGPT
