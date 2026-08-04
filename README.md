@@ -416,6 +416,7 @@ Run `oracle --help` or open the
 | Goal | Read |
 |---|---|
 | Install and complete a first consult | [Getting started](docs/getting-started.md) |
+| Follow standard working process & workflows | [Standard Working Process (SOP)](docs/WORKFLOW.md) |
 | Understand components and storage | [Architecture](docs/architecture.md) |
 | Configure a workspace | [Configuration schema](docs/config-schema.md) |
 | Look up CLI options | [CLI reference](docs/cli-reference.md) |
