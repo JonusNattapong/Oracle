@@ -132,6 +132,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `mcpServers` integration is unaffected.
 
 ### Fixed
+- **ChatGPT Browser Stream Reader request tracking** — the `ChatGptStreamReader`
+  was using an undeclared `turnRequestIds` Set field, causing runtime errors when
+  attempting to read response streams. Added proper field initialization and
+  improved request identification to track conversation turns from
+  `Network.requestWillBeSent` events instead of checking response URLs directly,
+  which was prone to false positives. Added cleanup to prevent memory leaks when
+  the reader is reused. All 651 unit tests pass and live verification confirmed.
 - ChatGPT Browser Mode no longer returns a quota notice as if it were the
   model's answer, and no longer reports a mid-turn Cloudflare challenge as a
   bare three-minute timeout — the challenge is named, with a diagnostic
