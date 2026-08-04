@@ -25,7 +25,7 @@ describe("ensureProjectConfig", () => {
     await fs.writeFile(configPath, '{"model":"custom"}\n', "utf8");
     await ensureProjectConfig(root);
 
-    expect(JSON.parse(first)).toMatchObject({ backend: "codex", model: "gpt-5.4" });
+    expect(JSON.parse(first)).toMatchObject({ backend: "chatgpt-browser", model: "gpt-5.4" });
     expect(JSON.parse(first)).not.toHaveProperty("provider");
     await expect(fs.readFile(configPath, "utf8")).resolves.toBe('{"model":"custom"}\n');
   });

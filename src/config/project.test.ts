@@ -42,7 +42,7 @@ describe("loadProjectConfig", () => {
       serve: { host: "0.0.0.0", port: 9474, manualLogin: false }
     });
     await expect(loadProjectConfig(root)).resolves.toMatchObject({
-      backend: "codex",
+      backend: "chatgpt-browser",
       provider: "auto",
       include: ["lib/**/*.ts"],
       browser: {

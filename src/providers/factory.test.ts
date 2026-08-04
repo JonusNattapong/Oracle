@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { CodexCliProvider } from "./codex.js";
+import { ChatGptBrowserBackend } from "../backends/chatgpt-browser/backend.js";
 import {
   createExecutionBackend,
   createProvider,
@@ -13,8 +14,8 @@ import {
 import { TokenStore } from "../auth/store.js";
 
 describe("provider factory", () => {
-  test("creates Codex by default", () => {
-    expect(createProvider()).toBeInstanceOf(CodexCliProvider);
+  test("creates ChatGPT Browser by default", () => {
+    expect(createProvider()).toBeInstanceOf(ChatGptBrowserBackend);
   });
 
   test("reports Codex version and login readiness", async () => {

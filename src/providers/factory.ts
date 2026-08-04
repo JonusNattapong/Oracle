@@ -114,7 +114,7 @@ function createAnthropicProvider(): AnthropicProvider {
 }
 
 export function createExecutionBackend(
-  name: BackendName = "codex",
+  name: BackendName = "chatgpt-browser",
   options: CreateExecutionBackendOptions = {}
 ): Provider {
   switch (name) {
@@ -132,13 +132,21 @@ export function createExecutionBackend(
       return new ChatGptBrowserBackend({
         profileDir: options.browser?.profileDir
           ?? path.join(options.homeDir ?? oracleHomeDir(), "chrome-profile"),
-        enabled: options.experimentalBrowserMode ?? false,
+        enabled: options.experimentalBrowserMode ?? true,
         headed: true,
         timeoutMs: options.browser?.timeoutMs
       });
     case "azure": return new AzureOpenAIProvider(options.azure);
     case "openrouter": return new OpenRouterProvider(options.openrouter);
-    default: return new CodexCliProvider();
+    case "codex": return new CodexCliProvider();
+    default:
+      return new ChatGptBrowserBackend({
+        profileDir: options.browser?.profileDir
+          ?? path.join(options.homeDir ?? oracleHomeDir(), "chrome-profile"),
+        enabled: options.experimentalBrowserMode ?? true,
+        headed: true,
+        timeoutMs: options.browser?.timeoutMs
+      });
   }
 }
 

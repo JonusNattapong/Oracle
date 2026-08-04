@@ -65,7 +65,7 @@ describe("resolveProviderRoute", () => {
         config: config(),
         environment: {}
       }).provider
-    ).toBe("browser");
+    ).toBe("chatgpt-browser");
   });
 
   test("supports explicit Azure model prefixes without exposing credentials", () => {

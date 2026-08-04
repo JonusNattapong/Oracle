@@ -102,6 +102,17 @@ function describe(
       configured
     };
   }
+  if (provider === "chatgpt-browser") {
+    return {
+      requestedModel: model,
+      model,
+      provider,
+      source,
+      endpoint: "ChatGPT Web Browser (Chrome CDP)",
+      credentialSource: "ChatGPT Chrome session",
+      configured: true
+    };
+  }
   return {
     requestedModel: model,
     model,
@@ -142,20 +153,20 @@ export function resolveProviderRoute(input: {
   if (model.includes("/")) {
     return describe("openrouter", model, "model-prefix", input.config, environment);
   }
-  if (/^claude[-.:]/i.test(model)) {
+  if (/^claude[-.:]/i.test(model) && environment.ANTHROPIC_API_KEY) {
     return describe("anthropic", model, "model-prefix", input.config, environment);
   }
   if (/^(gpt|o\d|chatgpt)[-.:]/i.test(model)) {
-    if (input.config.routing.preferAzure) {
+    if (input.config.routing.preferAzure && environment.AZURE_OPENAI_API_KEY) {
       return describe("azure", model, "project-config", input.config, environment);
     }
     if (environment.OPENAI_API_KEY) {
       return describe("openai", model, "environment", input.config, environment);
     }
-    return describe("browser", model, "environment", input.config, environment);
+    return describe("chatgpt-browser", model, "environment", input.config, environment);
   }
   return describe(
-    input.config.routing.defaultProvider,
+    input.config.routing.defaultProvider ?? "chatgpt-browser",
     model,
     "default",
     input.config,

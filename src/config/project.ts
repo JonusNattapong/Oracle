@@ -265,8 +265,8 @@ const schema = z
   .strict();
 
 export const DEFAULT_PROJECT_CONFIG: Readonly<ProjectConfig> = Object.freeze({
-  backend: "codex",
-  provider: "codex",
+  backend: "chatgpt-browser",
+  provider: "chatgpt-browser",
   model: "gpt-5.4",
   include: Object.freeze(["src/**/*", "README.md", "package.json"]) as unknown as string[],
   exclude: Object.freeze([
@@ -286,7 +286,7 @@ export const DEFAULT_PROJECT_CONFIG: Readonly<ProjectConfig> = Object.freeze({
       types: Object.freeze(["fact", "insight"]) as unknown as MemoryMirrorConfig["types"],
     }),
   }) as unknown as MemoryConfig,
-  experimental: Object.freeze({ browserMode: false }),
+  experimental: Object.freeze({ browserMode: true }),
   browser: Object.freeze({
     model: "gpt-5.6-sol",
     manualLogin: false,
@@ -318,7 +318,7 @@ export const DEFAULT_PROJECT_CONFIG: Readonly<ProjectConfig> = Object.freeze({
     baseURL: "https://openrouter.ai/api/v1",
   }),
   routing: Object.freeze({
-    defaultProvider: "codex",
+    defaultProvider: "chatgpt-browser",
     preferAzure: false,
   }),
   serve: Object.freeze({
