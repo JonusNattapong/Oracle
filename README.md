@@ -474,6 +474,17 @@ Oracle builds on the vision and open-source prototype created by
 that consultation workflow into persistent memory, explicit identity,
 multi-agent coordination, guarded action, and a local control plane.
 
+## Comparison with Related Projects
+
+| Feature / Capability | [steipete/oracle](https://github.com/steipete/oracle) | [Soul-Brews-Studio/maw-js](https://github.com/Soul-Brews-Studio/maw-js) | **Oracle-Ecosystems** (This Repo) |
+|---|---|---|---|
+| **Primary Focus** | Single-agent Q&A & context bundling | Multi-agent process runner & `tmux` orchestrator | Coordination kernel, persistent memory & agent execution platform |
+| **Runtime Architecture** | Single-turn CLI / Browser consult | Bun runtime, `tmux` window manager & Web UI | Dual MCP stdio servers (`oracle-mcp`, `oracle-msg-mcp`), CLI & Runtime Daemon |
+| **Multi-Agent Coordination** | ❌ None (Single-session focus) | `tmux` pane management & process pings | SQLite WAL bus, presence, consensus voting & Remote Swarm |
+| **Task Verification Gate** | ❌ None | ❌ None | Mandatory checklist-gated submission (`oracle_task_submit`) |
+| **Memory Architecture** | Transient context bundling | Plugin-based session context | BM25 + Vector hybrid memory, entity knowledge graph, auto-consolidation & Wiki |
+| **Governance & Safety** | Workspace path checks | Plugin hooks | ACTB Governance Framework, Docker execution sandbox, tamper-evident audit chain |
+
 ## License
 
 [MIT](LICENSE)
