@@ -2,7 +2,10 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    exclude: ["**/node_modules/**", "dist/**", "examples/**"],
+    // `.clew/worktrees/**` holds full checkouts of this repo for in-flight agent
+    // work. Their tests are mid-edit by definition, so collecting them mixes
+    // another branch's failures into this one's results.
+    exclude: ["**/node_modules/**", "dist/**", "**/examples/**", "**/.clew/**"],
     // Much of this suite does real work — writing memory entries to disk,
     // spawning processes, probing for docker — rather than exercising pure
     // functions. Several such tests sat just under vitest's 5s default and

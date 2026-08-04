@@ -113,7 +113,10 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await fs.rm(workspace, { recursive: true, force: true });
+  // maxRetries: on Windows a just-closed handle can still hold a directory long
+  // enough for the recursive walk to hit ENOTEMPTY. Without retries the failure
+  // lands on whichever test happened to run last, which reads as a flaky suite.
+  await fs.rm(workspace, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 describe("memory store configuration", () => {

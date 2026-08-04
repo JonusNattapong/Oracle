@@ -28,6 +28,36 @@ describe("scanFilesForSecrets", () => {
     expect(scanFilesForSecrets([file(content)])).toEqual([]);
   });
 
+  test.each([
+    "function decodePlanTier(accessToken: string): PlanTier {",
+    "  apiKey: string;",
+    "async function refresh(clientSecret: string, token: string): Promise<void> {",
+    "  password?: Record<string, unknown>;",
+    "const read = (authToken: Buffer): number => authToken.length;"
+  ])("allows TypeScript type annotation %s", (content) => {
+    expect(scanFilesForSecrets([file(content)])).toEqual([]);
+  });
+
+  test.each([
+    "      accessToken: data.access_token,",
+    "const key = config.auth.apiKey;",
+    "  clientSecret: options?.client_secret"
+  ])("allows a value that references a secret instead of embedding it %s", (content) => {
+    expect(scanFilesForSecrets([file(content)])).toEqual([]);
+  });
+
+  test("still reports a bare unquoted literal", () => {
+    expect(scanFilesForSecrets([file("PASSWORD=hunter2000")])).toEqual([
+      { path: "config.txt", line: 1, detector: "sensitive-assignment" }
+    ]);
+  });
+
+  test("still reports a quoted value that merely looks like a type name", () => {
+    expect(scanFilesForSecrets([file('password: "stringy-actual-value"')])).toEqual([
+      { path: "config.txt", line: 1, detector: "sensitive-assignment" }
+    ]);
+  });
+
   test("does not include secret values in findings", () => {
     const secret = "extremely-sensitive-value";
     expect(JSON.stringify(scanFilesForSecrets([file(`password=${secret}`)]))).not.toContain(
