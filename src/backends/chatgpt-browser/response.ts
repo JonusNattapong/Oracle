@@ -261,6 +261,7 @@ export class ResponseMonitor {
     const controls = await this.session.evaluate<{
       hasAccountControl: boolean;
       hasLoginControl: boolean;
+      isCloudflare: boolean;
     }>(`
       (function() {
         const visible = (element) => Boolean(
@@ -278,12 +279,20 @@ export class ResponseMonitor {
         const login = document.querySelector(
           '[data-testid="login-button"],[data-testid="signup-button"]'
         );
+        const cf = document.querySelector('#challenge-running, .cf-turnstile, #turnstile-wrapper');
         return {
           hasAccountControl: visible(account),
-          hasLoginControl: visible(login)
+          hasLoginControl: visible(login),
+          isCloudflare: visible(cf)
         };
       })()
     `);
+    if (controls.isCloudflare) {
+      return {
+        authenticated: false,
+        detail: "Cloudflare Turnstile challenge detected; complete verification in Chrome via `oracle browser setup`."
+      };
+    }
     return controls.hasAccountControl && !controls.hasLoginControl
       ? {
           authenticated: true,
@@ -463,6 +472,42 @@ export class ResponseMonitor {
          return text.toLowerCase().includes(${JSON.stringify(label.toLowerCase())});
        })()`
     );
+  }
+
+  /**
+   * Selects a model in the ChatGPT web UI (e.g. GPT-4o, o3-mini, Canvas).
+   */
+  async selectModel(modelName: string): Promise<boolean> {
+    const selectors = JSON.stringify(CHATGPT_SELECTORS.modelSelector);
+    const modelBtn = await this.centreOf(
+      `(() => {
+         const selectors = ${selectors};
+         for (const sel of selectors) {
+           const btn = document.querySelector(sel);
+           if (btn && btn.getClientRects().length > 0) return btn;
+         }
+         return null;
+       })()`
+    );
+    if (!modelBtn) return false;
+
+    await this.clickAt(modelBtn.x, modelBtn.y);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    const item = await this.centreOf(
+      `(() => {
+         const options = Array.from(document.querySelectorAll('[role="menuitem"],[role="option"],button'));
+         return options.find((n) => (n.textContent || "").toLowerCase().includes(${JSON.stringify(modelName.toLowerCase())}));
+       })()`
+    );
+    if (!item) {
+      await this.session.evaluate("document.activeElement && document.activeElement.blur()");
+      return false;
+    }
+
+    await this.clickAt(item.x, item.y);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return true;
   }
 
   async uploadImages(images: BrowserImagePayload[], timeoutMs = 60_000): Promise<void> {

@@ -9,34 +9,40 @@ export const CHATGPT_SELECTORS: SelectorMap = {
     "#prompt-textarea",
     "textarea[data-id='root']",
     "div[contenteditable='true']",
-    "textarea"
+    "textarea",
+    "[role='textbox']",
+    "div[aria-label*='Prompt' i]"
   ],
   sendButton: [
     "button[data-testid='send-button']",
     "button[data-testid='fruitjuice-send-button']",
-    "button[aria-label*='Send']"
+    "button[aria-label*='Send' i]",
+    "button[aria-label*='Submit' i]",
+    "button[type='submit']"
   ],
   stopButton: [
     "button[data-testid='stop-button']",
-    "button[aria-label*='Stop']",
+    "button[aria-label*='Stop' i]",
     ".result-streaming"
   ],
   completionAction: [
     "[data-testid='copy-turn-action-button']",
-    "button[aria-label*='Copy']"
+    "button[aria-label*='Copy' i]"
   ],
   responseContainer: [
     "[data-message-author-role='assistant'] .markdown",
     "article[data-turn='assistant'] .markdown",
     "article[data-testid^='conversation-turn-'] .markdown",
     "div.markdown",
-    ".agent-turn .markdown"
+    ".agent-turn .markdown",
+    "[role='article'] .markdown"
   ],
   assistantTurn: [
     "[data-message-author-role='assistant']",
     "article[data-turn='assistant']",
     "article[data-testid^='conversation-turn-']:has([data-message-author-role='assistant'])",
-    ".agent-turn"
+    ".agent-turn",
+    "[role='article']"
   ],
   fileInput: [
     "input[type='file'][accept*='image']",
@@ -64,5 +70,17 @@ export const CHATGPT_SELECTORS: SelectorMap = {
     "[data-testid*='file-thumbnail']",
     "[data-testid*='image-thumbnail']",
     "button[aria-label*='Remove file' i]"
+  ],
+  modelSelector: [
+    "button[data-testid='model-selector-button']",
+    "button[aria-haspopup='menu'][aria-label*='Model' i]",
+    "button[aria-label*='ChatGPT' i]",
+    "button[aria-haspopup='menu']"
+  ],
+  cloudflareChallenge: [
+    "#challenge-running",
+    ".cf-turnstile",
+    "#turnstile-wrapper",
+    "iframe[src*='challenges.cloudflare.com']"
   ]
 };

@@ -244,6 +244,10 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
         }
       }
 
+      if (request.model && request.model !== "gpt-5.4") {
+        await monitor.selectModel(request.model);
+      }
+
       if (request.tool) {
         // Engaging the tool must be confirmed, not assumed: answering a question
         // that was meant to search the web without having searched looks like a

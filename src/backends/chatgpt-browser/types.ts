@@ -34,6 +34,8 @@ export interface SelectorMap {
   attachButton: string[];
   composerMenuItem: string[];
   attachment: string[];
+  modelSelector: string[];
+  cloudflareChallenge: string[];
 }
 
 /** Tools selectable from the composer's plus menu. */
