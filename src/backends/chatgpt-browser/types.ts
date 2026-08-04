@@ -7,6 +7,8 @@ export interface ChatGptBrowserConfig {
   headed: boolean;
   /** Response timeout in milliseconds (default: 180000). */
   timeoutMs?: number;
+  /** Capture conversation responses from CDP Network events before using the DOM fallback. */
+  streamEnabled?: boolean;
 }
 
 export interface ChromeTarget {

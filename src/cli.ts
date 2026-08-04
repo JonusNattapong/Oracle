@@ -112,6 +112,7 @@ function backendRuntimeOptions(config: ProjectConfig) {
   return {
     homeDir: homeDir(),
     experimentalBrowserMode: config.experimental?.browserMode,
+    experimentalBrowserStream: config.experimental?.browserStream,
     browser: {
       ...config.browser,
       browserTimeout: config.browser.timeout,

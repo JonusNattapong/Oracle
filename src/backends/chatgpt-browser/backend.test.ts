@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { ChatGptBrowserBackend } from "./backend.js";
+import { ChatGptBrowserBackend, classifyBrowserError } from "./backend.js";
+import { OracleError } from "../../errors.js";
 
 describe("ChatGptBrowserBackend", () => {
   test("has expected capabilities contract", () => {
@@ -38,6 +39,23 @@ describe("ChatGptBrowserBackend", () => {
     ).rejects.toMatchObject({
       code: "ORACLE_BROWSER_MODE_DISABLED"
     });
+  });
+
+  test("classifies browser failures", () => {
+    expect(classifyBrowserError(new Error("WebSocket connection closed"))).toBe("transient");
+    expect(classifyBrowserError(new Error("Execution context was destroyed"))).toBe("transient");
+    expect(classifyBrowserError(new Error("Chrome not found"))).toBe("permanent");
+    expect(classifyBrowserError(new Error("ChatGPT response stream timed out"))).toBe("permanent");
+    expect(classifyBrowserError(new OracleError(
+      "ORACLE_BROWSER_RATE_LIMITED",
+      "limited",
+      "wait"
+    ))).toBe("permanent");
+    expect(classifyBrowserError(new OracleError(
+      "ORACLE_BROWSER_CHALLENGE_REQUIRED",
+      "challenge",
+      "solve"
+    ))).toBe("permanent");
   });
 
   test("healthCheck returns doctor check array", async () => {

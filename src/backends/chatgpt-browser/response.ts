@@ -1,11 +1,18 @@
 import WebSocket from "ws";
 import { CHATGPT_SELECTORS } from "./selectors.js";
+import { detectRateLimit } from "./limits.js";
+import { OracleError } from "../../errors.js";
 import type { BrowserImagePayload } from "./types.js";
 
 interface PendingCommand {
   resolve: (value: unknown) => void;
   reject: (error: Error) => void;
   timer: NodeJS.Timeout;
+}
+
+export interface CdpEvent {
+  method: string;
+  params: Record<string, unknown>;
 }
 
 export interface ResponseBaseline {
@@ -25,6 +32,10 @@ export interface CdpClient {
   evaluateAsync<T>(expression: string, timeoutMs?: number): Promise<T>;
 }
 
+export interface CdpEventClient extends CdpClient {
+  onEvent(listener: (event: CdpEvent) => void): () => void;
+}
+
 export interface ChatGptAuthenticationStatus {
   authenticated: boolean;
   detail: string;
@@ -34,6 +45,12 @@ export class CdpSession implements CdpClient {
   private readonly ws: WebSocket;
   private messageId = 0;
   private readonly pending = new Map<number, PendingCommand>();
+  private readonly eventListeners = new Set<(event: CdpEvent) => void>();
+
+  onEvent(listener: (event: CdpEvent) => void): () => void {
+    this.eventListeners.add(listener);
+    return () => this.eventListeners.delete(listener);
+  }
 
   constructor(wsUrl: string) {
     this.ws = new WebSocket(wsUrl);
@@ -54,10 +71,19 @@ export class CdpSession implements CdpClient {
         try {
           const message = JSON.parse(raw.toString()) as {
             id?: number;
+            method?: string;
+            params?: Record<string, unknown>;
             error?: { code?: number; message?: string };
             result?: unknown;
           };
-          if (message.id === undefined) return;
+          if (message.id === undefined) {
+            if (typeof message.method === "string" && message.params && typeof message.params === "object") {
+              for (const listener of this.eventListeners) {
+                listener({ method: message.method, params: message.params });
+              }
+            }
+            return;
+          }
           const pending = this.pending.get(message.id);
           if (!pending) return;
           this.pending.delete(message.id);
@@ -898,15 +924,18 @@ export class ResponseMonitor {
     let responseStarted = false;
     let quietPolls = 0;
     let attemptedReloadRecovery = false;
+    let challengePolls = 0;
 
     const stopSelectors = JSON.stringify(CHATGPT_SELECTORS.stopButton);
     const completionSelectors = JSON.stringify(CHATGPT_SELECTORS.completionAction);
     const responseSelectors = JSON.stringify(CHATGPT_SELECTORS.responseContainer);
     const assistantSelectors = JSON.stringify(CHATGPT_SELECTORS.assistantTurn);
+    const challengeSelectors = JSON.stringify(CHATGPT_SELECTORS.cloudflareChallenge);
 
     const checkScript = `
       (function() {
         const stopSelectors = ${stopSelectors};
+        const challengeSelectors = ${challengeSelectors};
         const completionSelectors = ${completionSelectors};
         const responseSelectors = ${responseSelectors};
         const assistantSelectors = ${assistantSelectors};
@@ -938,12 +967,14 @@ export class ResponseMonitor {
           turn
           && completionSelectors.some((selector) => turn.querySelector(selector))
         );
+        const cloudflareChallenge = challengeSelectors.some((selector) => Boolean(document.querySelector(selector)));
         return {
           isStreaming,
           hasCompletionAction,
           count: elements.length,
           assistantTurnCount: assistantTurns.length,
           assistantImageCount: imageSources.size,
+          cloudflareChallenge,
           text: element ? (element.innerText || element.textContent || "").trim() : ""
         };
       })()
@@ -956,6 +987,7 @@ export class ResponseMonitor {
         count: number;
         assistantTurnCount?: number;
         assistantImageCount?: number;
+        cloudflareChallenge: boolean;
         text: string;
       };
       try {
@@ -982,6 +1014,15 @@ export class ResponseMonitor {
         responseStarted = true;
       }
 
+      challengePolls = status.cloudflareChallenge ? challengePolls + 1 : 0;
+      if (challengePolls >= 2) {
+        throw new OracleError(
+          "ORACLE_BROWSER_CHALLENGE_REQUIRED",
+          "Cloudflare challenge detected. Complete the challenge in the open Chrome window and re-run.",
+          "Complete the challenge in the open Chrome window, then re-run the consult."
+        );
+      }
+
       if (
         responseStarted
         && !status.isStreaming
@@ -991,6 +1032,16 @@ export class ResponseMonitor {
           || (status.assistantImageCount ?? 0) > (baseline.assistantImageCount ?? 0)
         )
       ) {
+        const rateLimit = detectRateLimit(status.text);
+        if (rateLimit.limited) {
+          const reset = rateLimit.retryAfter ? ` Try again after ${rateLimit.retryAfter}.` : "";
+          throw new OracleError(
+            "ORACLE_BROWSER_RATE_LIMITED",
+            `ChatGPT rate limit reached.${reset}`,
+            "Wait for the limit to reset before retrying.",
+            { notice: status.text }
+          );
+        }
         return status.text
           || `[ChatGPT returned ${status.assistantImageCount ?? 1} image(s)]`;
       }

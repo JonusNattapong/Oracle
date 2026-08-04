@@ -58,6 +58,7 @@ export interface ProjectConfig {
   memory: MemoryConfig;
   experimental?: {
     browserMode?: boolean;
+    browserStream?: boolean;
   };
   browser: {
     profileDir?: string;
@@ -252,7 +253,7 @@ const schema = z
       .optional(),
     memory: memorySchema.optional(),
     experimental: z
-      .object({ browserMode: z.boolean().optional() })
+      .object({ browserMode: z.boolean().optional(), browserStream: z.boolean().optional() })
       .strict()
       .optional(),
     browser: browserSchema.optional(),
@@ -286,7 +287,7 @@ export const DEFAULT_PROJECT_CONFIG: Readonly<ProjectConfig> = Object.freeze({
       types: Object.freeze(["fact", "insight"]) as unknown as MemoryMirrorConfig["types"],
     }),
   }) as unknown as MemoryConfig,
-  experimental: Object.freeze({ browserMode: true }),
+  experimental: Object.freeze({ browserMode: true, browserStream: true }),
   browser: Object.freeze({
     model: "gpt-5.6-sol",
     manualLogin: false,

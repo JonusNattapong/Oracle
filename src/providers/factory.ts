@@ -73,6 +73,7 @@ const PROVIDER_NAMES: readonly ProviderName[] = [
 export interface CreateExecutionBackendOptions {
   homeDir?: string;
   experimentalBrowserMode?: boolean;
+  experimentalBrowserStream?: boolean;
   browser?: Omit<BrowserProviderOptions, "maxConcurrentTabs">
     & Partial<Omit<ChatGptBrowserConfig, "enabled">>
     & { maxConcurrentTabs?: string | number };
@@ -134,7 +135,8 @@ export function createExecutionBackend(
           ?? path.join(options.homeDir ?? oracleHomeDir(), "chrome-profile"),
         enabled: options.experimentalBrowserMode ?? true,
         headed: true,
-        timeoutMs: options.browser?.timeoutMs
+        timeoutMs: options.browser?.timeoutMs,
+        streamEnabled: options.experimentalBrowserStream ?? options.browser?.streamEnabled
       });
     case "azure": return new AzureOpenAIProvider(options.azure);
     case "openrouter": return new OpenRouterProvider(options.openrouter);
@@ -145,7 +147,8 @@ export function createExecutionBackend(
           ?? path.join(options.homeDir ?? oracleHomeDir(), "chrome-profile"),
         enabled: options.experimentalBrowserMode ?? true,
         headed: true,
-        timeoutMs: options.browser?.timeoutMs
+        timeoutMs: options.browser?.timeoutMs,
+        streamEnabled: options.experimentalBrowserStream ?? options.browser?.streamEnabled
       });
   }
 }

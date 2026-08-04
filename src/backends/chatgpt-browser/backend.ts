@@ -18,6 +18,7 @@ import {
   normalizeChatGptConversationUrl,
   ResponseMonitor
 } from "./response.js";
+import { ChatGptStreamReader } from "./stream.js";
 import { BrowserDiagnostics } from "./diagnostics.js";
 import { OracleError } from "../../errors.js";
 import { estimateTokens } from "../../tokens.js";
@@ -105,6 +106,24 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
   }
 
   async run(request: ExecutionBackendRequest): Promise<ExecutionBackendResponse> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        return await this.runOnce(request);
+      } catch (error) {
+        lastError = error;
+        const classification = classifyBrowserError(error);
+        if (classification === "permanent" || attempt === 2) {
+          throw error;
+        }
+        console.warn(`[chatgpt-browser] retrying attempt ${attempt + 2}/3 after ${classification} failure`);
+        await delay(attempt === 0 ? 2_000 : 5_000);
+      }
+    }
+    throw lastError instanceof Error ? lastError : new Error(String(lastError));
+  }
+
+  private async runOnce(request: ExecutionBackendRequest): Promise<ExecutionBackendResponse> {
     const supported: NodeJS.Platform[] = ["darwin", "linux", "win32"];
     if (!supported.includes(process.platform)) {
       throw new OracleError(
@@ -245,7 +264,14 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
       }
 
       if (request.model && request.model !== "gpt-5.4") {
-        await monitor.selectModel(request.model);
+        const selected = await monitor.selectModel(request.model);
+        if (!selected) {
+          throw new OracleError(
+            "ORACLE_BROWSER_EXECUTION_FAILED",
+            `ChatGPT's UI model picker did not accept requested model "${request.model}".`,
+            "Select an available model in ChatGPT and retry."
+          );
+        }
       }
 
       if (request.tool) {
@@ -272,13 +298,44 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
         ? `[SYSTEM]\n${request.systemPrompt}\n\n[USER]\n${browserUserPrompt}`
         : browserUserPrompt;
 
+      const streamReader = this.config.streamEnabled === false
+        ? undefined
+        : new ChatGptStreamReader(session);
+      await streamReader?.start();
       const baseline = await monitor.fillPromptAndSend(fullPrompt);
-
-      const text = await monitor.waitForResponse(baseline, timeoutMs, {
+      const domResponse = monitor.waitForResponse(baseline, timeoutMs, {
         // Deep research sits unchanged for minutes at a time; the stall reload
         // that rescues a wedged UI would throw the research away instead.
         allowStallReload: request.tool !== "deep-research"
       });
+      // Whichever tier loses the race is abandoned mid-flight: the DOM poller keeps
+      // evaluating against a session this method closes in `finally`, and the stream
+      // reader outlives a DOM win the same way. Both rejections must be absorbed or
+      // Node tears the process down on the unhandled rejection.
+      domResponse.catch(() => undefined);
+      const streamResponse = streamReader?.read();
+      streamResponse?.catch(() => undefined);
+      let text: string;
+      let streamUsage: { promptTokens: number; completionTokens: number } | undefined;
+      if (streamResponse) {
+        try {
+          const streamed = await Promise.race([
+            streamResponse.then((result) => ({ tier: "stream" as const, ...result })),
+            domResponse.then((domText) => ({ tier: "dom" as const, text: domText, usage: undefined }))
+          ]);
+          text = streamed.text;
+          streamUsage = streamed.usage;
+          if (streamed.tier === "dom") streamReader?.cancel();
+          logTier(streamed.tier);
+        } catch {
+          streamReader?.cancel();
+          text = await domResponse;
+          logTier("dom", "stream failed");
+        }
+      } else {
+        text = await domResponse;
+        logTier("dom", "stream disabled");
+      }
       const responseId = await monitor.currentConversationUrl();
       const captured = await monitor.captureAssistantImages();
       const images = captured.images.length > 0
@@ -288,8 +345,8 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
           )
         : [];
 
-      const inputTokens = estimateTokens(fullPrompt);
-      const outputTokens = estimateTokens(text);
+      const inputTokens = streamUsage?.promptTokens ?? estimateTokens(fullPrompt);
+      const outputTokens = streamUsage?.completionTokens ?? estimateTokens(text);
 
       return {
         responseId,
@@ -309,21 +366,31 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
         }
       };
     } catch (err) {
+      let screenshotPath: string | undefined;
       if (session) {
         try {
           const diagDir = path.join(this.config.profileDir, "..", "diagnostics");
-          await this.diagnostics.captureDiagnosticScreenshot(session, diagDir);
+          screenshotPath = await this.diagnostics.captureDiagnosticScreenshot(session, diagDir);
         } catch {
           // ignore screenshot failure
         }
       }
       if (err instanceof OracleError) {
+        if (err.code === "ORACLE_BROWSER_CHALLENGE_REQUIRED" && screenshotPath) {
+          throw new OracleError(
+            err.code,
+            `${err.message} Diagnostic screenshot: ${screenshotPath}`,
+            err.suggestion,
+            { ...(err.details ?? {}), screenshotPath }
+          );
+        }
         throw err;
       }
       throw new OracleError(
         "ORACLE_BROWSER_EXECUTION_FAILED",
         `ChatGPT Browser consult failed: ${err instanceof Error ? err.message : String(err)}`,
-        "Check browser diagnostics or log into ChatGPT via `oracle browser setup`."
+        "Check browser diagnostics or log into ChatGPT via `oracle browser setup`.",
+        classifyBrowserError(err) === "transient" ? { transient: true } : undefined
       );
     } finally {
       if (session) {
@@ -331,4 +398,35 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
       }
     }
   }
+}
+
+export function classifyBrowserError(error: unknown): "transient" | "permanent" {
+  if (error instanceof OracleError) {
+    if (
+      error.code === "ORACLE_BROWSER_RATE_LIMITED"
+      || error.code === "ORACLE_BROWSER_CHALLENGE_REQUIRED"
+      || error.code === "ORACLE_BROWSER_UNSUPPORTED_PLATFORM"
+      || error.code === "ORACLE_BROWSER_MODE_DISABLED"
+    ) return "permanent";
+    if (error.code === "ORACLE_BROWSER_EXECUTION_FAILED") {
+      return error.details?.transient === true ? "transient" : "permanent";
+    }
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  const permanent = /not authenticated|no chatgpt account session|unsupported platform|chrome.*(?:not found|unavailable)|browser mode.*disabled|response.* timed out|stream timed out/i;
+  const transient = /websocket.*(?:disconnect|close|not open)|connection.*(?:closed|reset)|execution context was destroyed|cannot find context|promise was collected|navigation|target.*crash|target.*closed|cdp command .* timed out/i;
+  return permanent.test(message) ? "permanent" : transient.test(message) ? "transient" : "permanent";
+}
+
+/**
+ * Which tier answered is the signal for whether the stream path is reliable enough to
+ * promote, so it is recorded on every consult. stderr keeps it clear of the answer the
+ * CLI writes to stdout.
+ */
+function logTier(tier: "stream" | "dom", reason?: string): void {
+  console.error(`[chatgpt-browser] answer tier: ${tier}${reason ? ` (${reason})` : ""}`);
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
