@@ -86,6 +86,17 @@ tasks.
 | **Coordination-only MCP server** | Agents need messaging and verified tasks without loading provider, memory, or agent dependencies. | `oracle-msg-mcp` |
 | **Runtime API + Control Center** | Scheduling, remote coordination, approvals, or event replay must survive individual CLI sessions. | `oracle-daemon` |
 
+### Oracle CLI vs. Oracle MCP: Core Distinction
+
+While both surfaces ride on top of the same shared core engine (`BundleService`, `MemoryStore`, `Policy Gate`, and SQLite database), they serve distinct roles:
+
+| Dimension | **Oracle CLI (`oracle`)** | **Oracle MCP (`oracle-mcp` / `oracle-msg-mcp`)** |
+|---|---|---|
+| **Target User** | **Human Developers** & shell scripts | **AI Coding Agents & IDE Hosts** (Claude Code, Codex, Cursor) |
+| **Communication Mode** | Interactive terminal commands & human-readable output | Stdio JSON-RPC protocol (machine-callable tool schemas) |
+| **Surface Scope** | **Full administrative control** (all commands: ask, agent, memory, daemon, control, schedule, github) | **Focused 18-tool surface** (curated tools needed by agents: `oracle_ask`, `oracle_agent`, `oracle_memory_*`) |
+| **Binary Entry** | `oracle` (`./dist/cli.js`) | `oracle-mcp` (`./dist/mcp.js`) & `oracle-msg-mcp` (`./dist/mcp-messaging.js`) |
+
 ## Architecture and trust boundaries
 
 <p align="center">
