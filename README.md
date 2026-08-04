@@ -68,9 +68,9 @@ tasks.
 | Layer | What it does | Primary interface |
 |---|---|---|
 | **Aware** | Derives a live snapshot of Oracle's role, operator, workspace label, backend, available capabilities, and enforced boundaries. | `oracle identity awareness` · `oracle_awareness_show` |
-| **Consult** | Bundles selected files and context, scans outbound content, calls the chosen backend, and records a replayable session. | `oracle ask` · `oracle_ask` |
-| **Remember** | Maintains project/global facts, insights, local docs, entity links, and ranked retrieval when configured. | `oracle memory` · `oracle_memory_*` |
-| **Act** | Runs a checkpointed coding loop with workspace tools, read-only mode, policy checks, approval gates, and audit evidence. | `oracle agent` · `oracle_agent` |
+| **Consult** | Bundles selected files and context with AST compression, scans outbound content, calls the chosen backend, and records a replayable session. | `oracle ask` · `oracle_ask` |
+| **Remember** | Maintains project/global facts, insights, local docs, entity links, and ranked retrieval with MemoryGraph visualization when configured. | `oracle memory` · `oracle_memory_*` |
+| **Act** | Runs a checkpointed coding loop with workspace tools, read-only mode, policy checks, approval gates, and audit evidence. Autonomous task breakdown generates structured sub-task checklists. | `oracle agent` · `oracle_agent` |
 | **Coordinate** | Connects agents through messages, presence, checklist-gated tasks, consensus, and recovery. | `oracle msg` / `oracle task` · `oracle-msg-mcp` |
 | **Operate** | Owns long-lived schedules, approvals, SQLite state, HTTP APIs, WebSocket events, and the human Control Center. | `oracle daemon` · `oracle control` |
 | **Companion** | Turns fresh semantic presence into an explainable `speak` or `silence` intent without storing raw coordinates, and can raise an opt-in local notification. | `oracle companion` · Runtime API |
@@ -254,6 +254,43 @@ The built-in listener is HTTP. Put non-loopback deployments behind TLS or an
 encrypted private network; do not expose port 4777 directly to the public
 internet.
 
+## New capabilities
+
+### AST Context Compression
+
+Oracle automatically compresses function and method bodies to lightweight signatures during bundling, preserving type definitions and API surfaces while maximizing token budget efficiency. This is especially valuable when working with large codebases where comprehensive context matters but token limits are tight.
+
+```bash
+# Bundled contexts are compressed transparently
+oracle ask "Review the authorization flow" -f "src/auth/**/*.ts"
+```
+
+### MemoryGraph Visualization
+
+The memory system now includes entity relationship visualization showing how facts, services, and concepts connect. The MemoryGraph component displays node counts, dependency edges, and interaction patterns, making knowledge retrieval more intuitive.
+
+### Autonomous Task Breakdown & Verification Checklists
+
+When working with complex goals, Oracle can autonomously break them into structured sub-tasks with verification checklists. Each sub-task includes:
+- Descriptive title and context
+- Assigned owner
+- Verification checklist items (Design → Implementation → Testing)
+- Clear acceptance criteria
+
+```bash
+oracle agent "Implement rate limiting and update documentation" --plan
+# Shows: Design subtask, Implementation subtask, Verification subtask with checklists
+```
+
+### ChatGPT Browser Mode Enhancements
+
+The default backend now includes:
+- **ARIA Fallback Chain** — robust element finding via accessibility tree + DOM selectors
+- **Cloudflare Challenge Diagnostics** — automatic detection and troubleshooting of Cloudflare blocks
+- **Model Switching** — dynamically select Claude, GPT-4, or other available models within ChatGPT
+
+These enhancements make Browser Mode more resilient for long-running consultations and agent loops.
+
 ## Execution backends
 
 Backend selection can come from `--backend`, `.oracle/config.json`, model
@@ -261,7 +298,7 @@ routing, or environment configuration.
 
 | Backend | Consult | Agent loop | Authentication / note |
 |---|:---:|:---:|---|
-| **ChatGPT Browser Mode** | Yes | No | **Default**; headed Chrome DevTools CDP with ARIA fallback chain, zero API keys required |
+| **ChatGPT Browser Mode** | Yes | No | **Default**; headed Chrome DevTools CDP, ARIA fallback chain, Cloudflare challenge diagnostics, model switching, zero API keys required |
 | **Codex CLI** | Yes | Yes | Local `codex login` |
 | **Anthropic** | Yes | Yes | `ANTHROPIC_API_KEY` or `oracle login --provider anthropic` |
 | **OpenAI** | Yes | No | `OPENAI_API_KEY` |

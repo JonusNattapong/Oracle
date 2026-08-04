@@ -1,4 +1,71 @@
-# Oracle Agent — Autonomous Coding Loop
+# AGENT.md
+
+This file provides guidance to Claude Code when working with code in this repository.
+
+## Working in this repository
+
+Oracle is a workspace-confined consultation and coordination layer for AI
+coding agents: persistent memory, guarded action (agent loop), and durable
+coordination (messaging, tasks, Runtime). TypeScript ESM, Node >= 24, strict
+mode, `NodeNext` module resolution. No linter/formatter is configured — rely
+on `tsc` and consistent style.
+
+### Commands
+
+```bash
+npm install          # install dependencies
+npm run build        # compile TypeScript to dist/ (tsc)
+npm run typecheck    # type-check only (tsc --noEmit)
+npm run dev          # run the CLI via tsx (no build needed)
+npm run test         # full vitest suite (vitest run src)
+npx vitest run src/agent/loop.test.ts   # single test file
+npx vitest run -t "test name"           # single test by name
+npm run verify       # offline release gate: build + test + smoke tests
+npm run verify:live  # live gate against a real signed-in ChatGPT session (slow, real cost)
+```
+
+`npm run verify` is offline. `verify:live` drives the real browser backend and
+asserts on what actually happened in the account — run it only when touching
+ChatGPT Browser Mode.
+
+### Architecture
+
+One core, four surfaces:
+
+- **CLI** (`src/cli.ts`) — full administrative surface: ask, agent, memory,
+  daemon, control, schedule, github.
+- **MCP servers** (`src/mcp/server.ts`) — stdio JSON-RPC, 18 focused tools
+  (`oracle_ask`, `oracle_agent`, `oracle_memory_*`). Coordination-only twin:
+  `src/mcp/messagingTools.ts` → `oracle-msg-mcp`.
+- **Runtime daemon** (`src/runtime/daemon.ts`) — persistent process owning
+  SQLite state (`~/.oracle/runtime/oracle.db`), scheduler, approvals, WebSocket
+  events, local HTTP APIs on 127.0.0.1:4777.
+- **ChatGPT Browser Mode** (`src/backends/chatgpt-browser/`) — experimental
+  headed-Chrome backend for consult + Saved Memory.
+
+Core flow — a consult bundles workspace context (`src/context/bundleService.ts`)
+with AST compression (`src/context/astCompressor.ts`) and AST dependency resolution
+(`src/context/astResolver.ts`), scans for secrets, passes the policy gate, then
+routes to a provider/backend (`src/providers/`, `src/backends/`). The agent loop
+(`src/agent/loop.ts`) is provider-agnostic; each agent-capable backend (`codex`,
+`anthropic`, `opencode`) translates the neutral transcript.
+
+Task breakdown (`src/tasks/breakdown.ts`) autonomously decomposes complex goals into
+structured sub-tasks with verification checklists. Memory graph visualization
+(`src/web/components/MemoryGraph.tsx`) displays entity relationships and knowledge connections.
+
+State split: user-level data (sessions, identity, memory, runtime) lives under
+`~/.oracle/`; project config, policy, and docs under `.oracle/`.
+
+### Testing notes
+
+- Tests are colocated in `src/` as `*.test.ts` and run with vitest. Many do
+  real work (disk writes, spawning processes, probing docker), so timeouts are
+  30s.
+- `tsconfig.json` excludes `*.test.ts` from the build; vitest is the test runner.
+- Node >= 24 is required (`engines` field).
+
+## Oracle Agent — Autonomous Coding Loop
 
 Oracle can act as an autonomous coding agent: you give it a task, and it
 reads, writes, and edits files and searches the codebase in a **tool-use
@@ -232,6 +299,11 @@ Set the provider in `.oracle/config.json`:
 | `src/providers/openaiProvider.ts` | `runAgentTurn` via OpenAI function calling (opencode) |
 | `src/mcp/tools/agent.ts` | `oracle_agent` + `oracle_agent_checkpoints` + `oracle_agent_checkpoint_delete` MCP tools |
 | `src/cli.ts` | `oracle agent` and `oracle agent-checkpoints` commands |
+| `src/context/astCompressor.ts` | AST compression: collapses function/method bodies to signatures for token efficiency |
+| `src/context/astResolver.ts` | AST dependency resolution: identifies relevant code by analyzing imports and dependencies |
+| `src/tasks/breakdown.ts` | Autonomous task breakdown: decomposes goals into structured sub-tasks with verification checklists |
+| `src/web/components/MemoryGraph.tsx` | MemoryGraph UI: entity relationship visualization with node memory counts and edge weights |
+| `src/backends/chatgpt-browser/` | ChatGPT Browser Mode: headed Chrome CDP backend with ARIA fallback chain and Cloudflare diagnostics |
 
 ---
 *Oracle — A persistent coordination layer for AI coding agents*
