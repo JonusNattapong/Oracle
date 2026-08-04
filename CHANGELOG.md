@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **ChatGPT Browser response streaming** — captures conversation responses from
+  the CDP Network domain with incremental SSE parsing, full-message and JSON
+  patch delta support, optional usage metadata, and DOM polling fallback.
+  The path is controlled by `experimental.browserStream` and defaults to
+  enabled. Live verification still reports intermittent CDP/renderer failures,
+  so the DOM path remains the safety net.
+
 - **`npm run verify:live`** — end-to-end verification against the real
   signed-in account. Every defect found while building the browser backend
   shipped with unit tests passing; what they had in common is that nothing
@@ -125,6 +132,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `mcpServers` integration is unaffected.
 
 ### Fixed
+- ChatGPT Browser Mode no longer returns a quota notice as if it were the
+  model's answer, and no longer reports a mid-turn Cloudflare challenge as a
+  bare three-minute timeout — the challenge is named, with a diagnostic
+  screenshot. A model the UI picker refuses now fails loudly instead of
+  answering from whichever model was already selected, and transient CDP
+  faults are retried on a fresh session rather than ending the consult.
 - Assistant image capture no longer warns about citation favicons. Web-search
   and deep-research answers embed 128x128 favicons from every site they cite;
   those cleared the size floor, could not be fetched from the page's own origin,

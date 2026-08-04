@@ -6,5 +6,6 @@ llms*.txt
 graphify-out/
 .clew/
 .agents/
+.claude/settings.json
 .playwright-mcp/
 .commandcode/
