@@ -75,6 +75,8 @@ import { buildOracleSystemPrompt } from "./core/systemPrompt.js";
 import { getConversationContext, recordSelfLog } from "./core/selfMemory.js";
 import { buildMemoryContext } from "./core/memoryContext.js";
 import { buildWiki, getWikiPage, listWikiTopics } from "./wiki/compile.js";
+import { getGitModifiedFiles, getGitStagedFiles } from "./context/gitFiles.js";
+import { resolveAstDependencies } from "./context/astResolver.js";
 
 /**
  * Open a cost-logging sink backed by the runtime database.
@@ -136,6 +138,9 @@ program
   .argument("<question>", "Your question")
   .option("--soul <name>", "Soul prompt name (~/.oracle/souls/<name>.md)")
   .option("-f, --file <pattern...>", "File paths or glob patterns to include")
+  .option("--git-diff", "Include files modified in git diff")
+  .option("--git-staged", "Include files staged in git index")
+  .option("--ast-resolve", "Auto-resolve AST dependency files referenced in prompt")
   .option("--conversation <id>", "Stable id so Oracle recalls what it already told you across calls")
   .option("--remember <text>", "Explicitly save a high-level fact or preference to ChatGPT account memory (chatgpt-browser only)")
   .option("--include-docs", "Search .oracle/docs/ for relevant documentation")
@@ -272,7 +277,21 @@ program
       }
     }
 
-    const hasFiles = Boolean(options.file?.length);
+    const filesToInclude: string[] = [...(options.file ?? [])];
+    if (options.gitDiff) {
+      filesToInclude.push(...(await getGitModifiedFiles(cwd)));
+    }
+    if (options.gitStaged) {
+      filesToInclude.push(...(await getGitStagedFiles(cwd)));
+    }
+    const uniqueFiles = [...new Set(filesToInclude)];
+    if (options.astResolve && uniqueFiles.length > 0) {
+      const astDeps = await resolveAstDependencies(uniqueFiles, cwd, 1);
+      uniqueFiles.push(...astDeps);
+    }
+    const finalFiles = [...new Set(uniqueFiles)];
+
+    const hasFiles = finalFiles.length > 0;
     const result = await service.consult({
       prompt: `${ctxBlock}\n\n## Question\n${question}`,
       title: question,
@@ -283,7 +302,7 @@ program
       provider: route.provider,
       conversationId: options.conversation,
       accountMemory: options.remember,
-      files: hasFiles ? options.file : [],
+      files: hasFiles ? finalFiles : [],
       model: route.model,
       cwd,
       systemPrompt,

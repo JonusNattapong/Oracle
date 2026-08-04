@@ -11,6 +11,8 @@ import { loadSoul } from "../../core/souls.js";
 import { buildOracleSystemPrompt } from "../../core/systemPrompt.js";
 import { searchDocs } from "../../docs/reader.js";
 import type { ProfileStore } from "../../identity/profile.js";
+import { getGitModifiedFiles, getGitStagedFiles } from "../../context/gitFiles.js";
+import { resolveAstDependencies } from "../../context/astResolver.js";
 
 async function success(
   text: string,
@@ -68,10 +70,15 @@ export function registerConsultTool(
         accountMemory: z.string().min(1).max(2000).optional().describe("Explicit opt-in: exact high-level fact or preference to save to the signed-in ChatGPT account's Saved Memory. Requires backend='chatgpt-browser'; never use for secrets or large text."),
         include_docs: z.boolean().optional().describe("Search .oracle/docs/ for relevant documentation and include as context"),
         doc_search: z.string().optional().describe("Specific doc query (defaults to using the question itself)"),
-        include_memory: z.boolean().optional().describe("Recall stored project memory relevant to the question. Default: true")
+        include_memory: z.boolean().optional().describe("Recall stored project memory relevant to the question. Default: true"),
+        active_file: z.string().optional().describe("Active open file path in the client IDE"),
+        cursor_position: z.object({ line: z.number(), column: z.number() }).optional().describe("Cursor position in active_file { line, column }"),
+        git_diff: z.boolean().optional().describe("Automatically include modified files in git diff"),
+        git_staged: z.boolean().optional().describe("Automatically include staged files in git index"),
+        ast_resolve: z.boolean().optional().describe("Auto-resolve AST dependency files referenced by entry files")
       }
     },
-    async ({ question, soul, context, files, backend, conversationId, accountMemory, include_docs, doc_search, include_memory }) => {
+    async ({ question, soul, context, files, backend, conversationId, accountMemory, include_docs, doc_search, include_memory, active_file, cursor_position, git_diff, git_staged, ast_resolve }) => {
       try {
         if (soul !== undefined) {
           soul = soul.trim();
@@ -93,6 +100,10 @@ export function registerConsultTool(
         });
         const systemPrompt = buildOracleSystemPrompt(soulPrompt, awarenessContext);
         let ctxBlock = context ? `\n\n## Context from the asking agent\n${context}` : "";
+
+        if (active_file) {
+          ctxBlock += `\n\n## Active Editor Context\nFile: ${active_file}${cursor_position ? ` (line ${cursor_position.line}, col ${cursor_position.column})` : ""}`;
+        }
 
         if (conversationId) {
           ctxBlock += await getConversationContext(deps.memory, conversationId);
@@ -127,8 +138,25 @@ export function registerConsultTool(
           }
         }
 
+        const filesToInclude: string[] = [...(files ?? [])];
+        if (active_file) {
+          filesToInclude.push(active_file);
+        }
+        if (git_diff) {
+          filesToInclude.push(...(await getGitModifiedFiles(deps.workspaceRoot)));
+        }
+        if (git_staged) {
+          filesToInclude.push(...(await getGitStagedFiles(deps.workspaceRoot)));
+        }
+        const uniqueFiles = [...new Set(filesToInclude)];
+        if (ast_resolve && uniqueFiles.length > 0) {
+          const astFiles = await resolveAstDependencies(uniqueFiles, deps.workspaceRoot, 1);
+          uniqueFiles.push(...astFiles);
+        }
+        const finalFiles = [...new Set(uniqueFiles)];
+
         const prompt = `${ctxBlock}\n\n## Question\n${question}`;
-        const hasFiles = files !== undefined && files.length > 0;
+        const hasFiles = finalFiles.length > 0;
         const result = await deps.service.consult({
           prompt,
           title: question,
@@ -136,7 +164,7 @@ export function registerConsultTool(
           provider: targetBackend,
           conversationId,
           accountMemory,
-          files: hasFiles ? files : [],
+          files: hasFiles ? finalFiles : [],
           model: deps.config.model,
           cwd: deps.workspaceRoot,
           maxFileSizeBytes: deps.config.maxFileSizeBytes,
