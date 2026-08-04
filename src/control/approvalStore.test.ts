@@ -15,7 +15,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   database.close();
-  await fs.rm(home, { recursive: true, force: true });
+  await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 describe("ApprovalStore", () => {

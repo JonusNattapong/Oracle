@@ -25,7 +25,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   database.close();
-  await fs.rm(home, { recursive: true, force: true });
+  await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 /** Records every intent it is handed, so tests can assert on what reached a channel. */

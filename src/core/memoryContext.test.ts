@@ -15,7 +15,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await fs.rm(workspace, { recursive: true, force: true });
+  await fs.rm(workspace, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 describe("buildMemoryContext", () => {

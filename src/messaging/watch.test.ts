@@ -19,7 +19,7 @@ afterEach(async () => {
   await watcher?.close();
   watcher = undefined;
   store.dispose();
-  await fs.rm(home, { recursive: true, force: true });
+  await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 function waitFor<T>(check: () => T | undefined, timeoutMs = 5000): Promise<T> {

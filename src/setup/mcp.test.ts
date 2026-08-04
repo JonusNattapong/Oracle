@@ -6,7 +6,7 @@ import { ensureProjectConfig, generateMcpSetup, writeMcpSetup } from "./mcp.js";
 
 const roots: string[] = [];
 afterEach(async () => {
-  await Promise.all(roots.splice(0).map((root) => fs.rm(root, { recursive: true, force: true })));
+  await Promise.all(roots.splice(0).map((root) => fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 })));
 });
 
 async function temporaryRoot(): Promise<string> {

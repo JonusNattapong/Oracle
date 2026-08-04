@@ -12,7 +12,7 @@ describe("docs reader", () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tmp, { recursive: true, force: true });
+    await fs.rm(tmp, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
   });
 
   it("addDoc creates the file and listDocs finds it", async () => {

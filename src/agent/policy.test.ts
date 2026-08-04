@@ -42,7 +42,7 @@ describe("OraclePolicy Enforcement", () => {
       await fs.writeFile(path.join(root, ".oracle", "policy.json"), "{ invalid", "utf8");
       await expect(loadPolicy(root)).rejects.toThrow(/Invalid Oracle policy/);
     } finally {
-      await fs.rm(root, { recursive: true, force: true });
+      await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
     }
   });
 
@@ -57,7 +57,7 @@ describe("OraclePolicy Enforcement", () => {
         sandbox: { mode: "docker", network: "none", memoryMb: 512, environment: ["NODE_ENV"] }
       });
     } finally {
-      await fs.rm(root, { recursive: true, force: true });
+      await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
     }
   });
 
@@ -70,7 +70,7 @@ describe("OraclePolicy Enforcement", () => {
       }), "utf8");
       await expect(loadPolicy(root)).rejects.toThrow("sandbox.network must be none");
     } finally {
-      await fs.rm(root, { recursive: true, force: true });
+      await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
     }
   });
 });

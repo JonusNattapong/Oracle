@@ -37,8 +37,8 @@ afterEach(async () => {
   for (const disposable of disposables) disposable.dispose();
   service.dispose();
   database.close();
-  await fs.rm(home, { recursive: true, force: true });
-  await fs.rm(workspace, { recursive: true, force: true });
+  await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
+  await fs.rm(workspace, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 describe("ControlCenterService", () => {

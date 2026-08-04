@@ -14,7 +14,7 @@ describe("OrchestratorFactory", () => {
   });
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(tempDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
   });
 
   it("builds a working local adapter with no external service", async () => {

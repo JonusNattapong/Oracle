@@ -133,7 +133,7 @@ afterAll(async () => {
   tasks?.dispose();
   await client.close();
   await server.close();
-  await fs.rm(root, { recursive: true, force: true });
+  await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 describe("Oracle MCP tools", () => {

@@ -13,7 +13,7 @@ const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0
 
 afterEach(async () => {
   await Promise.all(temporaryDirectories.splice(0).map((directory) =>
-    fs.rm(directory, { recursive: true, force: true })
+    fs.rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 })
   ));
 });
 

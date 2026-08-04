@@ -17,7 +17,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await daemon?.stop();
-  await fs.rm(home, { recursive: true, force: true });
+  await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 describe("OracleDaemon", () => {

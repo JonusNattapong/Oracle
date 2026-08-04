@@ -14,7 +14,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   store.dispose();
-  await fs.rm(home, { recursive: true, force: true });
+  await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 describe("MessageStore", () => {

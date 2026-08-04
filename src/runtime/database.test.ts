@@ -16,7 +16,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   database.close();
-  await fs.rm(home, { recursive: true, force: true });
+  await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 describe("RuntimeDatabase", () => {
@@ -120,7 +120,7 @@ describe("RuntimeDatabase", () => {
 
   test("migrates a 0.2 approval database without losing pending requests", async () => {
     database.close();
-    await fs.rm(home, { recursive: true, force: true });
+    await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
     await fs.mkdir(path.join(home, "runtime"), { recursive: true });
     const file = path.join(home, "runtime", "oracle.db");
     const legacy = new DatabaseSync(file);
@@ -180,7 +180,7 @@ describe("RuntimeDatabase", () => {
 
   test("migrates a schema 9 database and makes Companion storage usable", async () => {
     database.close();
-    await fs.rm(home, { recursive: true, force: true });
+    await fs.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
     await fs.mkdir(path.join(home, "runtime"), { recursive: true });
     const file = path.join(home, "runtime", "oracle.db");
     const legacy = new DatabaseSync(file);

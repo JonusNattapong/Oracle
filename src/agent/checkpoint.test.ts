@@ -10,7 +10,7 @@ describe("CheckpointStore", () => {
   const store = new CheckpointStore(dir);
 
   afterAll(async () => {
-    await fs.rm(dir, { recursive: true, force: true });
+    await fs.rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
   });
 
   const sampleTranscript: AgentMessage[] = [
