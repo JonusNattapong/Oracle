@@ -1,7 +1,10 @@
 node_modules/
 dist/
 .env
+llms*.txt
 .oracle/
 graphify-out/
 .clew/
 .agents/
+.playwright-mcp/
+.commandcode/
