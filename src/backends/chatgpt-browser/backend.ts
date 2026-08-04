@@ -327,10 +327,13 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
           streamUsage = streamed.usage;
           if (streamed.tier === "dom") streamReader?.cancel();
           logTier(streamed.tier);
-        } catch {
+        } catch (streamError) {
           streamReader?.cancel();
           text = await domResponse;
-          logTier("dom", "stream failed");
+          // Naming the failure is the whole point of the log: a silent fallback
+          // reads as "the stream tier works" right up until someone deletes the
+          // DOM path.
+          logTier("dom", `stream failed: ${streamError instanceof Error ? streamError.message : String(streamError)}`);
         }
       } else {
         text = await domResponse;

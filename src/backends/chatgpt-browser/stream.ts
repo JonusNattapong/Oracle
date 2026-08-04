@@ -20,6 +20,21 @@ interface StreamState {
 
 const CONVERSATION_PATH = "/backend-api/conversation";
 
+/**
+ * `/backend-api/conversation` is a prefix of several other endpoints — `/conversation/{id}`
+ * for history, `/conversations` for the sidebar — and those fire first. Latching onto one
+ * of them pins the reader to a request that has already finished, so the POST carrying the
+ * answer is never read. Only the exact path, and only the POST, is the turn.
+ */
+function isConversationTurn(url: string, method: string | undefined): boolean {
+  if (method !== undefined && method.toUpperCase() !== "POST") return false;
+  try {
+    return new URL(url).pathname === CONVERSATION_PATH;
+  } catch {
+    return false;
+  }
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -142,6 +157,7 @@ export class ChatGptStreamReader {
   private rejectCompletion: ((error: Error) => void) | undefined;
   private started = false;
   private settled = false;
+  private readonly turnRequestIds = new Set<string>();
 
   constructor(
     private readonly client: CdpEventClient,
@@ -193,11 +209,17 @@ export class ChatGptStreamReader {
   }
 
   private handleEvent(event: CdpEvent): void {
-    if (event.method === "Network.responseReceived") {
-      const response = isRecord(event.params.response) ? event.params.response : undefined;
-      const url = response && typeof response.url === "string" ? response.url : "";
+    if (event.method === "Network.requestWillBeSent") {
+      const request = isRecord(event.params.request) ? event.params.request : undefined;
+      const url = request && typeof request.url === "string" ? request.url : "";
+      const method = request && typeof request.method === "string" ? request.method : undefined;
       const requestId = typeof event.params.requestId === "string" ? event.params.requestId : undefined;
-      if (requestId && url.includes(CONVERSATION_PATH)) {
+      if (requestId && isConversationTurn(url, method)) this.turnRequestIds.add(requestId);
+      return;
+    }
+    if (event.method === "Network.responseReceived") {
+      const requestId = typeof event.params.requestId === "string" ? event.params.requestId : undefined;
+      if (requestId && this.turnRequestIds.has(requestId)) {
         this.requestId = requestId;
         void this.enableStreaming(requestId);
       }
@@ -241,6 +263,7 @@ export class ChatGptStreamReader {
   private async cleanup(): Promise<void> {
     this.unsubscribe?.();
     this.unsubscribe = undefined;
+    this.turnRequestIds.clear();
     if (!this.started) return;
     this.started = false;
     try {

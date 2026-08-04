@@ -46,7 +46,8 @@ describe("ChatGptStreamReader", () => {
     const reader = new ChatGptStreamReader(c);
     await reader.start();
     const promise = reader.read();
-    for (const listener of c.listeners) listener({ method: "Network.responseReceived", params: { requestId: "1", response: { url: "https://chatgpt.com/backend-api/conversation" } } });
+    for (const listener of c.listeners) listener({ method: "Network.requestWillBeSent", params: { requestId: "1", request: { url: "https://chatgpt.com/backend-api/conversation", method: "POST" } } });
+    for (const listener of c.listeners) listener({ method: "Network.responseReceived", params: { requestId: "1" } });
     for (const listener of c.listeners) listener({ method: "Network.dataReceived", params: { requestId: "1", data: 'data: {"message":{"content":{"parts":["ok"]}}}\n\n' } });
     for (const listener of c.listeners) listener({ method: "Network.dataReceived", params: { requestId: "1", data: "data: [DONE]\n\n" } });
     for (const listener of c.listeners) listener({ method: "Network.loadingFinished", params: { requestId: "1" } });
@@ -59,7 +60,8 @@ describe("ChatGptStreamReader", () => {
     const reader = new ChatGptStreamReader(c);
     await reader.start();
     const promise = reader.read();
-    for (const listener of c.listeners) listener({ method: "Network.responseReceived", params: { requestId: "1", response: { url: "https://chatgpt.com/backend-api/conversation" } } });
+    for (const listener of c.listeners) listener({ method: "Network.requestWillBeSent", params: { requestId: "1", request: { url: "https://chatgpt.com/backend-api/conversation", method: "POST" } } });
+    for (const listener of c.listeners) listener({ method: "Network.responseReceived", params: { requestId: "1" } });
     for (const listener of c.listeners) listener({ method: "Network.dataReceived", params: { requestId: "1", data: "data: [DONE]\n\n" } });
     for (const listener of c.listeners) listener({ method: "Network.loadingFinished", params: { requestId: "1" } });
     await expect(promise).rejects.toThrow("no text");
@@ -72,7 +74,8 @@ describe("ChatGptStreamReader", () => {
     const reader = new ChatGptStreamReader(c, { onDelta });
     await reader.start();
     const promise = reader.read();
-    for (const listener of c.listeners) listener({ method: "Network.responseReceived", params: { requestId: "1", response: { url: "https://chatgpt.com/backend-api/conversation" } } });
+    for (const listener of c.listeners) listener({ method: "Network.requestWillBeSent", params: { requestId: "1", request: { url: "https://chatgpt.com/backend-api/conversation", method: "POST" } } });
+    for (const listener of c.listeners) listener({ method: "Network.responseReceived", params: { requestId: "1" } });
     for (const listener of c.listeners) listener({ method: "Network.dataReceived", params: { requestId: "1", data: 'data: {"message":{"content":{"parts":["ok"]}}}\n\n' } });
     for (const listener of c.listeners) listener({ method: "Network.dataReceived", params: { requestId: "1", data: "data: [DONE]\n\n" } });
     for (const listener of c.listeners) listener({ method: "Network.loadingFinished", params: { requestId: "1" } });
