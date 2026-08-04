@@ -75,10 +75,11 @@ export function registerConsultTool(
         cursor_position: z.object({ line: z.number(), column: z.number() }).optional().describe("Cursor position in active_file { line, column }"),
         git_diff: z.boolean().optional().describe("Automatically include modified files in git diff"),
         git_staged: z.boolean().optional().describe("Automatically include staged files in git index"),
-        ast_resolve: z.boolean().optional().describe("Auto-resolve AST dependency files referenced by entry files")
+        ast_resolve: z.boolean().optional().describe("Auto-resolve AST dependency files referenced by entry files"),
+        compress_context: z.boolean().optional().describe("Compress AST dependency files into signature skeletons to save tokens")
       }
     },
-    async ({ question, soul, context, files, backend, conversationId, accountMemory, include_docs, doc_search, include_memory, active_file, cursor_position, git_diff, git_staged, ast_resolve }) => {
+    async ({ question, soul, context, files, backend, conversationId, accountMemory, include_docs, doc_search, include_memory, active_file, cursor_position, git_diff, git_staged, ast_resolve, compress_context }) => {
       try {
         if (soul !== undefined) {
           soul = soul.trim();
@@ -149,8 +150,9 @@ export function registerConsultTool(
           filesToInclude.push(...(await getGitStagedFiles(deps.workspaceRoot)));
         }
         const uniqueFiles = [...new Set(filesToInclude)];
+        let astFiles: string[] = [];
         if (ast_resolve && uniqueFiles.length > 0) {
-          const astFiles = await resolveAstDependencies(uniqueFiles, deps.workspaceRoot, 1);
+          astFiles = await resolveAstDependencies(uniqueFiles, deps.workspaceRoot, 1);
           uniqueFiles.push(...astFiles);
         }
         const finalFiles = [...new Set(uniqueFiles)];
@@ -165,6 +167,8 @@ export function registerConsultTool(
           conversationId,
           accountMemory,
           files: hasFiles ? finalFiles : [],
+          compressContext: Boolean(compress_context),
+          compressFiles: astFiles.length > 0 ? astFiles : undefined,
           model: deps.config.model,
           cwd: deps.workspaceRoot,
           maxFileSizeBytes: deps.config.maxFileSizeBytes,

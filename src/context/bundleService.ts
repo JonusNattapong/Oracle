@@ -3,6 +3,7 @@ import { estimateTokens } from "../tokens.js";
 import { resolveFiles } from "./files.js";
 import { scanFilesForSecrets } from "./secrets.js";
 import { buildUserPrompt, renderBundle, DEFAULT_SYSTEM_PROMPT } from "./bundle.js";
+import { compressToSignatures } from "./astCompressor.js";
 import { OracleError } from "../errors.js";
 
 export interface CreateBundleOptions {
@@ -15,6 +16,8 @@ export interface CreateBundleOptions {
   maxFileSizeBytes?: number;
   maxInputBytes?: number;
   allowEmptyFiles?: boolean;
+  compressContext?: boolean;
+  compressFiles?: string[];
 }
 
 export interface FileManifestEntry {
@@ -45,10 +48,26 @@ export class BundleService {
       ...(options.include ?? [])
     ];
 
-    const files = await resolveFiles(patterns, {
+    let files = await resolveFiles(patterns, {
       cwd,
       maxFileSizeBytes: options.maxFileSizeBytes ?? 1_000_000
     });
+
+    if (options.compressContext || options.compressFiles?.length) {
+      const compressSet = new Set((options.compressFiles ?? []).map((f) => f.replaceAll("\\", "/")));
+      files = files.map((file) => {
+        const shouldCompress = options.compressContext || compressSet.has(file.path);
+        if (shouldCompress && !file.base64) {
+          const compressed = compressToSignatures(file.content);
+          return {
+            ...file,
+            content: compressed,
+            sizeBytes: Buffer.byteLength(compressed, "utf8")
+          };
+        }
+        return file;
+      });
+    }
 
     if (files.length === 0 && !options.allowEmptyFiles && patterns.length > 0) {
       throw new OracleError(

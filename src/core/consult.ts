@@ -147,7 +147,9 @@ export class ConsultService {
       systemPrompt: request.systemPrompt,
       maxFileSizeBytes: request.maxFileSizeBytes,
       maxInputBytes: request.maxInputBytes,
-      allowEmptyFiles: request.allowEmptyFiles
+      allowEmptyFiles: request.allowEmptyFiles,
+      compressContext: request.compressContext,
+      compressFiles: request.compressFiles
     });
 
     const { systemPrompt, userPrompt, bundle, files, estimatedInputTokens } = bundleResult;

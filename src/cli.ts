@@ -141,6 +141,7 @@ program
   .option("--git-diff", "Include files modified in git diff")
   .option("--git-staged", "Include files staged in git index")
   .option("--ast-resolve", "Auto-resolve AST dependency files referenced in prompt")
+  .option("--ast-compress", "Compress AST dependency files into signature skeletons")
   .option("--conversation <id>", "Stable id so Oracle recalls what it already told you across calls")
   .option("--remember <text>", "Explicitly save a high-level fact or preference to ChatGPT account memory (chatgpt-browser only)")
   .option("--include-docs", "Search .oracle/docs/ for relevant documentation")
@@ -285,8 +286,9 @@ program
       filesToInclude.push(...(await getGitStagedFiles(cwd)));
     }
     const uniqueFiles = [...new Set(filesToInclude)];
+    let astDeps: string[] = [];
     if (options.astResolve && uniqueFiles.length > 0) {
-      const astDeps = await resolveAstDependencies(uniqueFiles, cwd, 1);
+      astDeps = await resolveAstDependencies(uniqueFiles, cwd, 1);
       uniqueFiles.push(...astDeps);
     }
     const finalFiles = [...new Set(uniqueFiles)];
@@ -303,6 +305,8 @@ program
       conversationId: options.conversation,
       accountMemory: options.remember,
       files: hasFiles ? finalFiles : [],
+      compressContext: Boolean(options.astCompress),
+      compressFiles: astDeps.length > 0 ? astDeps : undefined,
       model: route.model,
       cwd,
       systemPrompt,

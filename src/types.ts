@@ -45,6 +45,10 @@ export interface ConsultRequest {
   allowEmptyFiles?: boolean;
   /** Attribution for cost accounting; unset calls are reported as unattributed. */
   agent?: string;
+  /** Compress context files into AST signature skeletons to optimize token usage */
+  compressContext?: boolean;
+  /** Specific file paths to compress into AST signature skeletons */
+  compressFiles?: string[];
 }
 
 export interface TokenUsage {
