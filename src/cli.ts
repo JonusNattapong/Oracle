@@ -74,6 +74,8 @@ import { loadSoul } from "./core/souls.js";
 import { buildOracleSystemPrompt } from "./core/systemPrompt.js";
 import { getConversationContext, recordSelfLog } from "./core/selfMemory.js";
 import { buildMemoryContext } from "./core/memoryContext.js";
+import { validateCitations, type Citation } from "./core/citations.js";
+import { resolveComposerTool } from "./core/composerTool.js";
 import { buildWiki, getWikiPage, listWikiTopics } from "./wiki/compile.js";
 import { getGitModifiedFiles, getGitStagedFiles } from "./context/gitFiles.js";
 import { resolveAstDependencies } from "./context/astResolver.js";
@@ -146,9 +148,11 @@ program
   .option("--conversation <id>", "Stable id so Oracle recalls what it already told you across calls")
   .option("--remember <text>", "Explicitly save a high-level fact or preference to ChatGPT account memory (chatgpt-browser only)")
   .option("--include-docs", "Search .oracle/docs/ for relevant documentation")
+  .option("--no-citations", "Do not add memory/document citation references to the prompt or output")
   .option("--no-memory", "Answer without recalling stored project memory")
   .option("--web-search", "Turn on ChatGPT's Web search for this answer (chatgpt-browser only)")
   .option("--deep-research", "Turn on ChatGPT's Deep research for this answer; takes many minutes (chatgpt-browser only)")
+  .option("--create-image", "Turn on ChatGPT's Create image for this answer; generated images are saved to the session artifacts directory (chatgpt-browser only)")
   .option("-m, --model <model>", "Model override")
   .option("--backend <backend>", "Backend override (codex, openai, anthropic, gemini, opencode, browser, chatgpt-browser, azure, openrouter)")
   .option("--provider <provider>", "Provider override (deprecated: use --backend)")
@@ -250,6 +254,7 @@ program
     const memory = await orchestrator.createMemoryAdapter();
 
     let ctxBlock = "";
+    const citations: Citation[] = [];
     if (options.conversation) {
       ctxBlock += await getConversationContext(memory, options.conversation);
     }
@@ -258,8 +263,12 @@ program
       // answerable without stored memory — but it is reported, because a silent
       // drop looks identical to "nothing was remembered".
       try {
-        const recalled = await buildMemoryContext(memory, question);
+        const recalled = await buildMemoryContext(memory, question, { includeCitations: options.citations !== false });
         ctxBlock += recalled.block;
+        citations.push(...recalled.citations);
+        if (recalled.used === 0 && recalled.omitted === 0) {
+          ctxBlock += "\n\n## Recalled project memory\nNo matching project memory was found for this question. Answer without claiming memory support.";
+        }
         if (recalled.used === 0 && recalled.omitted > 0) {
           console.warn(
             `[memory] ${recalled.omitted} recalled item(s) did not fit the context budget; answering without project memory.`
@@ -274,7 +283,13 @@ program
     if (options.includeDocs) {
       const matched = await searchDocs(cwd, question, 5);
       if (matched.length > 0) {
-        const docsBlock = matched.map((d) => `### ${d.name}${d.heading ? ` — ${d.heading}` : ""}\n${d.snippet}`).join("\n\n");
+        const docsBlock = matched.map((d, index) => {
+          const ref = `d${index + 1}`;
+          if (options.citations !== false) {
+            citations.push({ ref, id: `${d.name}${d.heading ? `#${d.heading}` : ""}`, kind: "doc", label: d.name, path: d.name });
+          }
+          return `### ${options.citations !== false ? `[${ref}] ` : ""}${d.name}${d.heading ? ` — ${d.heading}` : ""}\n${d.snippet}`;
+        }).join("\n\n");
         ctxBlock += `\n\n## Documentation from .oracle/docs/\n${docsBlock}`;
       }
     }
@@ -298,9 +313,11 @@ program
     const result = await service.consult({
       prompt: `${ctxBlock}\n\n## Question\n${question}`,
       title: question,
-      tool: options.deepResearch
-        ? "deep-research"
-        : options.webSearch ? "web-search" : undefined,
+      tool: resolveComposerTool({
+        webSearch: options.webSearch,
+        deepResearch: options.deepResearch,
+        createImage: options.createImage
+      }),
       preset: "review",
       provider: route.provider,
       conversationId: options.conversation,
@@ -331,6 +348,21 @@ program
     }
 
     console.log(result.output);
+    if (options.citations !== false) {
+      const validation = validateCitations(result.output, citations);
+      if (citations.length > 0) {
+        console.log("\nSources:");
+        for (const citation of citations) {
+          const freshness = citation.freshness ? ` (${citation.freshness})` : "";
+          console.log(`  [${citation.ref}] ${citation.kind}: ${citation.label}${freshness} — ${citation.id}`);
+        }
+      } else {
+        console.log("\nSources: none (no project memory or documentation was recalled).");
+      }
+      if (validation.unknown.length > 0) {
+        console.warn(`Warning: answer cited unknown references: ${validation.unknown.join(", ")}`);
+      }
+    }
     if (result.accountMemoryRequested) {
       // "Saved" is only claimed for a write checked against the account; an
       // unverifiable one must not read as success.
@@ -639,6 +671,57 @@ memCmd
     const memory = await orchestrator.createMemoryAdapter();
     const count = await memory.clearWorking(agent ?? undefined);
     console.log(`Cleared ${count} working memory entries.`);
+  });
+
+memCmd
+  .command("verify")
+  .description("Verify file anchors attached to memory entries")
+  .option("--anchors", "Check Git-anchored memory freshness")
+  .action(async (options) => {
+    if (!options.anchors) {
+      console.log("Nothing to verify. Pass --anchors to check Git-anchored memory.");
+      return;
+    }
+    const orchestrator = new OrchestratorFactory(process.cwd(), homeDir());
+    const memory = await orchestrator.createMemoryAdapter();
+    if (!memory.verifyAnchors) {
+      console.error("The active memory backend does not expose anchor verification.");
+      process.exitCode = 1;
+      return;
+    }
+    const report = await memory.verifyAnchors();
+    console.log(`Anchors: ${report.totalAnchored}   fresh: ${report.fresh}   drifted: ${report.drifted}   missing: ${report.missing}   unavailable: ${report.unavailable}`);
+    for (const entry of report.entries) {
+      const states = entry.statuses.map((status) => `${status.path}=${status.state}`).join(", ");
+      console.log(`  ${entry.id}  [${entry.type}]  ${states}`);
+    }
+  });
+
+memCmd
+  .command("why")
+  .description("Explain why a memory was reachable for a question")
+  .argument("<entryId>", "Memory entry id")
+  .requiredOption("--for <question>", "Question or query that recalled the entry")
+  .action(async (entryId, options) => {
+    const orchestrator = new OrchestratorFactory(process.cwd(), homeDir());
+    const memory = await orchestrator.createMemoryAdapter();
+    const entry = (await memory.recall({ limit: 100_000, includeStale: true, touch: false }))
+      .find((candidate) => candidate.id === entryId);
+    if (!entry) {
+      console.error(`Memory entry not found: ${entryId}`);
+      process.exitCode = 1;
+      return;
+    }
+    const explanation = await memory.graphWhy?.(entryId, options.for);
+    if (!explanation?.reachable) {
+      console.log(`Memory ${entryId} is not reachable through the entity graph for: ${options.for}`);
+      console.log("It may have been returned by lexical relevance only.");
+      return;
+    }
+    console.log(`Memory ${entryId}: ${entry.content}`);
+    for (const [index, relationPath] of explanation.paths.entries()) {
+      console.log(`Path ${index + 1}: ${relationPath.length ? relationPath.map((hop) => `${hop.from} -[${hop.relation}]-> ${hop.to}`).join("  ") : "direct entity match"}`);
+    }
   });
 
 // ── memory graph ─────────────────────────────────────────────────

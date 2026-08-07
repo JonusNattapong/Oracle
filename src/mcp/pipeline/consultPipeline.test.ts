@@ -29,6 +29,9 @@ describe("consult pipeline context limits", () => {
       images: false,
       continuation: false,
       structuredUsage: false,
+      // Stands in for a composer-tool-capable backend so this suite can assert
+      // what the pipeline forwards; ConsultService refuses a tool otherwise.
+      composerTools: true,
       supportedPlatforms: ["darwin", "linux", "win32"],
     },
     healthCheck: async () => [],

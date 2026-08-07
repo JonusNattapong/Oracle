@@ -119,7 +119,7 @@ export class ChatGptMemoryAdapter implements MemoryPort {
     agent: string,
     type: MemoryType,
     content: string,
-    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number }
+    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number; anchors?: import("./anchors.js").MemoryAnchor[] }
   ): Promise<MemoryStoreEntry> {
     if (!this.isRemoteType(type)) {
       return this.shadow.remember(agent, type, content, opts);
@@ -237,6 +237,7 @@ export class ChatGptMemoryAdapter implements MemoryPort {
     tags?: string[];
     limit?: number;
     includeArchived?: boolean;
+    includeStale?: boolean;
   }): Promise<MemoryStoreEntry[]> {
     const local = await this.shadow.recall({ ...opts, limit: opts?.limit ?? 200 });
     if (opts?.type === "working") return local;
@@ -248,7 +249,7 @@ export class ChatGptMemoryAdapter implements MemoryPort {
 
   async searchMemories(
     query: string,
-    opts?: { type?: MemoryType; agent?: string; limit?: number }
+    opts?: { type?: MemoryType; agent?: string; limit?: number; includeStale?: boolean }
   ): Promise<MemoryStoreEntry[]> {
     const local = await this.shadow.searchMemories(query, { ...opts, limit: opts?.limit ?? 200 });
     if (opts?.type === "working") return local;
@@ -260,9 +261,13 @@ export class ChatGptMemoryAdapter implements MemoryPort {
   /** Saved Memory has no ranking signal, so scored search is plain search. */
   async scoredSearchMemories(
     query: string,
-    opts?: { type?: MemoryType; agent?: string; limit?: number }
+    opts?: { type?: MemoryType; agent?: string; limit?: number; includeStale?: boolean }
   ): Promise<MemoryStoreEntry[]> {
     return this.searchMemories(query, opts);
+  }
+
+  verifyAnchors(opts?: { includeArchived?: boolean; paths?: string[] }) {
+    return this.shadow.verifyAnchors?.(opts) ?? Promise.resolve({ totalAnchored: 0, fresh: 0, drifted: 0, missing: 0, unavailable: 0, entries: [] });
   }
 
   /**
@@ -369,8 +374,12 @@ export class ChatGptMemoryAdapter implements MemoryPort {
   // ── Advanced features are local-only: Saved Memory has no graph, no decay,
   // and no consolidation surface. They operate on the shadow index. ──────────
 
-  graphQuery(query: string, opts?: { agent?: string; limit?: number }) {
+  graphQuery(query: string, opts?: { agent?: string; limit?: number; includeStale?: boolean }) {
     return this.shadow.graphQuery?.(query, opts) ?? Promise.resolve([]);
+  }
+
+  graphWhy(memoryId: string, question: string) {
+    return this.shadow.graphWhy?.(memoryId, question) ?? Promise.resolve({ reachable: false, paths: [], entities: [] });
   }
 
   getGraphStats() {

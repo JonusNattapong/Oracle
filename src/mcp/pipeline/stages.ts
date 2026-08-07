@@ -5,6 +5,7 @@ import { buildMemoryContext } from "../../core/memoryContext.js";
 import { searchDocs } from "../../docs/reader.js";
 import { getGitModifiedFiles, getGitStagedFiles } from "../../context/gitFiles.js";
 import { resolveAstDependencies } from "../../context/astResolver.js";
+import type { Citation } from "../../core/citations.js";
 import type { PipelineInput, PipelineDeps } from "./consultPipeline.js";
 
 /* ------------------------------------------------------------------ *
@@ -49,11 +50,12 @@ export async function resolveIdentity(
 export async function gatherContext(
   input: PipelineInput,
   deps: PipelineDeps
-): Promise<{ contextBlock: string }> {
+): Promise<{ contextBlock: string; citations: Citation[] }> {
   const question = input.prompt;
   let ctxBlock = input.context
     ? `\n\n## Context from the asking agent\n${input.context}`
     : "";
+  const citations: Citation[] = [];
 
   if (input.activeFile) {
     ctxBlock += `\n\n## Active Editor Context\nFile: ${input.activeFile}${
@@ -71,8 +73,12 @@ export async function gatherContext(
     // Recall is best-effort: losing it degrades the answer but does not
     // make the question unanswerable, so report and continue.
     try {
-      const recalled = await buildMemoryContext(deps.memory, question);
+      const recalled = await buildMemoryContext(deps.memory, question, { includeCitations: input.noCitations !== true });
       ctxBlock += recalled.block;
+      citations.push(...recalled.citations);
+      if (input.noCitations !== true && recalled.used === 0 && recalled.omitted === 0) {
+        ctxBlock += "\n\n## Recalled project memory\nNo matching project memory was found for this question. Answer without claiming memory support.";
+      }
       if (recalled.used === 0 && recalled.omitted > 0) {
         console.error(
           `[memory] ${recalled.omitted} recalled item(s) did not fit the context budget; answering without project memory.`
@@ -92,15 +98,19 @@ export async function gatherContext(
     const matched = await searchDocs(deps.workspaceRoot, docQuery, 5);
     if (matched.length > 0) {
       const docsBlock = matched
-        .map(
-          (d) => `### ${d.name}${d.heading ? ` — ${d.heading}` : ""}\n${d.snippet}`
-        )
+        .map((d, index) => {
+          const ref = `d${index + 1}`;
+          if (input.noCitations !== true) {
+            citations.push({ ref, id: `${d.name}${d.heading ? `#${d.heading}` : ""}`, kind: "doc", label: d.name, path: d.name });
+          }
+          return `### ${input.noCitations === true ? "" : `[${ref}] `}${d.name}${d.heading ? ` — ${d.heading}` : ""}\n${d.snippet}`;
+        })
         .join("\n\n");
       ctxBlock += `\n\n## Documentation from .oracle/docs/\n${docsBlock}\n\n(Match: "${docQuery}")`;
     }
   }
 
-  return { contextBlock: ctxBlock };
+  return { contextBlock: ctxBlock, citations };
 }
 
 /* ------------------------------------------------------------------ *

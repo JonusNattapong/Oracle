@@ -59,7 +59,7 @@ The harness was written to catch exactly this and was then left unplugged.
 - [x] `npm run verify` fails if recall@5 or MRR drops below the committed floor.
 - [x] A deliberate regression (lexical-only retrieval with vector fusion
       disabled) falls below the floor — covered by a regression test.
-- [ ] Dataset covers at least: plain recall, temporal, contradiction, graph hop.
+- [x] Dataset covers at least: plain recall, temporal, contradiction, graph hop.
 - [x] Thresholds file records the measurement date and baseline commit.
 
 ---
@@ -95,27 +95,29 @@ interface MemoryAnchor {
 }
 ```
 
-- `src/memory/anchors.ts` (new) — `resolveAnchors()` captures the anchor at
+- `src/memory/anchors.ts` (new) — `captureAnchors()` captures the anchor at
   write time; `checkAnchors()` compares stored `blobSha` against the working
-  tree and reports `fresh | drifted | missing`.
+  tree and reports `fresh | drifted | missing | unavailable`.
 - `src/memory/adapter.ts` — `remember()` accepts `anchors`; recall attaches the
   current freshness to each returned entry.
 - Recall ranking down-weights `drifted`, excludes `missing` by default (the
   file is gone; the memory is about nothing).
-- `oracle memory verify --anchors` — sweeps the store, reports drift counts,
-  and optionally queues drifted entries for `reflect.ts` to re-check.
+- `oracle memory verify --anchors` — sweeps the store and reports freshness
+  counts. MCP exposes the same operation as `oracle_memory_maintain` with
+  `action: "verify_anchors"`.
 - The agent loop already audits every `write_file` / `edit_file`
   (`src/agent/audit.ts`) — feed those paths into an incremental drift check so
   the common case costs nothing extra.
 
 ### Acceptance
 
-- [ ] Writing a memory with a file reference records commit + blob sha.
-- [ ] Editing that file flips the entry to `drifted` on the next recall.
-- [ ] Deleting that file excludes the entry from recall by default.
-- [ ] Anchors are optional — memories with no anchor behave exactly as today,
+- [x] Writing a memory with a file reference records commit + blob sha.
+- [x] Editing that file flips the entry to `drifted` on the next recall.
+- [x] Deleting that file excludes the entry from recall by default.
+- [x] Anchors are optional — memories with no anchor behave exactly as today,
       covered by the existing memory tests passing unmodified.
-- [ ] Drift check on a 1000-entry store completes in under 500 ms.
+- [x] Drift check on a 1000-entry store completes in under 500 ms using the
+      append-only anchor index plus parallel file hashing.
 
 ---
 
@@ -145,11 +147,11 @@ it *is* wrong, the user has no thread to pull.
 
 ### Acceptance
 
-- [ ] An answer using recalled memory lists the entries it used.
-- [ ] An answer using none says so explicitly instead of listing nothing.
-- [ ] Citation ids in the text resolve to real entry ids — validated, and a
+- [x] An answer using recalled memory lists the entries it used.
+- [x] An answer using none says so explicitly instead of listing nothing.
+- [x] Citation ids in the text resolve to real entry ids — validated, and a
       model citing a nonexistent id is reported rather than passed through.
-- [ ] `oracle memory why` prints a path for a reachable entry and a clear
+- [x] `oracle memory why` prints a path for a reachable entry and a clear
       "not reachable" for one pulled in by lexical match alone.
 
 ---
@@ -187,11 +189,12 @@ never been measured, so nobody knows the size of the tax.
 
 ### Acceptance
 
-- [ ] The token cost of the full tool surface is measured and recorded in
+- [x] The token cost of the full tool surface is measured and recorded in
       `docs/MCP-STANDARDS.md`.
-- [ ] The tiering decision cites that measurement.
-- [ ] If tiering ships: every tool remains reachable, and a test asserts that
-      no tool became unreachable.
+- [x] The tiering decision cites that measurement; 20 tools / ~3,880 tokens is
+      small enough to keep the current surface.
+- [x] Tiering did not ship because the measured surface is small; the existing
+      tool-list integration test continues to assert the advertised surface.
 
 ---
 
@@ -216,9 +219,9 @@ this tree). Not ESLint — the config burden is not worth it here.
 
 ### Acceptance
 
-- [ ] `npm run lint` exits clean on `main`.
-- [ ] `verify` fails on a newly introduced lint error.
-- [ ] No behavioral change: the full test suite passes unmodified.
+- [x] `npm run lint` exits clean on `main`.
+- [x] `verify` runs the lint gate before tests and fails on a newly introduced lint error.
+- [x] No behavioral change: the full test suite passes unmodified.
 
 ---
 

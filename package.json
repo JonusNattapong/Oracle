@@ -53,11 +53,13 @@
     "mcp": "tsx src/mcp.ts",
     "mcp:messaging": "tsx src/mcp-messaging.ts",
     "typecheck": "tsc --noEmit",
+    "lint": "oxlint --quiet src scripts",
     "test": "vitest run src",
     "test:eval": "vitest run src/memory/evalHarness.test.ts",
     "test:cli": "node scripts/smoke-cli.mjs",
     "test:runtime": "node scripts/smoke-runtime.mjs",
-    "verify": "npm run build && npm run test && npm run test:eval && npm run test:cli && npm run test:runtime",
+    "tool-budget": "tsx scripts/tool-budget.ts",
+    "verify": "npm run build && npm run lint && npm run test && npm run test:eval && npm run test:cli && npm run test:runtime",
     "prepublishOnly": "npm run verify",
     "verify:live": "node scripts/verify-live.mjs"
   },
@@ -79,6 +81,7 @@
   "devDependencies": {
     "@types/node": "^26.0.0",
     "@types/ws": "^8.18.1",
+    "oxlint": "^1.77.0",
     "tsx": "^4.23.0",
     "typescript": "^6.0.0",
     "vitest": "^4.1.0"

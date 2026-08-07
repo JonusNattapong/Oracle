@@ -119,6 +119,7 @@ export function defaultAgentTools(): AgentTool[] {
           const hash = createHash("sha256").update(content).digest("hex").slice(0, 8);
           ctx.audit.record("write", rel, { sizeBytes: content.length, contentHash: hash });
         }
+        await ctx.onFileMutation?.(rel, "write");
         return `Wrote ${content.length} chars to ${rel}`;
       },
     },
@@ -152,6 +153,7 @@ export function defaultAgentTools(): AgentTool[] {
           const hash = createHash("sha256").update(newContent).digest("hex").slice(0, 8);
           ctx.audit.record("edit", rel, { sizeBytes: newContent.length, contentHash: hash });
         }
+        await ctx.onFileMutation?.(rel, "edit");
         return `Edited ${rel}`;
       },
     },

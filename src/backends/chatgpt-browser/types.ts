@@ -41,12 +41,13 @@ export interface SelectorMap {
 }
 
 /** Tools selectable from the composer's plus menu. */
-export type ChatGptComposerTool = "web-search" | "deep-research";
+export type ChatGptComposerTool = "web-search" | "deep-research" | "create-image";
 
 /** Visible label each tool is listed under, and the pill it leaves behind. */
 export const COMPOSER_TOOL_LABELS: Record<ChatGptComposerTool, string> = {
   "web-search": "Web search",
-  "deep-research": "Deep research"
+  "deep-research": "Deep research",
+  "create-image": "Create image"
 };
 
 /**
@@ -54,11 +55,24 @@ export const COMPOSER_TOOL_LABELS: Record<ChatGptComposerTool, string> = {
  *
  * Deep research runs for many minutes and spends most of them with the turn
  * unchanged, which the normal three-minute budget treats as a dead session.
+ * Image generation is shorter but has the same shape: one long render with no
+ * incremental text to prove the turn is alive.
  */
 export const COMPOSER_TOOL_MIN_TIMEOUT_MS: Record<ChatGptComposerTool, number> = {
   "web-search": 0,
-  "deep-research": 45 * 60_000
+  "deep-research": 45 * 60_000,
+  "create-image": 5 * 60_000
 };
+
+/**
+ * Tools whose turn must not be rescued by a page reload. Their turn sits
+ * unchanged by design, and reloading discards the work rather than unwedging a
+ * stuck UI — a generated image is lost, not re-rendered.
+ */
+export const COMPOSER_TOOLS_WITHOUT_STALL_RELOAD: ReadonlySet<ChatGptComposerTool> = new Set([
+  "deep-research",
+  "create-image"
+]);
 
 export interface BrowserImagePayload {
   base64: string;

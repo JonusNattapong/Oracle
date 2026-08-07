@@ -121,6 +121,30 @@
       "query": "Memory graph visualization and UI exploration",
       "relevantIds": ["mem-008", "mem-014"],
       "category": "ui"
+    },
+    {
+      "id": "q-021",
+      "query": "When does the cached session expire over time?",
+      "relevantIds": ["mem-010", "mem-013"],
+      "category": "temporal"
+    },
+    {
+      "id": "q-022",
+      "query": "Contradictory memory claims about provider coverage",
+      "relevantIds": ["mem-002", "mem-007"],
+      "category": "contradiction"
+    },
+    {
+      "id": "q-023",
+      "query": "Find the graph path linking entities across agent memories",
+      "relevantIds": ["mem-005", "mem-008"],
+      "category": "graph-hop"
+    },
+    {
+      "id": "q-024",
+      "query": "Temporal graph history for scheduled runtime decisions",
+      "relevantIds": ["mem-014", "mem-013"],
+      "category": "temporal-graph"
     }
   ],
   "metrics": {

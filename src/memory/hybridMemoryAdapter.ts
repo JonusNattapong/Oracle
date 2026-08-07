@@ -126,7 +126,7 @@ export class HybridMemoryAdapter implements MemoryPort {
     agent: string,
     type: MemoryType,
     content: string,
-    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number }
+    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number; anchors?: import("./anchors.js").MemoryAnchor[] }
   ): Promise<MemoryStoreEntry> {
     const entry = await this.local.remember(agent, type, content, opts);
     if (!shouldMirror(this.policy, { type, content, tags: opts?.tags, importance: opts?.importance })) {
@@ -164,15 +164,16 @@ export class HybridMemoryAdapter implements MemoryPort {
     tags?: string[];
     limit?: number;
     includeArchived?: boolean;
+    includeStale?: boolean;
   }) {
     return this.local.recall(opts);
   }
 
-  searchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number }) {
+  searchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number; includeStale?: boolean }) {
     return this.local.searchMemories(query, opts);
   }
 
-  scoredSearchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number }) {
+  scoredSearchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number; includeStale?: boolean }) {
     return this.local.scoredSearchMemories(query, opts);
   }
 
@@ -201,12 +202,16 @@ export class HybridMemoryAdapter implements MemoryPort {
     return this.local.clearWorking(agent);
   }
 
-  graphQuery(query: string, opts?: { agent?: string; limit?: number }) {
+  graphQuery(query: string, opts?: { agent?: string; limit?: number; includeStale?: boolean }) {
     return this.local.graphQuery?.(query, opts) ?? Promise.resolve([]);
   }
 
   graphFindPath(from: string, to: string) {
     return this.local.graphFindPath?.(from, to) ?? Promise.resolve([]);
+  }
+
+  graphWhy(memoryId: string, question: string) {
+    return this.local.graphWhy?.(memoryId, question) ?? Promise.resolve({ reachable: false, paths: [], entities: [] });
   }
 
   getGraphStats() {
@@ -238,5 +243,9 @@ export class HybridMemoryAdapter implements MemoryPort {
 
   reflect(opts?: { agent?: string }) {
     return this.local.reflect?.(opts) ?? Promise.resolve([]);
+  }
+
+  verifyAnchors(opts?: { includeArchived?: boolean; paths?: string[] }) {
+    return this.local.verifyAnchors?.(opts) ?? Promise.resolve({ totalAnchored: 0, fresh: 0, drifted: 0, missing: 0, unavailable: 0, entries: [] });
   }
 }

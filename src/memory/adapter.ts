@@ -9,6 +9,7 @@ import { consolidateMemories, type ConsolidationResult } from "./consolidation.j
 import { pruneStaleMemories, promoteWorkingMemories, runMaintenance, type MaintenanceOptions, type MaintenanceResult } from "./maintenance.js";
 import { reflectOnMemories, type Reflection } from "./reflect.js";
 import type { RuntimeDatabase } from "../runtime/database.js";
+import { checkAnchors, type AnchorStatus, type AnchorVerificationReport, type MemoryAnchor } from "./anchors.js";
 
 /** Options for MemoryAdapter.startAutoMaintenance(). */
 export interface AutoMaintenanceOptions {
@@ -50,6 +51,16 @@ export interface MemoryStoreEntry {
   accessCount: number;
   lastAccessed: string;
   decayRate: number;
+  /** File anchors are persisted; statuses are computed on read and never persisted. */
+  anchors?: MemoryAnchor[];
+  anchorStatus?: AnchorStatus[];
+}
+
+interface AnchorIndexRecord {
+  id: string;
+  type: MemoryType;
+  anchors?: MemoryAnchor[];
+  deleted?: boolean;
 }
 
 const DATA_DIR = ".oracle-memory";
@@ -88,6 +99,7 @@ export class MemoryAdapter implements MemoryPort {
   private vectorsLoaded = false;
   private sqliteBackend: SQLiteMemoryBackend | null = null;
   private entityGraph: EntityGraph;
+  private anchorIndexWrite: Promise<void> = Promise.resolve();
 
   constructor(private readonly rootDir: string, private readonly dataDirectory = DATA_DIR) {
     this.vectors = new VectorStore(rootDir, dataDirectory);
@@ -105,6 +117,31 @@ export class MemoryAdapter implements MemoryPort {
 
   private dataDir(): string {
     return path.join(this.rootDir, this.dataDirectory);
+  }
+
+  private anchorIndexPath(): string {
+    return path.join(this.dataDir(), "anchors.ndjson");
+  }
+
+  private queueAnchorIndex(record: AnchorIndexRecord): void {
+    this.anchorIndexWrite = this.anchorIndexWrite.then(async () => {
+      await this.ensureDirs();
+      await fs.appendFile(this.anchorIndexPath(), `${JSON.stringify(record)}\n`, "utf8");
+    }).catch(() => {});
+  }
+
+  private async readAnchorIndex(): Promise<AnchorIndexRecord[] | null> {
+    try {
+      const lines = (await fs.readFile(this.anchorIndexPath(), "utf8")).split("\n").filter(Boolean);
+      const latest = new Map<string, AnchorIndexRecord>();
+      for (const line of lines) {
+        try {
+          const record = JSON.parse(line) as AnchorIndexRecord;
+          latest.set(record.id, record);
+        } catch { /* skip corrupt index rows */ }
+      }
+      return [...latest.values()].filter((record) => !record.deleted && record.anchors?.length);
+    } catch { return null; }
   }
 
   private typeDir(type: MemoryType): string {
@@ -137,8 +174,38 @@ export class MemoryAdapter implements MemoryPort {
   private async writeEntry(entry: MemoryStoreEntry): Promise<void> {
     const fp = this.filePath(entry.type, entry.id);
     const tmp = `${fp}.tmp`;
-    await fs.writeFile(tmp, JSON.stringify(entry, null, 2), "utf8");
+    const { anchorStatus: _anchorStatus, ...persisted } = entry;
+    await fs.writeFile(tmp, JSON.stringify(persisted, null, 2), "utf8");
     await fs.rename(tmp, fp);
+  }
+
+  private anchorWeight(entry: MemoryStoreEntry): number {
+    if (!entry.anchorStatus?.length) return 1;
+    if (entry.anchorStatus.some((status) => status.state === "missing")) return 0;
+    if (entry.anchorStatus.some((status) => status.state === "drifted")) return 0.5;
+    return 1;
+  }
+
+  private async attachAnchorStatuses(entries: MemoryStoreEntry[], includeStale: boolean, anchorPaths?: string[]): Promise<MemoryStoreEntry[]> {
+    const pathSet = anchorPaths?.length ? new Set(anchorPaths.map((value) => value.replaceAll("\\", "/"))) : undefined;
+    const anchored = entries.filter((entry) => entry.anchors?.length && (!pathSet || entry.anchors.some((anchor) => pathSet.has(anchor.path))));
+    if (anchored.length === 0) return entries;
+    const anchors = anchored.flatMap((entry) => entry.anchors ?? []);
+    const statuses = await checkAnchors(this.rootDir, anchors);
+    const statusMap = new Map(statuses.map((status, index) => {
+      const anchor = anchors[index];
+      return [`${anchor.path}\0${anchor.commit}\0${anchor.blobSha ?? ""}`, status];
+    }));
+    return entries
+      .map((entry) => {
+        if (!entry.anchors?.length) return entry;
+        const anchorStatus = entry.anchors.map((anchor) => {
+          if (pathSet && !pathSet.has(anchor.path)) return undefined;
+          return statusMap.get(`${anchor.path}\0${anchor.commit}\0${anchor.blobSha ?? ""}`);
+        }).filter((status): status is AnchorStatus => Boolean(status));
+        return { ...entry, anchorStatus };
+      })
+      .filter((entry) => includeStale || !entry.anchorStatus?.some((status) => status.state === "missing"));
   }
 
   /** Token overlap + durable-memory signals, deliberately zero-cost. */
@@ -155,7 +222,7 @@ export class MemoryAdapter implements MemoryPort {
     agent: string,
     type: MemoryType,
     content: string,
-    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number }
+    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number; anchors?: MemoryAnchor[] }
   ): Promise<MemoryStoreEntry> {
     await this.ensureDirs();
     const normalizedContent = canonicalContent(content);
@@ -175,8 +242,10 @@ export class MemoryAdapter implements MemoryPort {
       accessCount: 0,
       lastAccessed: now,
       decayRate: 0.01,
+      ...(opts?.anchors?.length ? { anchors: opts.anchors } : {}),
     };
     await this.writeEntry(entry);
+    if (entry.anchors?.length) this.queueAnchorIndex({ id: entry.id, type: entry.type, anchors: entry.anchors });
 
     // Fire-and-forget indexing — never blocks remember
     if (this.sqliteBackend) {
@@ -192,12 +261,13 @@ export class MemoryAdapter implements MemoryPort {
     return entry;
   }
 
-  async recall(opts?: { type?: MemoryType; agent?: string; tags?: string[]; limit?: number; includeArchived?: boolean; touch?: boolean }): Promise<MemoryStoreEntry[]> {
+  async recall(opts?: { type?: MemoryType; agent?: string; tags?: string[]; limit?: number; includeArchived?: boolean; includeStale?: boolean; anchorPaths?: string[]; touch?: boolean }): Promise<MemoryStoreEntry[]> {
     const type = opts?.type;
     const agent = opts?.agent;
     const tags = opts?.tags;
     const limit = opts?.limit ?? 20;
     const includeArchived = opts?.includeArchived ?? false;
+    const includeStale = opts?.includeStale ?? false;
     // Bulk/internal reads (maintenance, consolidation, stats) pass touch:false
     // so loading an entry for inspection doesn't itself reset its staleness clock.
     const touch = opts?.touch ?? true;
@@ -208,19 +278,22 @@ export class MemoryAdapter implements MemoryPort {
     for (const dir of dirs) {
       try {
         const files = (await fs.readdir(dir)).sort();
-        for (const file of files.slice(-(limit * 4))) {
-          if (!file.endsWith(".json")) continue;
-          try {
-            const entry = JSON.parse(await fs.readFile(path.join(dir, file), "utf8")) as MemoryStoreEntry;
-            if (entry.archived && !includeArchived) continue;
-            if (agent && entry.agent !== agent) continue;
-            if (tags && !tags.some((t) => entry.tags.includes(t))) continue;
-            entries.push(entry);
-          } catch { /* skip corrupt */ }
+        const candidates = files.slice(-(limit * 4)).filter((file) => file.endsWith(".json"));
+        const loaded = await Promise.all(candidates.map(async (file) => {
+          try { return JSON.parse(await fs.readFile(path.join(dir, file), "utf8")) as MemoryStoreEntry; }
+          catch { return null; }
+        }));
+        for (const entry of loaded) {
+          if (!entry) continue;
+          if (entry.archived && !includeArchived) continue;
+          if (agent && entry.agent !== agent) continue;
+          if (tags && !tags.some((t) => entry.tags.includes(t))) continue;
+          entries.push(entry);
         }
       } catch { /* dir not ready */ }
     }
-    const results = entries.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, limit);
+    const freshEntries = await this.attachAnchorStatuses(entries, includeStale, opts?.anchorPaths);
+    const results = freshEntries.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, limit);
     // Track access — fire-and-forget so recall never blocks
     if (touch) {
       for (const e of results) {
@@ -247,7 +320,7 @@ export class MemoryAdapter implements MemoryPort {
     return (semanticScore * 0.6) + (importance * 0.2) + (recencyBoost * 0.15) + (freqBoost * 0.05);
   }
 
-  async searchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number }): Promise<MemoryStoreEntry[]> {
+  async searchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number; includeStale?: boolean }): Promise<MemoryStoreEntry[]> {
     const limit = opts?.limit ?? 50;
     const q = query.toLowerCase();
 
@@ -257,10 +330,10 @@ export class MemoryAdapter implements MemoryPort {
         const hits = await this.sqliteBackend.search(query, limit * 2);
         if (hits.length > 0) {
           const ids = new Map(hits.map((h) => [h.memoryId, h.score]));
-          const all = await this.recall({ type: opts?.type, agent: opts?.agent, limit: 10_000 });
+          const all = await this.recall({ type: opts?.type, agent: opts?.agent, limit: 10_000, includeStale: opts?.includeStale });
           const scored = all
             .filter((e) => ids.has(e.id))
-            .map((e) => ({ entry: e, score: ids.get(e.id)! }))
+            .map((e) => ({ entry: e, score: ids.get(e.id)! * this.anchorWeight(e) }))
             .sort((a, b) => b.score - a.score)
             .slice(0, limit);
           return scored.map((s) => s.entry);
@@ -272,9 +345,9 @@ export class MemoryAdapter implements MemoryPort {
 
     // Fallback: keyword-only (BM25 via SQLite or lexical score)
     const terms = queryTerms(query);
-    const entries = await this.recall({ type: opts?.type, agent: opts?.agent, limit: Math.max(limit * 4, 100), touch: false });
+    const entries = await this.recall({ type: opts?.type, agent: opts?.agent, limit: Math.max(limit * 4, 100), includeStale: opts?.includeStale, touch: false });
     return entries
-      .map((entry) => ({ entry, score: this.lexicalScore(entry, terms) }))
+      .map((entry) => ({ entry, score: this.lexicalScore(entry, terms) * this.anchorWeight(entry) }))
       .filter((hit) => hit.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, limit)
@@ -286,7 +359,7 @@ export class MemoryAdapter implements MemoryPort {
    * Uses the same vector index as searchMemories, then re-ranks results
    * with recency, frequency, and importance factored in.
    */
-  async scoredSearchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number }): Promise<MemoryStoreEntry[]> {
+  async scoredSearchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number; includeStale?: boolean }): Promise<MemoryStoreEntry[]> {
     const limit = opts?.limit ?? 50;
     const q = query.toLowerCase();
 
@@ -295,12 +368,12 @@ export class MemoryAdapter implements MemoryPort {
         const hits = await this.sqliteBackend.search(query, limit * 4);
         if (hits.length > 0) {
           const ids = new Map(hits.map((h) => [h.memoryId, h.score]));
-          const all = await this.recall({ type: opts?.type, agent: opts?.agent, limit: 10_000 });
+          const all = await this.recall({ type: opts?.type, agent: opts?.agent, limit: 10_000, includeStale: opts?.includeStale });
           const scored = all
             .filter((e) => ids.has(e.id))
             .map((e) => ({
               entry: e,
-              score: this.recencyWeightedScore(ids.get(e.id)!, e),
+              score: this.recencyWeightedScore(ids.get(e.id)!, e) * this.anchorWeight(e),
             }))
             .sort((a, b) => b.score - a.score)
             .slice(0, limit);
@@ -317,9 +390,9 @@ export class MemoryAdapter implements MemoryPort {
 
     // Fallback: keyword + recency sort
     const terms = queryTerms(query);
-    const entries = await this.recall({ type: opts?.type, agent: opts?.agent, limit: Math.max(limit * 4, 100), touch: false });
+    const entries = await this.recall({ type: opts?.type, agent: opts?.agent, limit: Math.max(limit * 4, 100), includeStale: opts?.includeStale, touch: false });
     return entries
-      .map((entry) => ({ entry, score: this.lexicalScore(entry, terms) }))
+      .map((entry) => ({ entry, score: this.lexicalScore(entry, terms) * this.anchorWeight(entry) }))
       .filter((hit) => hit.score > 0)
       .sort((a, b) => this.recencyWeightedScore(b.score, b.entry) - this.recencyWeightedScore(a.score, a.entry))
       .slice(0, limit)
@@ -333,6 +406,7 @@ export class MemoryAdapter implements MemoryPort {
     if (updates.tags !== undefined) entry.tags = updates.tags;
     if (updates.importance !== undefined) entry.importance = updates.importance;
     await this.writeEntry(entry);
+    if (entry.anchors?.length) this.queueAnchorIndex({ id: entry.id, type: entry.type, anchors: entry.anchors });
     if (USE_OLLAMA && updates.content !== undefined) {
       this.ensureVectors().then(() => this.vectors.index(id, entry.content)).catch(() => {});
     }
@@ -350,10 +424,57 @@ export class MemoryAdapter implements MemoryPort {
     return { total: all.length, byType, byAgent };
   }
 
+  /** Verify every persisted file anchor in one batch and return a compact report. */
+  async verifyAnchors(opts?: { includeArchived?: boolean; paths?: string[] }): Promise<AnchorVerificationReport> {
+    const indexed = await this.readAnchorIndex();
+    if (indexed?.length) {
+      const pathSet = opts?.paths?.length ? new Set(opts.paths.map((value) => value.replaceAll("\\", "/"))) : undefined;
+      const selected = indexed.filter((record) => !pathSet || record.anchors?.some((anchor) => pathSet.has(anchor.path)));
+      const anchors = selected.flatMap((record) => record.anchors ?? []);
+      const statuses = await checkAnchors(this.rootDir, anchors);
+      const statusMap = new Map(statuses.map((status, index) => {
+        const anchor = anchors[index];
+        return [`${anchor.path}\0${anchor.commit}\0${anchor.blobSha ?? ""}`, status];
+      }));
+      const report: AnchorVerificationReport = { totalAnchored: 0, fresh: 0, drifted: 0, missing: 0, unavailable: 0, entries: [] };
+      for (const record of selected) {
+        const entryStatuses = (record.anchors ?? []).map((anchor) => statusMap.get(`${anchor.path}\0${anchor.commit}\0${anchor.blobSha ?? ""}`)!).filter(Boolean);
+        report.totalAnchored += entryStatuses.length;
+        for (const status of entryStatuses) report[status.state]++;
+        report.entries.push({ id: record.id, type: record.type, statuses: entryStatuses });
+      }
+      return report;
+    }
+    const all = await this.recall({
+      limit: 100_000,
+      includeArchived: opts?.includeArchived ?? true,
+      includeStale: true,
+      anchorPaths: opts?.paths,
+      touch: false,
+    });
+    const anchored = all.filter((entry) => entry.anchors?.length && entry.anchorStatus?.length);
+    const report: AnchorVerificationReport = {
+      totalAnchored: anchored.reduce((sum, entry) => sum + (entry.anchorStatus?.length ?? 0), 0),
+      fresh: 0,
+      drifted: 0,
+      missing: 0,
+      unavailable: 0,
+      entries: [],
+    };
+    for (const entry of anchored) {
+      const statuses = entry.anchorStatus ?? [];
+      for (const status of statuses) report[status.state]++;
+      report.entries.push({ id: entry.id, type: entry.type, statuses });
+      if (entry.anchors?.length) this.queueAnchorIndex({ id: entry.id, type: entry.type, anchors: entry.anchors });
+    }
+    return report;
+  }
+
   async forget(id: string, type: MemoryType): Promise<void> {
     try {
       await fs.unlink(this.filePath(type, id));
     } catch { /* ignore */ }
+    this.queueAnchorIndex({ id, type, deleted: true });
     if (this.sqliteBackend) {
       this.sqliteBackend.remove(id);
     } else if (USE_OLLAMA) {
@@ -377,6 +498,7 @@ export class MemoryAdapter implements MemoryPort {
         }
         const id = file.replace(".json", "");
         await fs.unlink(path.join(dir, file));
+        this.queueAnchorIndex({ id, type: "working", deleted: true });
         if (USE_OLLAMA) this.vectors.remove(id).catch(() => {});
         this.entityGraph.removeMemory(id).catch(() => {});
         count++;
@@ -388,20 +510,36 @@ export class MemoryAdapter implements MemoryPort {
   // ── Entity graph ─────────────────────────────────────────────────
 
   /** Entity-aware search: expand query with related entities. */
-  async graphQuery(query: string, opts?: { agent?: string; limit?: number }): Promise<MemoryStoreEntry[]> {
+  async graphQuery(query: string, opts?: { agent?: string; limit?: number; includeStale?: boolean }): Promise<MemoryStoreEntry[]> {
     const { entities, related } = await this.entityGraph.expandQuery(query);
     const entityNames = new Set([...entities, ...related.map((r) => r.name)]);
     const limit = opts?.limit ?? 20;
 
     // Search by expanded terms
     const expandedTerms = [query, ...entityNames].join(" ");
-    const results = await this.scoredSearchMemories(expandedTerms, { agent: opts?.agent, limit });
+    const results = await this.scoredSearchMemories(expandedTerms, { agent: opts?.agent, limit, includeStale: opts?.includeStale });
     return results.slice(0, limit);
   }
 
   /** Find relation path between two entities. */
   async graphFindPath(from: string, to: string): Promise<import("./entityGraph.js").PathHop[]> {
     return this.entityGraph.findPath(from, to);
+  }
+
+  async graphWhy(memoryId: string, question: string): Promise<{ reachable: boolean; paths: import("./entityGraph.js").PathHop[][]; entities: string[] }> {
+    const targetEntities = await this.entityGraph.entitiesForMemory(memoryId);
+    const { entities: questionEntities } = await this.entityGraph.expandQuery(question);
+    const paths: import("./entityGraph.js").PathHop[][] = [];
+    for (const from of questionEntities) {
+      for (const to of targetEntities) {
+        if (from === to) paths.push([]);
+        else {
+          const path = await this.entityGraph.findPath(from, to);
+          if (path.length) paths.push(path);
+        }
+      }
+    }
+    return { reachable: paths.length > 0, paths, entities: targetEntities };
   }
 
   /** Entity graph statistics. */

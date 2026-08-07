@@ -1,4 +1,5 @@
 import type { MemoryStoreEntry, MemoryType, AutoMaintenanceOptions } from "../memory/adapter.js";
+import type { AnchorVerificationReport, MemoryAnchor } from "../memory/anchors.js";
 
 /**
  * MemoryPort — abstraction over memory storage (file-based or MCP-backed).
@@ -9,14 +10,14 @@ export interface MemoryPort {
     agent: string,
     type: MemoryType,
     content: string,
-    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number }
+    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number; anchors?: MemoryAnchor[] }
   ): Promise<MemoryStoreEntry>;
 
-  recall(opts?: { type?: MemoryType; agent?: string; tags?: string[]; limit?: number; includeArchived?: boolean }): Promise<MemoryStoreEntry[]>;
+  recall(opts?: { type?: MemoryType; agent?: string; tags?: string[]; limit?: number; includeArchived?: boolean; includeStale?: boolean; touch?: boolean }): Promise<MemoryStoreEntry[]>;
 
-  searchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number }): Promise<MemoryStoreEntry[]>;
+  searchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number; includeStale?: boolean }): Promise<MemoryStoreEntry[]>;
 
-  scoredSearchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number }): Promise<MemoryStoreEntry[]>;
+  scoredSearchMemories(query: string, opts?: { type?: MemoryType; agent?: string; limit?: number; includeStale?: boolean }): Promise<MemoryStoreEntry[]>;
 
   updateMemory(id: string, type: MemoryType, updates: { content?: string; tags?: string[]; importance?: number }): Promise<MemoryStoreEntry | null>;
 
@@ -29,10 +30,13 @@ export interface MemoryPort {
   // ── Optional advanced methods (default fallbacks) ───────────────
 
   /** Entity-aware search: expand query with related entities */
-  graphQuery?(query: string, opts?: { agent?: string; limit?: number }): Promise<MemoryStoreEntry[]>;
+  graphQuery?(query: string, opts?: { agent?: string; limit?: number; includeStale?: boolean }): Promise<MemoryStoreEntry[]>;
 
   /** Find relation path between two entities */
   graphFindPath?(from: string, to: string): Promise<{ from: string; relation: string; to: string }[]>;
+
+  /** Explain why a memory was reachable for a question through the entity graph. */
+  graphWhy?(memoryId: string, question: string): Promise<{ reachable: boolean; paths: Array<{ from: string; relation: string; to: string }[]>; entities: string[] }>;
 
   /** Entity graph statistics */
   getGraphStats?(): Promise<{ entityCount: number; edgeCount: number }>;
@@ -72,5 +76,8 @@ export interface MemoryPort {
 
   /** Stop periodic maintenance. */
   stopAutoMaintenance?(): void;
+
+  /** Verify file anchors and report freshness. */
+  verifyAnchors?(opts?: { includeArchived?: boolean; paths?: string[] }): Promise<AnchorVerificationReport>;
 }
 

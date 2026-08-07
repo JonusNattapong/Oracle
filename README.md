@@ -313,8 +313,22 @@ The default backend now includes:
 - **ARIA Fallback Chain** — robust element finding via accessibility tree + DOM selectors
 - **Cloudflare Challenge Diagnostics** — automatic detection and troubleshooting of Cloudflare blocks
 - **Model Switching** — dynamically select Claude, GPT-4, or other available models within ChatGPT
+- **Images both ways** — send local images for ChatGPT to read, and get generated ones back on disk
 
 These enhancements make Browser Mode more resilient for long-running consultations and agent loops.
+
+```bash
+# Ask about an image you already have
+oracle ask -f screenshot.png "why is this layout breaking on mobile?"
+
+# Generate one and keep it; the saved path is printed as [image] <path>
+oracle ask --create-image "a flat-style architecture diagram of a message bus"
+```
+
+Images passed through `-f` are attached to the ChatGPT composer (PNG, JPEG, or
+WebP, up to 10 MB each). Images ChatGPT generates are written to the session's
+artifacts directory and returned as `images` in the structured result — an
+`oracle_ask` caller gets the same paths back over MCP.
 
 ## Execution backends
 

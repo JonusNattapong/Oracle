@@ -93,6 +93,17 @@ export class ConsultService {
       activeProvider = this.backendResolver(requestedBackend);
     }
 
+    // A composer tool that is silently dropped is the worst outcome: an answer
+    // that was meant to search the web, research, or return an image comes back
+    // looking like an ordinary answer, and nothing marks it as incomplete.
+    if (request.tool && !activeProvider.capabilities.composerTools) {
+      throw new OracleError(
+        "ORACLE_INVALID_REQUEST",
+        `Backend '${activeProvider.id}' cannot engage the '${request.tool}' composer tool.`,
+        "Use backend 'chatgpt-browser' with a signed-in ChatGPT session, or retry without the tool option."
+      );
+    }
+
     const accountMemory = request.accountMemory?.trim();
     if (request.accountMemory !== undefined && !accountMemory) {
       throw new OracleError(

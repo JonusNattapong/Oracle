@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import type { MemoryPort } from "../../orchestrator/ports.js";
 import { success, failure } from "../response.js";
+import { captureAnchors } from "../../memory/anchors.js";
 
 const SCOPE = z.enum(["project", "global"]).default("project");
 const MEMORY_TYPE = z.enum(["fact", "insight", "chunk", "working"]);
@@ -23,7 +24,7 @@ export function registerMemoryTools(
   server: McpServer,
   deps: { memory: MemoryPort; globalMemory: MemoryPort; workspaceRoot: string }
 ): void {
-  const { memory, globalMemory } = deps;
+  const { memory, globalMemory, workspaceRoot } = deps;
   const store = (scope: "project" | "global") => (scope === "global" ? globalMemory : memory);
 
   server.registerTool(
@@ -37,12 +38,18 @@ export function registerMemoryTools(
         type: MEMORY_TYPE,
         content: z.string().min(1).max(20_000),
         tags: z.array(z.string().min(1)).max(50).optional(),
-        importance: z.number().min(0).max(1).optional()
+        importance: z.number().min(0).max(1).optional(),
+        anchors: z.array(z.object({
+          path: z.string().min(1),
+          lines: z.tuple([z.number().int().min(1), z.number().int().min(1)]).optional()
+        })).max(20).optional().describe("Workspace files that support this memory")
       }
     },
-    async ({ scope, agent, type, content, tags, importance }) => {
+    async ({ scope, agent, type, content, tags, importance, anchors }) => {
       try {
-        const entry = await store(scope).remember(agent, type, content, { tags, importance });
+        if (anchors?.length && scope === "global") throw new Error("File anchors are only supported for project memory");
+        const captured = anchors?.length ? await captureAnchors(workspaceRoot, anchors) : undefined;
+        const entry = await store(scope).remember(agent, type, content, { tags, importance, anchors: captured });
         return success(`Saved ${scope} memory ${entry.id}.`, { scope, memory: entry });
       } catch (error) { return failure(error); }
     }
@@ -62,17 +69,18 @@ export function registerMemoryTools(
         agent: z.string().optional(),
         type: MEMORY_TYPE.optional(),
         tags: z.array(z.string().min(1)).optional().describe("Only applies when listing (no query)"),
-        limit: z.number().int().min(1).max(200).default(20)
+        limit: z.number().int().min(1).max(200).default(20),
+        include_stale: z.boolean().default(false).describe("Include memories whose anchored files are missing")
       }
     },
-    async ({ scope, query, mode, agent, type, tags, limit }) => {
+    async ({ scope, query, mode, agent, type, tags, limit, include_stale }) => {
       try {
         const target = store(scope);
-        const options = { type, agent: agent ?? undefined, limit };
+        const options = { type, agent: agent ?? undefined, limit, includeStale: include_stale };
         const entries = !query
           ? await target.recall({ ...options, tags })
           : mode === "graph"
-            ? (await target.graphQuery?.(query, { agent: agent ?? undefined, limit })) ?? []
+            ? (await target.graphQuery?.(query, { agent: agent ?? undefined, limit, includeStale: include_stale })) ?? []
             : await target.searchMemories(query, options);
         return success(JSON.stringify(entries, null, 2), {
           scope,
@@ -115,7 +123,7 @@ export function registerMemoryTools(
         "Housekeeping and health. `stats` reports counts; `consolidate` merges near-duplicates; "
         + "`prune` soft-archives stale low-importance entries; `promote` turns often-retrieved working "
         + "memories into insights; `clear_working` drops working memory; `prune_graph` removes stale "
-        + "entities; `reflect` distils new insights (needs ANTHROPIC_API_KEY); `all` runs prune + promote.",
+        + "entities; `reflect` distils new insights (needs ANTHROPIC_API_KEY); `verify_anchors` checks Git freshness; `all` runs prune + promote.",
       inputSchema: {
         scope: SCOPE,
         action: z.enum([
@@ -126,6 +134,7 @@ export function registerMemoryTools(
           "clear_working",
           "prune_graph",
           "reflect",
+          "verify_anchors",
           "all"
         ]).default("stats"),
         agent: z.string().optional().describe("clear_working and reflect only"),
@@ -176,6 +185,12 @@ export function registerMemoryTools(
           case "reflect": {
             const insights = await target.reflect?.({ agent: agent ?? undefined }) ?? [];
             return success(JSON.stringify(insights, null, 2), { scope, count: insights.length, insights });
+          }
+          case "verify_anchors": {
+            const report = await target.verifyAnchors?.() ?? {
+              totalAnchored: 0, fresh: 0, drifted: 0, missing: 0, unavailable: 0, entries: []
+            };
+            return success(JSON.stringify(report, null, 2), { scope, report });
           }
           case "all": {
             const result = await target.runMaintenance?.({

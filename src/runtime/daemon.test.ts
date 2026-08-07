@@ -41,6 +41,7 @@ describe("OracleDaemon", () => {
           images: false,
           continuation: false,
           structuredUsage: false,
+          composerTools: true,
           supportedPlatforms: ["darwin", "linux", "win32"]
         },
         healthCheck: async () => [],
@@ -150,7 +151,7 @@ describe("OracleDaemon", () => {
 
     const researchRes = await client!.consult({
       question: "Research this through ChatGPT web search",
-      backend: "codex",
+      backend: "chatgpt-browser",
       tool: "web-search"
     });
     expect(researchRes.status).toBe("completed");

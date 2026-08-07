@@ -10,6 +10,7 @@ import type {
 import {
   COMPOSER_TOOL_LABELS,
   COMPOSER_TOOL_MIN_TIMEOUT_MS,
+  COMPOSER_TOOLS_WITHOUT_STALL_RELOAD,
   type ChatGptBrowserConfig
 } from "./types.js";
 import { ChromeLauncher, ensureWindowNotMinimized, findOrCreatePageTarget } from "./chrome.js";
@@ -52,6 +53,7 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
     images: true,
     continuation: true,
     accountMemory: true,
+    composerTools: true,
     structuredUsage: false,
     supportedPlatforms: Object.freeze(["darwin" as NodeJS.Platform, "linux" as NodeJS.Platform, "win32" as NodeJS.Platform])
   });
@@ -304,9 +306,10 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
       await streamReader?.start();
       const baseline = await monitor.fillPromptAndSend(fullPrompt);
       const domResponse = monitor.waitForResponse(baseline, timeoutMs, {
-        // Deep research sits unchanged for minutes at a time; the stall reload
-        // that rescues a wedged UI would throw the research away instead.
-        allowStallReload: request.tool !== "deep-research"
+        // Deep research and image generation sit unchanged for minutes at a
+        // time; the stall reload that rescues a wedged UI would throw the work
+        // away instead.
+        allowStallReload: !request.tool || !COMPOSER_TOOLS_WITHOUT_STALL_RELOAD.has(request.tool)
       });
       // Whichever tier loses the race is abandoned mid-flight: the DOM poller keeps
       // evaluating against a session this method closes in `finally`, and the stream

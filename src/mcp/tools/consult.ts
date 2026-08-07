@@ -15,6 +15,7 @@ import {
   AstResolveSchema,
   WebSearchSchema,
   DeepResearchSchema,
+  CreateImageSchema,
 } from "../pipeline/schema.js";
 
 export function registerConsultTool(
@@ -65,6 +66,10 @@ export function registerConsultTool(
           .boolean()
           .optional()
           .describe("Recall stored project memory relevant to the question. Default: true"),
+        no_citations: z
+          .boolean()
+          .optional()
+          .describe("Disable memory and documentation citation references"),
         active_file: z
           .string()
           .optional()
@@ -82,6 +87,7 @@ export function registerConsultTool(
           .describe("Compress AST dependency files into signature skeletons to save tokens"),
         web_search: WebSearchSchema,
         deep_research: DeepResearchSchema,
+        create_image: CreateImageSchema,
       },
     },
     async ({
@@ -95,6 +101,7 @@ export function registerConsultTool(
       include_docs,
       doc_search,
       include_memory,
+      no_citations,
       active_file,
       cursor_position,
       git_diff,
@@ -103,6 +110,7 @@ export function registerConsultTool(
       compress_context,
       web_search,
       deep_research,
+      create_image,
     }) => {
       return runConsultPipeline(
         {
@@ -121,10 +129,12 @@ export function registerConsultTool(
           astResolve: ast_resolve,
           includeDocs: include_docs,
           includeMemory: include_memory,
+          noCitations: no_citations,
           conversationId,
           soul,
           webSearch: web_search,
           deepResearch: deep_research,
+          createImage: create_image,
         },
         deps
       );

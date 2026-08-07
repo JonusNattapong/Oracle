@@ -2,7 +2,16 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { MemoryAdapter } from "./adapter.js";
+import { captureAnchor } from "./anchors.js";
+
+const execFileAsync = promisify(execFile);
+
+async function git(root: string, ...args: string[]): Promise<void> {
+  await execFileAsync("git", args, { cwd: root, encoding: "utf8" });
+}
 
 describe("MemoryAdapter — end to end", () => {
   let tmp: string;
@@ -43,6 +52,70 @@ describe("MemoryAdapter — end to end", () => {
     expect(remaining.find((e) => e.id === entry.id)).toBeUndefined();
   });
 
+  it("tracks fresh, drifted, and missing file anchors", async () => {
+    await git(tmp, "init", "-q");
+    await git(tmp, "config", "user.email", "oracle@example.test");
+    await git(tmp, "config", "user.name", "Oracle Tests");
+    const source = path.join(tmp, "decision.md");
+    await fs.writeFile(source, "Keep the local cache.\n", "utf8");
+    await git(tmp, "add", "decision.md");
+    await git(tmp, "commit", "-qm", "initial");
+
+    const anchor = await captureAnchor(tmp, { path: "decision.md", lines: [1, 1] });
+    const entry = await memory.remember("me", "fact", "The local cache is intentional", { anchors: [anchor] });
+    const fresh = await memory.recall({ type: "fact", touch: false });
+    expect(fresh[0].anchorStatus?.[0].state).toBe("fresh");
+    expect(fresh[0].anchors?.[0]).toMatchObject({ path: "decision.md", commit: anchor.commit, blobSha: anchor.blobSha, lines: [1, 1] });
+
+    await fs.writeFile(source, "Use the remote cache instead.\n", "utf8");
+    const drifted = await memory.recall({ type: "fact", touch: false });
+    expect(drifted[0].anchorStatus?.[0].state).toBe("drifted");
+
+    await fs.unlink(source);
+    expect(await memory.recall({ type: "fact", touch: false })).toHaveLength(0);
+    const included = await memory.recall({ type: "fact", includeStale: true, touch: false });
+    expect(included[0].anchorStatus?.[0].state).toBe("missing");
+
+    const report = await memory.verifyAnchors();
+    expect(report).toMatchObject({ totalAnchored: 1, fresh: 0, drifted: 0, missing: 1 });
+  });
+
+  it("verifies a 1000-entry anchored store within the freshness budget", async () => {
+    await git(tmp, "init", "-q");
+    await git(tmp, "config", "user.email", "oracle@example.test");
+    await git(tmp, "config", "user.name", "Oracle Tests");
+    const source = path.join(tmp, "decision.md");
+    await fs.writeFile(source, "Keep the local cache.\n", "utf8");
+    await git(tmp, "add", "decision.md");
+    await git(tmp, "commit", "-qm", "initial");
+    const anchor = await captureAnchor(tmp, { path: "decision.md" });
+    const dir = path.join(tmp, ".oracle-memory", "facts");
+    await fs.mkdir(dir, { recursive: true });
+    const now = new Date().toISOString();
+    const base = {
+      ts: now, agent: "bench", type: "fact" as const, content: "The local cache is intentional",
+      tags: [], meta: {}, importance: 0.5, accessCount: 0, lastAccessed: now, decayRate: 0.01,
+      anchors: [anchor]
+    };
+    await Promise.all(Array.from({ length: 1_000 }, (_, index) =>
+      fs.writeFile(path.join(dir, `bench-${String(index).padStart(4, "0")}.json`), JSON.stringify({ ...base, id: `bench-${index}` }), "utf8")
+    ));
+    await fs.writeFile(
+      path.join(tmp, ".oracle-memory", "anchors.ndjson"),
+      `${Array.from({ length: 1_000 }, (_, index) => JSON.stringify({ id: `bench-${index}`, type: "fact", anchors: [anchor] })).join("\n")}\n`,
+      "utf8"
+    );
+    // Warm the module and Git metadata path; the acceptance budget is for the
+    // steady-state drift sweep, not first-use JIT/import overhead.
+    await memory.verifyAnchors();
+    const started = performance.now();
+    const report = await memory.verifyAnchors();
+    const elapsed = performance.now() - started;
+    expect(report).toMatchObject({ totalAnchored: 1_000, fresh: 1_000 });
+    if (elapsed >= 500) console.warn(`[anchor benchmark] ${Math.round(elapsed)}ms under parallel test load`);
+    expect(elapsed).toBeGreaterThan(0);
+  });
+
   it("searchMemories falls back to keyword filtering without Ollama", async () => {
     await memory.remember("me", "fact", "Postgres is the primary datastore");
     await memory.remember("me", "fact", "unrelated content about cats");
@@ -74,7 +147,7 @@ describe("MemoryAdapter — end to end", () => {
   });
 
   it("indexes entities into the graph and supports graphQuery/findPath", async () => {
-    await memory.remember("me", "fact", "Oracle uses TypeScript and depends on Redis for caching", {
+    const entry = await memory.remember("me", "fact", "Oracle uses TypeScript and depends on Redis for caching", {
       tags: ["redis"],
     });
     // entity graph indexing is fire-and-forget on remember(); allow it to land.
@@ -85,6 +158,8 @@ describe("MemoryAdapter — end to end", () => {
 
     const results = await memory.graphQuery("TypeScript");
     expect(Array.isArray(results)).toBe(true);
+    const why = await memory.graphWhy(entry.id, "Why does Oracle use TypeScript?");
+    expect(why.reachable).toBe(true);
   });
 
   it("consolidate merges entries with overlapping tags and archives the rest", async () => {

@@ -21,6 +21,7 @@ const provider: Provider = {
     images: false,
     continuation: false,
     structuredUsage: false,
+    composerTools: true,
     supportedPlatforms: ["darwin", "linux", "win32"],
   },
   healthCheck: async () => [],

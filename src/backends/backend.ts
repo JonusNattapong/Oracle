@@ -7,6 +7,8 @@ export interface ExecutionBackendCapabilities {
   continuation: boolean;
   /** Can explicitly write a high-level fact to the signed-in account's saved memory. */
   accountMemory?: boolean;
+  /** Can engage a composer tool (web search, deep research, image generation) for a turn. */
+  composerTools?: boolean;
   structuredUsage: boolean;
   /** Platforms this backend can run on. */
   supportedPlatforms: readonly NodeJS.Platform[];
@@ -21,10 +23,10 @@ export interface ExecutionBackendRequest {
   /** Exact user-authorized text to save to the signed-in account's memory. */
   accountMemory?: string;
   /**
-   * Composer tool to engage for this turn (currently `web-search`). Backends
-   * that cannot honour it must fail rather than answer without it.
+   * Composer tool to engage for this turn. Backends that cannot honour it must
+   * fail rather than answer without it.
    */
-  tool?: "web-search" | "deep-research";
+  tool?: "web-search" | "deep-research" | "create-image";
   images?: Array<{ base64: string; mimeType: string; fileName: string }>;
   /** Session-owned directory where the backend may persist generated artifacts. */
   artifactsDir?: string;

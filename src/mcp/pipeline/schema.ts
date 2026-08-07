@@ -47,3 +47,10 @@ export const DeepResearchSchema = z
   .boolean()
   .optional()
   .describe("Ask ChatGPT to run Deep Research for this turn (chatgpt-browser only)");
+
+export const CreateImageSchema = z
+  .boolean()
+  .optional()
+  .describe(
+    "Ask ChatGPT to generate an image for this turn; generated images are saved to disk and their paths returned in `images` (chatgpt-browser only)"
+  );

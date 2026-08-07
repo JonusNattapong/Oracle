@@ -374,7 +374,9 @@ export class EntityGraph {
 
   constructor(rootDir: string, private readonly dataDirectory = ".oracle-memory") {
     this.rootDir = rootDir;
-    this.ready = this.init();
+    // Graph indexing is best-effort; a workspace may be removed while a
+    // fire-and-forget remember is still settling (common in short-lived tests).
+    this.ready = this.init().catch(() => {});
   }
 
   private async init(): Promise<void> {
@@ -544,6 +546,15 @@ export class EntityGraph {
       frontier = next;
     }
     return [];
+  }
+
+  /** Return graph entities that were extracted from a particular memory. */
+  async entitiesForMemory(memoryId: string): Promise<string[]> {
+    await this.ready;
+    const data = await this.load();
+    return Object.values(data.entities)
+      .filter((entity) => entity.memoryIds.includes(memoryId))
+      .map((entity) => entity.name);
   }
 
   /**

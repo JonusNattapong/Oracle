@@ -45,6 +45,7 @@ const browserProvider: Provider = {
   capabilities: {
     ...provider.capabilities,
     accountMemory: true,
+    composerTools: true,
     images: true
   },
   async run(request) {
@@ -223,6 +224,23 @@ describe("Oracle MCP tools", () => {
     const body = listed.structuredContent as { mode: string; count: number };
     expect(body.mode).toBe("recent");
     expect(body.count).toBeGreaterThan(0);
+  });
+
+  test("oracle_ask returns citation metadata for recalled memory", async () => {
+    await client.callTool({
+      name: "oracle_memory_remember",
+      arguments: { agent: "tester", type: "fact", content: "Deploys require two approvals before production." }
+    });
+    const answer = await client.callTool({
+      name: "oracle_ask",
+      arguments: { question: "How many approvals do deploys require?" }
+    });
+    expect(answer.isError).not.toBe(true);
+    const body = answer.structuredContent as { citations: Array<{ ref: string; id: string; kind: string }>; citationValidation: { unknown: string[] } };
+    expect(body.citations).toEqual(expect.arrayContaining([
+      expect.objectContaining({ ref: "m1", kind: "memory" })
+    ]));
+    expect(body.citationValidation.unknown).toEqual([]);
   });
 
   test("maintain reports stats and runs housekeeping actions", async () => {

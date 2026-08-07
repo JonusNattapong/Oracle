@@ -1,6 +1,18 @@
 # Oracle MCP Tool Standards
 
-This document defines the standardization layer for all Oracle MCP tools, ensuring consistency, quality, and maintainability across the current 60-tool surface.
+This document defines the standardization layer for all Oracle MCP tools, ensuring consistency, quality, and maintainability across the current 20-tool surface.
+
+## Tool Budget Measurement (2026-08-07)
+
+`npm run tool-budget` serializes the registered MCP tool names, descriptions,
+and input schemas. The current default server advertises **20 tools** costing
+approximately **3,880 tokens** (a `JSON.stringify` character estimate divided
+by four). `oracle_ask` is the largest single schema at roughly 780 tokens.
+
+This is below the threshold where deferred loading would repay its added
+configuration and discoverability cost, so v0.8.0 keeps the current single
+surface. The measurement is reproducible from the committed script at
+`scripts/tool-budget.ts`; rerun it when a tool schema changes materially.
 
 ## Architecture
 
@@ -91,7 +103,7 @@ cache.invalidatePattern("skill-.*");
 - Returns `checkpointId` on each run; save it to resume later
 - Checkpoint persisted after every tool-calling turn under `~/.oracle/checkpoints/`
 
-### 2. Memory (18 tools)
+### 2. Memory (4 tools)
 - `oracle_memory_remember` — Store a fact/insight/chunk/working memory
 - `oracle_memory_search` — Full-text search
 - `oracle_memory_scored_search` — BM25-ranked search with scoring

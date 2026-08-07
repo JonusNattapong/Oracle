@@ -10,6 +10,7 @@ import { RuntimeAgentApprovalGate } from "./approvalGate.js";
 import { ProfileStore } from "../identity/profile.js";
 import { RuntimeDatabase } from "../runtime/database.js";
 import { SandboxRunner } from "../sandbox/runner.js";
+import { MemoryAdapter } from "../memory/adapter.js";
 import os from "node:os";
 import path from "node:path";
 
@@ -123,13 +124,22 @@ export class AgentService {
         workspaceRoot: request.workspaceRoot,
         recorder: runtimeDatabase
       });
+      const memory = new MemoryAdapter(request.workspaceRoot);
       return await runAgentLoop({
         provider: this.provider,
         model: request.model,
         system,
         prompt: request.prompt,
         tools,
-        context: { workspaceRoot: request.workspaceRoot, readOnly, policy, sandbox },
+        context: {
+          workspaceRoot: request.workspaceRoot,
+          readOnly,
+          policy,
+          sandbox,
+          onFileMutation: async (filePath) => {
+            await memory.verifyAnchors({ paths: [filePath] }).catch(() => {});
+          }
+        },
         maxSteps: request.maxSteps,
         onStep: request.onStep,
         checkpointStore,

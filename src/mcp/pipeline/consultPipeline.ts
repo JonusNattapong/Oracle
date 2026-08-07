@@ -1,5 +1,7 @@
 import { OracleError, serializeOracleError } from "../../errors.js";
 import { recordSelfLog } from "../../core/selfMemory.js";
+import { resolveComposerTool } from "../../core/composerTool.js";
+import { validateCitations, type Citation } from "../../core/citations.js";
 import type { ConsultService } from "../../core/consult.js";
 import type { ProjectConfig } from "../../config/project.js";
 import type { MemoryPort } from "../../orchestrator/ports.js";
@@ -47,10 +49,12 @@ export interface PipelineInput {
   astResolve?: boolean;
   includeDocs?: boolean;
   includeMemory?: boolean;
+  noCitations?: boolean;
   conversationId?: string;
   soul?: string;
   webSearch?: boolean;
   deepResearch?: boolean;
+  createImage?: boolean;
 }
 
 export interface PipelineContext {
@@ -60,6 +64,7 @@ export interface PipelineContext {
   contextBlock: string;
   files: string[];
   astFiles: string[];
+  citations: Citation[];
   conversationId?: string;
   state: Record<string, unknown>;
 }
@@ -93,19 +98,17 @@ export async function runConsultPipeline(
   const targetBackend = input.backend ?? deps.providerId;
 
   try {
-    if (input.webSearch && input.deepResearch) {
-      throw new OracleError(
-        "ORACLE_INVALID_REQUEST",
-        "Web search and Deep Research cannot be enabled together.",
-        "Choose one research mode for this turn."
-      );
-    }
+    const composerTool = resolveComposerTool({
+      webSearch: input.webSearch,
+      deepResearch: input.deepResearch,
+      createImage: input.createImage
+    });
 
     /* Stage 1 — identity / soul / system prompt */
     const { soulName, systemPrompt } = await resolveIdentity(input, deps);
 
     /* Stage 2 — context block (memory recall, docs, conversation) */
-    const { contextBlock } = await gatherContext(input, deps);
+    const { contextBlock, citations } = await gatherContext(input, deps);
 
     /* Stage 3 — file collection (explicit, git, ast) */
     const { files, astFiles } = await collectFiles(input, deps);
@@ -117,6 +120,7 @@ export async function runConsultPipeline(
       contextBlock,
       files,
       astFiles,
+      citations,
       conversationId: input.conversationId,
       state: {},
     };
@@ -134,7 +138,7 @@ export async function runConsultPipeline(
       provider: targetBackend,
       conversationId: input.conversationId,
       accountMemory: input.accountMemory,
-      tool: input.deepResearch ? "deep-research" : input.webSearch ? "web-search" : undefined,
+      tool: composerTool,
       files: hasFiles ? files : [],
       compressContext: Boolean(input.compressContext),
       compressFiles: astFiles.length > 0 ? astFiles : undefined,
@@ -166,6 +170,7 @@ export async function runConsultPipeline(
     /* Stage 6a — post-execution hook (relay archives the Q&A) */
     const hookData =
       (await hooks?.onAfterExecute?.(ctx, result)) ?? {};
+    const citationValidation = validateCitations(result.output, citations);
 
     /* Stage 6b — present result */
     return await success(
@@ -182,6 +187,8 @@ export async function runConsultPipeline(
         images: result.images ?? [],
         artifactWarnings: result.artifactWarnings ?? [],
         usage: result.usage,
+        citations,
+        citationValidation,
         ...hookData,
       },
       result.images

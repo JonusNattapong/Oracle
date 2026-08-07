@@ -35,6 +35,15 @@ describe("buildMemoryContext", () => {
     expect(result.used).toBeGreaterThan(0);
     expect(result.block).toContain("Deploys to production require two approvals");
     expect(result.block).toContain("Recalled project memory");
+    expect(result.block).toContain("[m1]");
+    expect(result.citations).toEqual([expect.objectContaining({ ref: "m1", id: expect.any(String), kind: "memory" })]);
+  });
+
+  test("can disable citation references for bare callers", async () => {
+    await memory.remember("oracle", "fact", "Deploys require approval", {});
+    const result = await buildMemoryContext(memory, "deploy approval", { includeCitations: false });
+    expect(result.block).not.toContain("[m1]");
+    expect(result.citations).toEqual([]);
   });
 
   test("tells the model to admit a gap rather than guess", async () => {

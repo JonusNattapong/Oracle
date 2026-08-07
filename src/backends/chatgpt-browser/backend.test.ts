@@ -17,6 +17,7 @@ describe("ChatGptBrowserBackend", () => {
       images: true,
       continuation: true,
       accountMemory: true,
+      composerTools: true,
       structuredUsage: false,
       supportedPlatforms: ["darwin", "linux", "win32"]
     });

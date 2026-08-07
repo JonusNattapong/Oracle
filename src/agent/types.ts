@@ -51,6 +51,8 @@ export interface AgentContext {
   readOnly: boolean;
   /** Optional audit trail to record file mutations. */
   audit?: any; // AuditTrail type, avoid circular import
+  /** Optional hook for consumers that maintain file-backed indexes (memory, docs). */
+  onFileMutation?: (path: string, type: "write" | "edit" | "delete") => void | Promise<void>;
   /** Optional zero-trust policy; when absent, no policy checks are enforced. */
   policy?: import("./policy.js").OraclePolicy;
   /** Shared command executor; Docker mode is fail-closed and never falls back to host execution. */
