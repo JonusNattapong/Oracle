@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+- **Agent file tools could be walked out of the workspace by a link.**
+  `resolveInWorkspace()` resolved paths lexically, which normalises `../` but
+  says nothing about what a link points at: a symlink or directory junction
+  inside the workspace resolves to a path inside the workspace, and the kernel
+  then follows it out. `read_file`, `write_file`, `edit_file`, and `list_dir`
+  all went through it, so the agent could read and write outside the workspace
+  root — including under `--read-only`, which drops the mutating tools but
+  keeps `read_file`. Git records links in a tree, so cloning a repository was
+  enough to place one. `glob` and `grep` also descended links, reporting paths
+  outside the workspace as workspace contents.
+
+  Containment is now checked on the canonical path, with the not-yet-existing
+  tail of a `write_file` target resolved against its nearest existing ancestor.
+  Directory traversal skips links and re-checks containment per directory, so
+  it does not depend on how a given OS reports one. The consult path
+  (`src/context/files.ts`) already resolved through `fs.realpath` and was not
+  affected.
+
+  Regression tests cover read, write, list, glob, and grep through a directory
+  link; all five failed before the fix.
+
+### Changed
+- **The store's directories are created once per adapter, not once per write.**
+  A CPU profile of 300 sequential writes put `mkdir` above everything else
+  Oracle was doing: `ensureDirs()` ran five recursive `mkdir` calls at the top
+  of every `remember()` and again inside every queued index append. 100 writes
+  issued 1006 `mkdir` calls before, 6 after. Writes retry once against a
+  rebuilt store if it disappears underneath a live adapter, so the memo stays
+  an optimisation rather than an assumption.
+
 ## [0.8.2] - 2026-08-07
 
 ### Added

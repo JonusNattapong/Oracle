@@ -12,13 +12,47 @@ const MAX_OUTPUT_CHARS = 30_000;
 class ToolError extends Error {}
 
 /**
+ * Resolve `target` through any links, without requiring it to exist yet.
+ *
+ * fs.realpath throws on a path that is not there, but write_file legitimately
+ * names a file it is about to create. Walk up to the nearest ancestor that does
+ * exist, canonicalise that, and re-attach the segments below it — so the links
+ * that exist are followed and the part that does not exist cannot hide one.
+ */
+async function canonicalize(target: string): Promise<string> {
+  const missing: string[] = [];
+  let current = target;
+  for (;;) {
+    try {
+      const real = await fs.realpath(current);
+      return missing.length ? path.join(real, ...missing) : real;
+    } catch {
+      const parent = path.dirname(current);
+      if (parent === current) return path.join(current, ...missing);
+      missing.unshift(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
+/**
  * Resolve a caller-supplied path against the workspace root and refuse
  * anything that escapes it. This is the single trust boundary for every
  * filesystem tool — no tool should touch a path it did not get from here.
+ *
+ * The check is on the canonical path, not the lexical one. `path.resolve`
+ * normalises `../` but says nothing about what a link points at: a symlink or
+ * junction sitting inside the workspace resolves to a path inside the
+ * workspace, and the kernel then follows it out. Git carries links in a tree,
+ * so cloning a repository was enough to read and write outside the workspace —
+ * in read-only mode too, which drops the mutating tools but keeps read_file.
+ *
+ * Returns the canonical path so callers operate on exactly what was validated
+ * rather than re-following the link afterwards.
  */
-function resolveInWorkspace(ctx: AgentContext, rel: string): string {
-  const abs = path.resolve(ctx.workspaceRoot, rel);
-  const root = path.resolve(ctx.workspaceRoot);
+async function resolveInWorkspace(ctx: AgentContext, rel: string): Promise<string> {
+  const root = await canonicalize(path.resolve(ctx.workspaceRoot));
+  const abs = await canonicalize(path.resolve(ctx.workspaceRoot, rel));
   if (abs !== root && !abs.startsWith(root + path.sep)) {
     logSandbox("path-escape", { requestedPath: rel, resolvedPath: abs, workspaceRoot: root });
     throw new ToolError(`Path escapes the workspace: ${rel}`);
@@ -50,7 +84,16 @@ function optStr(input: Record<string, unknown>, key: string): string | undefined
   return v;
 }
 
-/** Recursively walk a directory, returning workspace-relative file paths. */
+/**
+ * Recursively walk a directory, returning workspace-relative file paths.
+ *
+ * Links are not followed. They are the same escape the path tools guard
+ * against, and here it is worse than a wrong answer: descending a link that
+ * points outside would put paths the caller cannot reach into results it reads
+ * as workspace contents. Dirent reports a POSIX symlink and a Windows junction
+ * differently, so the containment check does not rely on either — anything
+ * whose canonical path leaves the root is skipped whatever the OS calls it.
+ */
 async function walk(dir: string, root: string, acc: string[], limit: number): Promise<void> {
   if (acc.length >= limit) return;
   let entries: import("node:fs").Dirent[];
@@ -62,8 +105,10 @@ async function walk(dir: string, root: string, acc: string[], limit: number): Pr
   for (const entry of entries) {
     if (acc.length >= limit) return;
     if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "dist") continue;
+    if (entry.isSymbolicLink()) continue;
     const abs = path.join(dir, entry.name);
     if (entry.isDirectory()) {
+      if (!(await canonicalize(abs)).startsWith(root + path.sep)) continue;
       await walk(abs, root, acc, limit);
     } else if (entry.isFile()) {
       acc.push(path.relative(root, abs));
@@ -90,7 +135,7 @@ export function defaultAgentTools(): AgentTool[] {
       async execute(input, ctx) {
         const rel = str(input, "path");
         if (ctx.policy) validateFilePath(rel, ctx.policy);
-        const abs = resolveInWorkspace(ctx, rel);
+        const abs = await resolveInWorkspace(ctx, rel);
         const content = await fs.readFile(abs, "utf8");
         return truncate(content);
       },
@@ -111,7 +156,7 @@ export function defaultAgentTools(): AgentTool[] {
         assertWritable(ctx, "write_file");
         const rel = str(input, "path");
         if (ctx.policy) validateFilePath(rel, ctx.policy);
-        const abs = resolveInWorkspace(ctx, rel);
+        const abs = await resolveInWorkspace(ctx, rel);
         await fs.mkdir(path.dirname(abs), { recursive: true });
         const content = str(input, "content");
         await fs.writeFile(abs, content, "utf8");
@@ -140,7 +185,7 @@ export function defaultAgentTools(): AgentTool[] {
         assertWritable(ctx, "edit_file");
         const rel = str(input, "path");
         if (ctx.policy) validateFilePath(rel, ctx.policy);
-        const abs = resolveInWorkspace(ctx, rel);
+        const abs = await resolveInWorkspace(ctx, rel);
         const oldStr = str(input, "old_string");
         const newStr = str(input, "new_string");
         const content = await fs.readFile(abs, "utf8");
@@ -167,7 +212,7 @@ export function defaultAgentTools(): AgentTool[] {
       },
       async execute(input, ctx) {
         const rel = optStr(input, "path") ?? ".";
-        const abs = resolveInWorkspace(ctx, rel);
+        const abs = await resolveInWorkspace(ctx, rel);
         const entries = await fs.readdir(abs, { withFileTypes: true });
         const lines = entries
           .map((e) => (e.isDirectory() ? `${e.name}/` : e.name))
@@ -187,7 +232,7 @@ export function defaultAgentTools(): AgentTool[] {
       async execute(input, ctx) {
         const pattern = str(input, "pattern");
         const acc: string[] = [];
-        await walk(ctx.workspaceRoot, ctx.workspaceRoot, acc, 5000);
+        await walk(await canonicalize(ctx.workspaceRoot), await canonicalize(ctx.workspaceRoot), acc, 5000);
         const matches = acc.filter((p) => p.includes(pattern)).sort();
         return truncate(matches.join("\n") || "(no matches)");
       },
@@ -208,7 +253,7 @@ export function defaultAgentTools(): AgentTool[] {
         const query = str(input, "query");
         const pathFilter = optStr(input, "path_filter");
         const files: string[] = [];
-        await walk(ctx.workspaceRoot, ctx.workspaceRoot, files, 5000);
+        await walk(await canonicalize(ctx.workspaceRoot), await canonicalize(ctx.workspaceRoot), files, 5000);
         const hits: string[] = [];
         for (const rel of files) {
           if (pathFilter && !rel.includes(pathFilter)) continue;
@@ -244,7 +289,7 @@ export function defaultAgentTools(): AgentTool[] {
       async execute(input, ctx) {
         const rel = str(input, "path");
         if (ctx.policy) validateFilePath(rel, ctx.policy);
-        const filePath = resolveInWorkspace(ctx, rel);
+        const filePath = await resolveInWorkspace(ctx, rel);
         const data = await fs.readFile(filePath);
         const ext = path.extname(filePath).toLowerCase();
         const mimeType = {
@@ -277,7 +322,7 @@ export function defaultAgentTools(): AgentTool[] {
       async execute(input, ctx) {
         const rel = str(input, "path");
         if (ctx.policy) validateFilePath(rel, ctx.policy);
-        const filePath = resolveInWorkspace(ctx, rel);
+        const filePath = await resolveInWorkspace(ctx, rel);
         const data = await fs.readFile(filePath);
         const ext = path.extname(filePath).toLowerCase();
         const mimeType = {
