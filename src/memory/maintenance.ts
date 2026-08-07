@@ -14,7 +14,14 @@ import type { MemoryStoreEntry } from "./adapter.js";
 // ── Options / Result types ────────────────────────────────────────────────
 
 export interface MaintenanceOptions {
-  /** Minimum importance score (0-1) to retain a memory. Default: 0.2. */
+  /**
+   * Minimum importance score (0-1) to retain a memory. Default: 0.2.
+   *
+   * remember() stamps every entry with importance 0.5 and nothing lowers it
+   * over time, so the default leaves pruning inert on purpose: automatic
+   * maintenance never soft-deletes a memory the operator did not explicitly
+   * mark as low value. Raise it deliberately to prune.
+   */
   minImportance?: number;
   /** Days since last access before a memory is considered stale. Default: 30. */
   minStaleDays?: number;
@@ -37,7 +44,12 @@ export interface MaintenanceResult {
  *
  * Pruned entries are marked with `pruned: true` and persisted via `saveFn`.
  * They are **not** deleted from disk — only flagged — so they remain
- * auditable and recoverable.
+ * auditable and recoverable. recall() hides them the same way it hides
+ * archived entries; `includeArchived` brings either back.
+ *
+ * Effectively manual: with the default `minImportance` no entry written by
+ * remember() is ever eligible (see MaintenanceOptions.minImportance). Callers
+ * that want pruning must pass thresholds that say so.
  *
  * @param entries – All loaded memory entries (caller is responsible for scope).
  * @param opts    – Override defaults for staleness / importance thresholds.
