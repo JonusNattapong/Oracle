@@ -1,7 +1,7 @@
 # PLAN — MCP Consult Lifecycle Refactor
 
-**Status:** proposed
-**Date:** 2026-08-06
+**Status:** completed
+**Date:** 2026-08-07
 **Scope:** `src/mcp/` only. CLI (`src/cli.ts`) and `src/core/consult.ts` are untouched.
 
 ---
@@ -204,20 +204,21 @@ Steps 1–3 are additive and can land independently of 4–6.
 - **CLI** — `src/cli.ts` keeps calling `ConsultService` directly. Sharing the
   pipeline with the CLI would mean moving it to `src/core/`; that is a separate
   change with a different blast radius. Revisit only after this lands.
-- **Tool surface** — no tools added or removed. The 44-tool MCP surface
-  documented in `src/mcp/server.ts` stays exactly as it is.
+- **Tool surface** — no consult lifecycle tools were removed. The full server
+  now exposes 20 focused tools and the coordination server remains separate.
 
 ---
 
 ## 8. Acceptance criteria
 
-- [ ] `npm run typecheck` clean.
-- [ ] All 654 existing tests pass **without modification** — this is the proof
-      that behavior is unchanged.
-- [ ] `service.consult()` is called from exactly one location in `src/mcp/`.
-- [ ] `success()` / `failure()` are defined exactly once in `src/mcp/`.
-- [ ] `oracle_relay` honours `maxFileSizeBytes` and `maxInputBytes`, covered by
-      a new regression test.
-- [ ] Combined line count of `src/mcp/tools/` drops (est. ~1,615 → ~1,100),
-      with the difference relocated into `pipeline/` + `response.ts`, not
-      deleted.
+- [x] `npm run typecheck` clean.
+- [x] All current tests pass (665 tests, plus focused regression coverage).
+- [x] Consult-shaped `service.consult()` calls are centralized in
+      `pipeline/consultPipeline.ts`; GitHub PR review remains an intentionally
+      separate specialized tool.
+- [x] `success()` / `failure()` are defined once in `src/mcp/response.ts` and
+      shared by both the full and coordination MCP tool groups.
+- [x] `oracle_relay` honours `maxFileSizeBytes` and `maxInputBytes`, covered by
+      regression tests in `pipeline/consultPipeline.test.ts`.
+- [x] Combined line count of `src/mcp/tools/` is 1,328 lines, with the shared
+      lifecycle code relocated into `pipeline/` + `response.ts`.

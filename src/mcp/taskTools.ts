@@ -1,23 +1,10 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import { serializeOracleError } from "../errors.js";
+import { success, failure } from "./response.js";
 import type { TaskStore, TaskStatus } from "../tasks/store.js";
 import type { MessageStore } from "../messaging/store.js";
 import type { AgentRegistry } from "../messaging/registry.js";
 import { CoordinationService } from "../coordination/service.js";
-
-function success(text: string, structuredContent: Record<string, unknown>) {
-  return { content: [{ type: "text" as const, text }], structuredContent };
-}
-
-function failure(error: unknown) {
-  const serialized = serializeOracleError(error);
-  return {
-    isError: true,
-    content: [{ type: "text" as const, text: JSON.stringify(serialized) }],
-    structuredContent: serialized as unknown as Record<string, unknown>
-  };
-}
 
 const STATUS_ENUM = z.enum(["pending", "in_progress", "review", "done", "blocked", "cancelled"]);
 
