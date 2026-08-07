@@ -1,0 +1,50 @@
+name: Publish to npm
+
+# Manual only, never on push. A publish is irreversible in practice (npm
+# discourages and restricts unpublishing) and public, so it must be a
+# deliberate action someone triggers from the Actions tab, not something
+# that fires because a commit happened to land on main.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type the exact version from package.json to confirm (e.g. 0.8.0)'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Confirm version matches package.json
+        run: |
+          actual="$(node -p "require('./package.json').version")"
+          if [ "${{ github.event.inputs.confirm }}" != "$actual" ]; then
+            echo "::error::Confirmation input '${{ github.event.inputs.confirm }}' does not match package.json version '$actual'. Aborting — this check exists so a stale or mistyped input can't publish the wrong version."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify (build + full test suite)
+        run: npm run verify
+
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
