@@ -7,6 +7,7 @@ import { RuntimeClient } from "./client.js";
 import { OracleDaemon } from "./daemon.js";
 import { readDaemonState } from "./state.js";
 import { SwarmClient } from "./swarmClient.js";
+import { VERSION } from "../version.js";
 
 let home: string;
 let daemon: OracleDaemon | undefined;
@@ -74,7 +75,7 @@ describe("OracleDaemon", () => {
       storage: "sqlite"
     });
     expect(await client!.getControlSnapshot()).toMatchObject({
-      version: "0.7.0",
+      version: VERSION,
       workspaceRoot: home,
       approvals: { pending: 0 }
     });
