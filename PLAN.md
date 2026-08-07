@@ -1,224 +1,328 @@
-# PLAN — MCP Consult Lifecycle Refactor
+# Oracle Server Mode — Multi-User Architecture
 
-**Status:** completed
-**Date:** 2026-08-07
-**Scope:** `src/mcp/` only. CLI (`src/cli.ts`) and `src/core/consult.ts` are untouched.
+**Status:** Planning  
+**Date:** 2026-08-07  
+**Target:** v0.9.0
+
+## Overview
+
+Oracle is currently single-user per machine (CLI + MCP in-process). Three concurrent users on the same machine create race conditions on Chrome profile, memory store, and sessions. This plan transitions Oracle to a server architecture: one daemon serves multiple CLI/MCP clients via HTTP.
+
+## Problem Statement
+
+### Current (Single-User)
+
+```
+┌─ CLI
+├─ MCP host (Claude AI)
+├─ IDE extension
+└─ Other clients
+  ↓ (all in-process)
+[Chrome profile (locked)]
+[Memory files (~/.oracle/memory/*.jsonl)]
+[Sessions dir (~/.oracle/sessions/...)]
+```
+
+**Issues:**
+1. Two Chrome instances race over the same profile → `DevToolsActivePort` collision → CDP hangs (fixed in 7b2bb96, but symptom of deeper issue)
+2. Memory store is file-based → concurrent writes corrupt JSONL
+3. Sessions write directly to disk → filename collisions
+4. Cannot share memory/context across users
+5. Three concurrent users = three Chrome instances = massive resource use
+
+### Target (Multi-User)
+
+```
+┌─ CLI (HTTP client)
+├─ MCP host (HTTP client)
+├─ IDE extension (HTTP client)
+└─ Other clients
+  ↓ (all HTTP/REST)
+[Oracle Server (daemon)]
+├─ PostgreSQL (shared memory + audit)
+├─ Chrome instance (shared, queued)
+└─ Session manager
+```
+
+**Benefits:**
+1. One Chrome instance, many CLI clients (resource-efficient)
+2. Shared memory across users (context accumulates)
+3. Persistent audit trail (who did what, when)
+4. Safe concurrent access (ACID guarantees)
+5. Scales to N users on same machine
 
 ---
 
-## 1. Problem
+## Architecture Decisions
 
-`oracle_relay` (`src/mcp/tools/relay.ts`, 235 lines) was built by copying
-`oracle_ask` (`src/mcp/tools/consult.ts`, 208 lines). The two tools now share
-roughly 90% of their body verbatim.
+### Database: PostgreSQL
 
-### Duplicated between `consult.ts` and `relay.ts`
+**Decision:** SQLite → PostgreSQL  
+**Reasoning:** [SQLite vs PostgreSQL](https://betterstack.com/community/guides/databases/postgresql-vs-sqlite/) — SQLite uses file locking, unsuitable for concurrent writers. PostgreSQL is the default for multi-user server daemons.
 
-| Concern | `consult.ts` | `relay.ts` |
-| --- | --- | --- |
-| `success()` / `failure()` helpers | L17–43 | L20–47 — byte-identical |
-| soul → awareness → `buildOracleSystemPrompt` | L88–101 | L163–176 |
-| conversation → memory → docs → context block | L102–140 | L121–148 |
-| files + `git_diff` + `git_staged` + `ast_resolve` + dedupe | L142–155 | L150–160 |
-| `service.consult()` + status check | L159–178 | L182–198 |
-| `recordSelfLog` for `conversationId` | L180–182 | L208–214 |
+**Schema sketch:**
+```sql
+CREATE TABLE memory_entries (
+  id UUID PRIMARY KEY,
+  content TEXT,
+  anchors JSONB,  -- A2: git-anchored memory
+  created_at TIMESTAMPTZ,
+  drifted_at TIMESTAMPTZ,  -- when blob SHA diverged
+  ...
+);
 
-### Drift this has already caused
+CREATE TABLE audit_log (
+  id UUID PRIMARY KEY,
+  user_id TEXT,
+  action TEXT,  -- oracle_ask, oracle_agent_start, ...
+  request JSONB,
+  response JSONB,
+  duration_ms INT,
+  created_at TIMESTAMPTZ
+);
 
-`relay.ts` (L182–194) omits `maxFileSizeBytes` and `maxInputBytes` when calling
-`service.consult()`. `consult.ts` (L172–173) passes both. **Result:
-`oracle_relay` silently ignores the project's configured context limits.** This
-is a live bug, and it is exactly the failure mode duplicated code produces —
-one copy was fixed, the other was not.
-
-### Wider duplication
-
-`failure()` is copy-pasted into **13 files** under `src/mcp/tools/`:
-`agent.ts`, `consult.ts`, `docs.ts`, `github.ts`, `history.ts`, `identity.ts`,
-`memory.ts`, `oracle.ts`, `relay.ts`, `session.ts`, `util.ts`, `web.ts`.
-
----
-
-## 2. Design — pipeline plus lifecycle hooks
-
-Separate the **sequence** (identical for every consult-shaped tool) from the
-**policy** (what makes each tool different).
-
-```
-                 ┌──────────── ConsultPipeline (single source) ─────────┐
-                 │                                                       │
-  request ──────►│  1. resolve   soul → awareness → systemPrompt         │
-                 │  2. gather    conversation → memory → docs            │
-                 │  3. collect   files → git → ast → dedupe              │
-                 │  4. execute   service.consult()                       │
-                 │  5. persist   recordSelfLog                           │
-                 │  6. present   success() / failure()                   │
-                 └───────────────────────────────────────────────────────┘
-                        ▲                                ▲
-                 onBeforeExecute                   onAfterExecute
-                        │                                │
-        relay: archive request as         relay: file the Q&A into the
-               working memory                    memory bank
-        ask:   no-op                       ask:   no-op
+CREATE TABLE sessions (
+  id UUID PRIMARY KEY,
+  user_id TEXT,
+  conversation_id TEXT,
+  messages JSONB[],
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
 ```
 
-Stage 4 is the only place `service.consult()` is called, so config limits are
-passed exactly once and cannot drift again.
+### Authentication: Token File + Bearer Token
 
----
+**Decision:** API key → Token file (access + refresh)  
+**Reasoning:** [WorkOS CLI auth guide](https://workos.com/guide/best-practices-cli-authentication-a-technical-guide) — Static API keys unsuitable for team environments. Token file with refresh pattern is industry-standard (GitHub CLI, gcloud, etc.).
 
-## 3. Target file layout
+**Flow:**
+```bash
+# First time: redirect to login
+$ oracle login
+# Opens browser → CLI confirms → server mints tokens
+# Stores in ~/.oracle/auth/tokens.json (mode 0600)
 
-```
-src/mcp/
-  response.ts                  NEW  — shared success() / failure()
-  pipeline/
-    consultPipeline.ts         NEW  — stages 1–5 + hook dispatch
-    stages.ts                  NEW  — resolveIdentity / gatherContext / collectFiles
-    schema.ts                  NEW  — shared zod fields (files, git_diff, soul, …)
-  tools/
-    consult.ts                 SHRINK ~208 → ~60 lines (schema + pipeline call)
-    relay.ts                   SHRINK ~235 → ~70 lines (schema + two hooks)
-    <11 other tools>           EDIT — import failure() from ../response.js
-```
-
----
-
-## 4. Interfaces
-
-```ts
-// src/mcp/pipeline/consultPipeline.ts
-
-export interface PipelineContext {
-  prompt: string;
-  soulName: string;
-  systemPrompt: string;
-  contextBlock: string;
-  files: string[];
-  astFiles: string[];
-  conversationId?: string;
-  /** Scratch space for hooks to pass values between before/after. */
-  state: Record<string, unknown>;
-}
-
-export interface ConsultHooks {
-  onBeforeExecute?(ctx: PipelineContext): Promise<void>;
-  onAfterExecute?(
-    ctx: PipelineContext,
-    result: ConsultResult
-  ): Promise<Record<string, unknown>>;
-}
-
-export async function runConsultPipeline(
-  input: PipelineInput,
-  deps: PipelineDeps,
-  hooks?: ConsultHooks
-): Promise<PipelineOutcome>;
+# Subsequent runs: auto-refresh
+$ oracle ask "..."
+# CLI reads access token from disk → HTTP Bearer header
+# Server validates → identifies user → audit log
+# If expired → CLI uses refresh token → get new access token
 ```
 
-`onAfterExecute` returns a record that is merged into the tool's
-`structuredContent`, so `oracle_relay` can keep reporting its `memory` block
-without the pipeline knowing anything about memory archiving.
+**Security:**
+- Token file permission 0600 (user-only read/write)
+- Access token short-lived (15 min)
+- Refresh token long-lived (30 days)
+- Rotate on logout
 
-### `relay.ts` after the refactor
+### API: REST + Bearer Token
 
-```ts
-const outcome = await runConsultPipeline(input, deps, {
-  async onBeforeExecute(ctx) {
-    ctx.state.requestEntry = await deps.memory.remember(agent, "working", prompt, {
-      tags: [...allTags, "request"],
-      importance: 0.7
-    });
-  },
-  async onAfterExecute(ctx, result) {
-    const stored = await deps.memory.remember(
-      agent,
-      store_as as MemoryType,
-      `**Q:** ${prompt}\n\n**A:** ${result.output}`,
-      {
-        tags: allTags,
-        importance: store_as === "fact" ? 0.9 : 0.8,
-        meta: { source: "relay", sessionId: result.sessionId, responseId: result.responseId }
-      }
-    );
-    return {
-      memory: {
-        workingEntryId: (ctx.state.requestEntry as MemoryEntry).id,
-        storedEntryId: stored.id,
-        storedType: store_as,
-        storedTags: allTags
-      }
-    };
-  }
-});
+**Decision:** gRPC → REST with standard Bearer tokens  
+**Reasoning:** Simpler for CLI clients, standard HTTP debugging, no protobuf codegen, easier to mock in tests.
+
+**Endpoints sketch:**
+```
+POST /api/v1/ask
+  headers: Authorization: Bearer <token>
+  body: { prompt, model, tool, ... }
+  response: { id, messages[], citations[], ... }
+
+POST /api/v1/agent/start
+  ...
+
+GET /api/v1/sessions/<id>
+  ...
+
+GET /health
+  response: { status, db_ok, chrome_ok }
 ```
 
 ---
 
-## 5. Tool-specific inputs the pipeline must still support
+## Implementation Phases
 
-These are the fields that genuinely differ; the pipeline accepts them as
-optional input rather than being forked per tool.
+### Phase 1: Server + Auth + DB (Sprint 1 — 3–4 days)
 
-| Field | `oracle_ask` | `oracle_relay` |
-| --- | --- | --- |
-| `context` (free-text from caller) | yes | no |
-| `active_file` + `cursor_position` | yes | no |
-| `backend` override | yes | no |
-| `accountMemory` | yes | no |
-| `compress_context` | yes | no |
-| `agent` attribution | no | yes |
-| `store_as` / `tags` / `recall` | no | yes |
-| `preset` passed to `ConsultService` | `"review"` | `"relay"` |
+**Goal:** Minimal server that serves multiple CLI clients safely.
 
-`preset` is metadata only — it lands on the session record
-(`src/core/consult.ts:165`) and is not validated against `PRESET_NAMES`, so
-`"relay"` is legal. Preserve both values as-is.
+#### 1.1 PostgreSQL & schema
+- [ ] `src/database/schema.sql` — tables: memory_entries, audit_log, sessions
+- [ ] `src/database/migrate.ts` — migration runner
+- [ ] Create local Postgres + init script (development only)
+- [ ] Write to PLAN.md: "Ops: dev requires `postgres` on PATH; production uses `DATABASE_URL` env var"
+
+#### 1.2 HTTP server
+- [ ] `src/server/server.ts` — Express/Fastify with Router
+- [ ] `src/server/routes.ts` — `/api/v1/ask`, `/api/v1/agent/...`, `/health`
+- [ ] `src/server/middleware/auth.ts` — Bearer token validation
+- [ ] `src/server/middleware/audit.ts` — log every request to audit_log table
+- [ ] Graceful shutdown (SIGTERM → drain in-flight, close DB)
+
+#### 1.3 Authentication
+- [ ] `src/auth/tokens.ts` — JWT generation (access + refresh)
+- [ ] `src/auth/flow.ts` — OAuth device flow (open browser, poll server)
+- [ ] `src/cli/commands/login.ts` — `oracle login` command
+- [ ] `src/cli/auth-client.ts` — load token from file, refresh if needed, add to HTTP headers
+- [ ] Unit tests for token lifecycle
+
+#### 1.4 CLI → HTTP bridge
+- [ ] `src/cli/http-client.ts` — HTTP request wrapper (retry, error handling)
+- [ ] Replace direct service calls with `httpClient.ask(...)`
+- [ ] `oracle ask --server localhost:8080` flag (dev; default reads from config)
+- [ ] Update `.oracle/config.json` schema: `server: { host, port }`
+
+#### 1.5 MCP → HTTP bridge
+- [ ] `src/mcp/http-client.ts` — similar to CLI client
+- [ ] MCP tools use `httpClient` instead of in-process functions
+- [ ] `oracle_ask`, `oracle_agent`, etc. become HTTP calls
+
+#### 1.6 In-memory rate limiting
+- [ ] `src/server/rate-limit.ts` — token bucket per user (5 concurrent consults)
+- [ ] Reject 429 if user at limit; clients retry with backoff
+- [ ] Audit log: rate limit events
+
+#### 1.7 Tests & fixtures
+- [ ] `src/server/server.test.ts` — HTTP endpoints
+- [ ] `src/auth/tokens.test.ts` — JWT generation/validation
+- [ ] `src/cli/http-client.test.ts` — retry/error handling
+- [ ] Integration test: CLI → HTTP server → in-memory store (no Postgres needed)
+
+#### Success Criteria (Phase 1)
+- ✅ `npm run test` passes (all tests, including integration)
+- ✅ `oracle login` mints token file
+- ✅ `oracle ask` reads token, makes HTTP request to server
+- ✅ MCP host makes HTTP request to server
+- ✅ `/health` endpoint reports db_ok + chrome_ok
+- ✅ Audit log has entries for each oracle_ask call
 
 ---
 
-## 6. Execution steps
+### Phase 2: Deploy & Ops (Sprint 2 — 2 days)
 
-1. **`src/mcp/response.ts`** — extract `success()` / `failure()`. Update all 13
-   tool files to import them. Pure move, no behavior change.
-2. **`src/mcp/pipeline/stages.ts`** — lift `resolveIdentity`, `gatherContext`,
-   `collectFiles` out of `consult.ts` verbatim.
-3. **`src/mcp/pipeline/consultPipeline.ts`** — assemble stages, add hook
-   dispatch, always pass `maxFileSizeBytes` / `maxInputBytes`.
-4. **Rewrite `tools/consult.ts`** on the pipeline. Run tests — must stay green
-   with zero test edits.
-5. **Rewrite `tools/relay.ts`** on the pipeline with the two hooks. The
-   `maxInputBytes` bug is fixed as a side effect of step 3.
-6. **`src/mcp/pipeline/schema.ts`** — factor the shared zod field definitions
-   once both tools are on the pipeline and the real overlap is visible.
-7. `npm run typecheck && npm test`.
+**Goal:** Production-ready systemd service, health checks, graceful lifecycle.
 
-Steps 1–3 are additive and can land independently of 4–6.
+#### 2.1 Systemd service
+- [ ] `oracle.service` template — `ExecStart`, `Restart`, `StandardOutput`
+- [ ] `oracle install-service` command — creates service + enables
+- [ ] `oracle uninstall-service` — disables + removes
+- [ ] Unit tests: parse service file, verify key fields
+
+#### 2.2 Health checks
+- [ ] `GET /health` — check DB connection, Chrome responsiveness
+- [ ] `oracle health` command — calls `/health`, pretty-prints
+- [ ] Systemd `ExecStartPost` — optional health probe after start
+
+#### 2.3 Logging
+- [ ] Server logs to stdout (structured JSON for parsing)
+- [ ] Systemd journal captures logs (`journalctl -u oracle`)
+- [ ] CLI logs to `.oracle/cli.log` (timestamp, level)
+
+#### 2.4 Graceful shutdown
+- [ ] Server catches SIGTERM → drain 30 sec
+- [ ] In-flight requests get 30 sec to finish
+- [ ] Systemd `TimeoutStopSec=60` (gives server 30 + margin)
+
+#### 2.5 Documentation
+- [ ] README: "Run oracle server" (systemd vs manual)
+- [ ] Architecture doc: how auth, DB, HTTP interact
+
+#### Success Criteria (Phase 2)
+- ✅ `oracle install-service` creates working systemd unit
+- ✅ `systemctl start oracle` starts server
+- ✅ `oracle health` shows db_ok + chrome_ok
+- ✅ `systemctl stop oracle` gracefully shuts down
+- ✅ Logs appear in `journalctl`
 
 ---
 
-## 7. Out of scope
+### Phase 3: Memory → DB (Sprint 3 — 3–4 days)
 
-- **`oracle_agent`** — an autonomous loop, not a one-shot consult. It does not
-  fit this lifecycle and must not be forced into it.
-- **CLI** — `src/cli.ts` keeps calling `ConsultService` directly. Sharing the
-  pipeline with the CLI would mean moving it to `src/core/`; that is a separate
-  change with a different blast radius. Revisit only after this lands.
-- **Tool surface** — no consult lifecycle tools were removed. The full server
-  now exposes 20 focused tools and the coordination server remains separate.
+**Deferred.** Depends on v0.9.0 completing phases 1–2.
+
+- [ ] Migrate `src/memory/adapter.ts` from file-based to PostgreSQL
+- [ ] Add A2 (git-anchored memory): `anchors` column + drift detection
+- [ ] Add A3 (citations): return `citations[]` from `oracle_ask`
+- [ ] Backfill existing memory entries to DB
+- [ ] Remove `~/.oracle/memory/` directory (legacy)
 
 ---
 
-## 8. Acceptance criteria
+## Dependencies & Risks
 
-- [x] `npm run typecheck` clean.
-- [x] All current tests pass (665 tests, plus focused regression coverage).
-- [x] Consult-shaped `service.consult()` calls are centralized in
-      `pipeline/consultPipeline.ts`; GitHub PR review remains an intentionally
-      separate specialized tool.
-- [x] `success()` / `failure()` are defined once in `src/mcp/response.ts` and
-      shared by both the full and coordination MCP tool groups.
-- [x] `oracle_relay` honours `maxFileSizeBytes` and `maxInputBytes`, covered by
-      regression tests in `pipeline/consultPipeline.test.ts`.
-- [x] Combined line count of `src/mcp/tools/` is 1,328 lines, with the shared
-      lifecycle code relocated into `pipeline/` + `response.ts`.
+### Dependencies
+- **PostgreSQL** (dev: local; prod: `DATABASE_URL`)
+- **jwt library** (e.g., jsonwebtoken for Node.js)
+- **HTTP framework** (Express or Fastify)
+- **Migration tool** (e.g., Knex, Migrate-js)
+
+### Risks
+
+| Risk | Mitigation |
+|---|---|
+| Database migration fails | Test in Docker; rollback plan per migration |
+| Token theft (disk) | File permissions 0600; document SSH hardening for remote |
+| Bearer token interception | Use HTTPS in production (Caddy reverse proxy) |
+| Slow DB queries block CLI | Add indexes on (user_id, created_at); query timeouts |
+| Chrome still bottleneck | Queue requests; document concurrency limit |
+| Breaking change for MCP hosts | Bump to v0.9.0; document migration path (MCP → HTTP) |
+
+---
+
+## Breaking Changes
+
+**v0.8.0 → v0.9.0:**
+
+1. **MCP is now HTTP client** — Old code calling Oracle functions in-process breaks. MCP hosts must point to `ORACLE_SERVER_URL` env var.
+   - Mitigation: Default to `localhost:8080` in dev; document in README
+   - Impact: Claude AI, IDE extensions need configuration update
+
+2. **Memory store changes** — File-based → PostgreSQL. Old `.oracle/memory/*.jsonl` files ignored.
+   - Mitigation: One-time migration script (reads old files, imports to DB)
+   - Impact: Users running v0.8.0 + v0.9.0 in parallel: old binary uses DB, new binary uses DB (OK)
+
+3. **Config schema** — New `server:` section in `.oracle/config.json`
+   - Mitigation: Auto-migrate old config on first run
+   - Impact: None if migration succeeds
+
+---
+
+## Success Criteria (Overall)
+
+- ✅ 3 concurrent users on same machine
+- ✅ No Chrome profile collisions
+- ✅ Memory shared across users
+- ✅ Audit trail complete + queryable
+- ✅ All tests pass
+- ✅ systemd service works
+- ✅ Backward compat migration path documented
+
+---
+
+## Timeline
+
+| Phase | Days | Start | End |
+|---|---|---|---|
+| **1: Server + Auth + DB** | 3–4 | 2026-08-08 | 2026-08-12 |
+| **2: Deploy + Ops** | 2 | 2026-08-13 | 2026-08-15 |
+| **3: Memory → DB** | 3–4 | 2026-08-20 | 2026-08-24 |
+
+---
+
+## Related Roadmap
+
+- **A1:** Eval harness (memory quality) — independent, can proceed in parallel
+- **A2:** Git-anchored memory — part of Phase 3
+- **A3:** Citations — part of Phase 3
+- **B1:** Tool budget — independent
+- **B2:** Style gate — independent
+
+---
+
+## Questions for Review
+
+1. **Database location:** Assume local Postgres for dev; do we provide Docker Compose or expect user to `brew install postgresql`?
+2. **Token expiry:** 15 min access / 30 day refresh — OK or too short/long?
+3. **Rate limit:** 5 concurrent per user — OK for 3 users or too strict?
+4. **Production deployment:** systemd assumes Linux; Windows/macOS users need different (scheduled task / launchd)?
+5. **HTTPS:** Reverse proxy (Caddy) in front of server, or assume localhost-only dev use?
