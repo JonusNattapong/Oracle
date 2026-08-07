@@ -51,6 +51,9 @@ export async function createOracleMcpServer(
     // ── Consult (ask with context) ──
     "oracle_ask is a single entry point for Q&A — pass files, context, or a conversationId for multi-turn recall. The answer will include project memory and docs context automatically.",
     "",
+    // ── Relay (middleman + memory bank) ──
+    "oracle_relay is the middleman/middleware entry point: it archives your request, enriches it with recalled memory, consults the AI backend, then files the Q&A into the memory bank (tagged `relay`) so the same question is answered from memory on future calls.",
+    "",
     // ── Agent (autonomous coding loop) ──
     "oracle_agent runs an autonomous coding loop inside the workspace: reads/writes/edits files and runs shell commands. Use for implementation tasks, refactoring, and bug fixing. Confined to the workspace with audit trail.",
     "",
@@ -58,10 +61,10 @@ export async function createOracleMcpServer(
     "oracle_web_search and oracle_web_fetch let you search and read web pages when the task needs external API docs, troubleshooting, or live data.",
     "",
     // ── Identity ──
-    "Use oracle_identity_setup to configure the operator profile; oracle_identity_show or oracle_awareness_show to inspect Oracle's identity, environment, capabilities, and boundaries. Awareness is auto-injected into consults and agent runs.",
+    "Use oracle_identity_show or oracle_awareness_show to inspect Oracle's identity, environment, capabilities, and boundaries. Configure the operator profile with the CLI (`oracle identity`). Awareness is auto-injected into consults and agent runs.",
     "",
     // ── Init ──
-    "oracle_init bootstraps .oracle/ in a new project with policy.json (zero-trust rules), config.json, docs/, and skills/.",
+    "Bootstrap a new workspace with the CLI (`oracle init`); the MCP surface starts after the workspace is initialized.",
     "",
   ].join("\n");
 

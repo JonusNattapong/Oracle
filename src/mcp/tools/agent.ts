@@ -6,20 +6,8 @@ import type { SkillRegistry } from "../../skills/registry.js";
 import path from "node:path";
 import os from "node:os";
 import type { ProjectConfig } from "../../config/project.js";
-import { OracleError, serializeOracleError } from "../../errors.js";
-
-function success(text: string, structuredContent: Record<string, unknown>) {
-  return { content: [{ type: "text" as const, text }], structuredContent };
-}
-
-function failure(error: unknown) {
-  const serialized = serializeOracleError(error);
-  return {
-    isError: true,
-    content: [{ type: "text" as const, text: JSON.stringify(serialized) }],
-    structuredContent: serialized as unknown as Record<string, unknown>
-  };
-}
+import { OracleError } from "../../errors.js";
+import { success, failure } from "../response.js";
 
 export function registerAgentTools(
   server: McpServer,

@@ -34,7 +34,7 @@ One core, four surfaces:
 
 - **CLI** (`src/cli.ts`) — full administrative surface: ask, agent, memory,
   daemon, control, schedule, github.
-- **MCP servers** (`src/mcp/server.ts`) — stdio JSON-RPC, 18 focused tools
+- **MCP servers** (`src/mcp/server.ts`) — stdio JSON-RPC, 19 focused tools
   (`oracle_ask`, `oracle_agent`, `oracle_memory_*`). Coordination-only twin:
   `src/mcp/messagingTools.ts` → `oracle-msg-mcp`.
 - **Runtime daemon** (`src/runtime/daemon.ts`) — persistent process owning

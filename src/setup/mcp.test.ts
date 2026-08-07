@@ -96,4 +96,37 @@ describe("writeMcpSetup", () => {
     expect(content).toContain('model = "gpt-5.4"');
     expect(content).toContain("[mcp_servers.oracle]");
   });
+
+  test("replaces only the Oracle Codex block and preserves later tables", async () => {
+    const root = await temporaryRoot();
+    const configPath = path.join(root, ".codex", "config.toml");
+    await fs.mkdir(path.dirname(configPath));
+    await fs.writeFile(
+      configPath,
+      [
+        'model = "gpt-5.4"',
+        "",
+        "[mcp_servers.oracle]",
+        'command = "old-node"',
+        'args = ["old-mcp.js"]',
+        "",
+        "[mcp_servers.oracle.env]",
+        'ORACLE_WORKSPACE_ROOT = "old-root"',
+        "",
+        "[profiles.review]",
+        'model = "gpt-5.6"',
+        "",
+      ].join("\n"),
+      "utf8"
+    );
+    const generated = generateMcpSetup({ root, client: "codex", serverPath: path.join(root, "mcp.js") });
+
+    await writeMcpSetup(generated, true);
+
+    const content = await fs.readFile(configPath, "utf8");
+    expect(content).toContain('[profiles.review]');
+    expect(content).toContain('model = "gpt-5.6"');
+    expect(content).toContain(`args = [${JSON.stringify(path.join(root, "mcp.js").replaceAll("\\", "/"))}]`);
+    expect(content).not.toContain('ORACLE_WORKSPACE_ROOT = "old-root"');
+  });
 });

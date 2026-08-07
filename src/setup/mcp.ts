@@ -103,10 +103,29 @@ function mergeClaudeConfig(existing: string, generated: string, force: boolean, 
 
 function mergeCodexConfig(existing: string, generated: string, force: boolean, filePath: string): string {
   const marker = "[mcp_servers.oracle]";
-  const start = existing.indexOf(marker);
-  if (start < 0) return `${existing.trimEnd()}\n\n${generated}`;
-  if (!force && existing.slice(start).trim() !== generated.trim()) throw conflict(filePath);
-  return `${existing.slice(0, start).trimEnd()}\n\n${generated}`;
+  const lineEnding = existing.includes("\r\n") ? "\r\n" : "\n";
+  const lines = existing.split(/\r?\n/);
+  const markerLine = lines.findIndex((line) => line.trim() === marker);
+  const generatedBlock = generated.trim().replaceAll("\n", lineEnding);
+  if (markerLine < 0) return `${existing.trimEnd()}${lineEnding}${lineEnding}${generatedBlock}${lineEnding}`;
+
+  // Replace only Oracle's table and its nested tables. The old implementation
+  // replaced everything after the marker, which silently discarded unrelated
+  // Codex settings when Oracle was not the final table in the file.
+  let endLine = markerLine + 1;
+  while (endLine < lines.length) {
+    const table = lines[endLine].trim();
+    const isTable = /^\[[^\]]+\]$/.test(table);
+    const belongsToOracle = table.startsWith("[mcp_servers.oracle.");
+    if (isTable && !belongsToOracle) break;
+    endLine += 1;
+  }
+  const currentBlock = lines.slice(markerLine, endLine).join(lineEnding).trim();
+  if (!force && currentBlock !== generatedBlock) throw conflict(filePath);
+
+  const before = lines.slice(0, markerLine).join(lineEnding).trimEnd();
+  const after = lines.slice(endLine).join(lineEnding).trimStart();
+  return [before, generatedBlock, after].filter(Boolean).join(`${lineEnding}${lineEnding}`) + lineEnding;
 }
 
 export async function writeMcpSetup(file: SetupFile, force = false): Promise<void> {

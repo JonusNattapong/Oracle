@@ -144,6 +144,7 @@ describe("Oracle MCP tools", () => {
     expect(tools).toContain("oracle_memory_search");
     expect(tools).toContain("oracle_memory_remember");
     expect(tools).toContain("oracle_memory_maintain");
+    expect(tools).toContain("oracle_relay");
     expect(tools).toContain("oracle_identity_show");
     expect(tools).toContain("oracle_awareness_show");
     expect(tools).toContain("oracle_msg_send");
@@ -426,6 +427,75 @@ describe("Oracle MCP tools", () => {
         })
       ]
     });
+  });
+
+  test("oracle_relay relays a question and archives it as working + insight memory", async () => {
+    const relay = await client.callTool({
+      name: "oracle_relay",
+      arguments: { prompt: "What is the purpose of Oracle?", agent: "relayer" }
+    });
+    expect(relay.isError).not.toBe(true);
+    expect(relay.content).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "text", text: expect.stringContaining("ANSWER:") })
+      ])
+    );
+    const body = relay.structuredContent as { memory: { workingEntryId: string; storedEntryId: string; storedType: string } };
+    expect(body.memory.storedType).toBe("insight");
+    expect(body.memory.workingEntryId).toBeDefined();
+    expect(body.memory.storedEntryId).toBeDefined();
+
+    // The Q&A should be searchable in memory.
+    const found = await client.callTool({
+      name: "oracle_memory_search",
+      arguments: { query: "purpose of Oracle", tags: ["relay"], agent: "relayer", type: "insight" }
+    });
+    expect((found.structuredContent as { count: number }).count).toBeGreaterThanOrEqual(1);
+
+    // The working request should be visible too.
+    const working = await client.callTool({
+      name: "oracle_memory_search",
+      arguments: { agent: "relayer", type: "working", tags: ["relay", "request"], limit: 5 }
+    });
+    expect((working.structuredContent as { count: number }).count).toBeGreaterThanOrEqual(1);
+  });
+
+  test("oracle_relay stores the answer as a fact when store_as=fact", async () => {
+    const relay = await client.callTool({
+      name: "oracle_relay",
+      arguments: { prompt: "The release train runs on Fridays", store_as: "fact", agent: "scheduler" }
+    });
+    expect(relay.isError).not.toBe(true);
+    const body = relay.structuredContent as { memory: { storedType: string } };
+    expect(body.memory.storedType).toBe("fact");
+
+    const facts = await client.callTool({
+      name: "oracle_memory_search",
+      arguments: { query: "release train", type: "fact", agent: "scheduler" }
+    });
+    expect((facts.structuredContent as { count: number }).count).toBeGreaterThanOrEqual(1);
+  });
+
+  test("oracle_relay with conversation_id enables turn continuity", async () => {
+    const convo = "relay-convo-test";
+    const first = await client.callTool({
+      name: "oracle_relay",
+      arguments: { prompt: "Remember the word flibbertigibbet", agent: "converser", conversation_id: convo }
+    });
+    expect(first.isError).not.toBe(true);
+
+    const second = await client.callTool({
+      name: "oracle_relay",
+      arguments: { prompt: "What word did I just ask you to remember?", agent: "converser", conversation_id: convo }
+    });
+    expect(second.isError).not.toBe(true);
+
+    // The self-log working entry should contain the first question.
+    const log = await client.callTool({
+      name: "oracle_memory_search",
+      arguments: { query: "flibbertigibbet", agent: "oracle", type: "working" }
+    });
+    expect((log.structuredContent as { count: number }).count).toBeGreaterThanOrEqual(1);
   });
 
   test("exposes and injects the current self-awareness snapshot", async () => {

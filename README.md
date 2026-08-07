@@ -81,7 +81,7 @@ tasks.
 | Surface | Use it when | Entry point |
 |---|---|---|
 | **CLI** | A human or script needs direct consult, agent, memory, task, or Runtime commands. | `oracle` |
-| **MCP server** | Claude Code, Codex, or another MCP host needs Oracle as a consultant: ask, agent, memory, docs, web, diagnostics. 18 focused tools rather than everything the CLI can do. | `oracle-mcp` |
+| **MCP server** | Claude Code, Codex, or another MCP host needs Oracle as a consultant: ask, agent, memory, docs, web, diagnostics. 19 focused tools rather than everything the CLI can do. | `oracle-mcp` |
 | **Coordination-only MCP server** | Agents need messaging and verified tasks without loading provider, memory, or agent dependencies. | `oracle-msg-mcp` |
 | **Runtime API + Control Center** | Scheduling, remote coordination, approvals, or event replay must survive individual CLI sessions. | `oracle-daemon` |
 
@@ -509,7 +509,7 @@ The package exposes four binaries:
 
 ```text
 oracle            main CLI
-oracle-mcp        stdio MCP server (18 focused tools)
+oracle-mcp        stdio MCP server (19 focused tools)
 oracle-msg-mcp    coordination-only stdio MCP server
 oracle-daemon     persistent Runtime
 ```

@@ -2,22 +2,8 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { serializeOracleError } from "../../errors.js";
+import { success, failure } from "../response.js";
 import type { OracleRegistry } from "../../oracles/registry.js";
-
-function success(text: string, structuredContent: Record<string, unknown>) {
-  return { content: [{ type: "text" as const, text }], structuredContent };
-}
-
-function failure(error: unknown) {
-  const serialized = serializeOracleError(error);
-  return {
-    isError: true,
-    content: [{ type: "text" as const, text: JSON.stringify(serialized) }],
-    structuredContent: serialized as unknown as Record<string, unknown>
-  };
-}
-
 export function registerOracleProfileTools(server: McpServer, oracles: OracleRegistry): void {
   server.registerTool(
     "oracle_oracle_list",

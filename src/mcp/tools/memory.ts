@@ -1,20 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import type { MemoryPort } from "../../orchestrator/ports.js";
-import { serializeOracleError } from "../../errors.js";
-
-function success(text: string, structuredContent: Record<string, unknown>) {
-  return { content: [{ type: "text" as const, text }], structuredContent };
-}
-
-function failure(error: unknown) {
-  const serialized = serializeOracleError(error);
-  return {
-    isError: true,
-    content: [{ type: "text" as const, text: JSON.stringify(serialized) }],
-    structuredContent: serialized as unknown as Record<string, unknown>
-  };
-}
+import { success, failure } from "../response.js";
 
 const SCOPE = z.enum(["project", "global"]).default("project");
 const MEMORY_TYPE = z.enum(["fact", "insight", "chunk", "working"]);

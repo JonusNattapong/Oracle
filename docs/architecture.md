@@ -24,8 +24,8 @@ stores and does not replace their existing sources of truth.
 | Component | Responsibility | Source |
 |---|---|---|
 | **CLI** | Commander-based CLI: `ask`, `agent`, `memory`, `wiki`, `docs`, `web`, `msg`, `task`, `identity`, `github`, `session`, `skill` | `src/cli.ts` |
-| **MCP Server** | Stdio MCP server exposing Oracle's full tool surface | `src/mcp/server.ts`, `src/mcp/runtime.ts` |
-| **Standalone coordination server** | `oracle-msg-mcp` binary — 21 messaging, task, consensus, and recovery tools without the provider/memory/agent stack | `src/mcp-messaging.ts` |
+| **MCP Server** | Stdio MCP server exposing 19 focused consultation, memory, docs, web, identity, history, and diagnostics tools | `src/mcp/server.ts`, `src/mcp/runtime.ts` |
+| **Standalone coordination server** | `oracle-msg-mcp` binary — 22 messaging, task, consensus, and recovery tools without the provider/memory/agent stack | `src/mcp-messaging.ts` |
 | **Runtime daemon** | Long-lived Scheduler owner, SQLite backend, local/admin API, project-scoped Remote Swarm API, WebSocket events | `src/runtime/`, `src/daemon.ts` |
 | **Remote Swarm** | Cross-machine messages, presence, verified tasks, scoped tokens, reconnect replay | `src/runtime/swarmService.ts`, `src/runtime/swarmClient.ts` |
 | **Control Center** | Web dashboard, Ink TUI, quorum/expiry approvals, execute-once gate, optional Telegram callbacks | `src/control/` |

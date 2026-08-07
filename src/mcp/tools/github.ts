@@ -4,20 +4,7 @@ import type { ConsultService } from "../../core/consult.js";
 import type { ProjectConfig } from "../../config/project.js";
 import type { PRFile } from "../../github/types.js";
 import * as gh from "../../github/gh.js";
-import { serializeOracleError } from "../../errors.js";
-
-function success(text: string, structuredContent: Record<string, unknown>) {
-  return { content: [{ type: "text" as const, text }], structuredContent };
-}
-
-function failure(error: unknown) {
-  const serialized = serializeOracleError(error);
-  return {
-    isError: true,
-    content: [{ type: "text" as const, text: JSON.stringify(serialized) }],
-    structuredContent: serialized as unknown as Record<string, unknown>
-  };
-}
+import { success, failure } from "../response.js";
 
 export function registerGitHubTools(
   server: McpServer,

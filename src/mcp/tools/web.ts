@@ -1,23 +1,10 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import { serializeOracleError } from "../../errors.js";
+import { success, failure } from "../response.js";
 import { webSearchWithTrace } from "../../web/search.js";
 import { fetchUrl } from "../../web/fetchUrl.js";
 import { agentqlExtract } from "../../web/providers/agentql.js";
 import { SEARCH_PROVIDERS, FETCH_PROVIDERS } from "../../web/types.js";
-
-function success(text: string, structuredContent: Record<string, unknown>) {
-  return { content: [{ type: "text" as const, text }], structuredContent };
-}
-
-function failure(error: unknown) {
-  const serialized = serializeOracleError(error);
-  return {
-    isError: true,
-    content: [{ type: "text" as const, text: JSON.stringify(serialized) }],
-    structuredContent: serialized as unknown as Record<string, unknown>
-  };
-}
 
 export function registerWebTools(server: McpServer): void {
   server.registerTool(
