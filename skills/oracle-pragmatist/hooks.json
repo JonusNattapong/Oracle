@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "systemPrompt",
+            "prompt": "$ORACLE_PRAGMATIST_RULES"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "systemPrompt",
+            "prompt": "$ORACLE_PRAGMATIST_CHECK_REUSE"
+          }
+        ]
+      }
+    ]
+  }
+}

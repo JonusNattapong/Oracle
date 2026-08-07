@@ -1,0 +1,73 @@
+{
+  "skills": ["oracle-pragmatist"],
+  "pragmatist": {
+    "enabled": true,
+    "strictMode": false,
+    "reusablePatterns": [
+      {
+        "name": "pagination",
+        "path": "src/utils/pagination.ts",
+        "description": "Handles offset-based and cursor-based pagination",
+        "markers": ["paginate", "usePagination", "Paginator"]
+      },
+      {
+        "name": "api-client",
+        "path": "src/api/client.ts",
+        "description": "HTTP client with auth and error handling",
+        "markers": ["apiClient", "request", "fetch"]
+      },
+      {
+        "name": "form-validation",
+        "path": "src/utils/validation.ts",
+        "description": "Runtime validation with zod",
+        "markers": ["validate", "schema"]
+      },
+      {
+        "name": "modals",
+        "path": "src/components/Modal.tsx",
+        "description": "Reusable modal dialog component",
+        "markers": ["Modal", "useModal", "showModal"]
+      },
+      {
+        "name": "date-input",
+        "note": "HTML5 input type=date covers 95% of cases. No library needed."
+      },
+      {
+        "name": "state-management",
+        "path": "src/hooks/useState.ts",
+        "description": "Use React hooks for state, not Redux for simple cases"
+      }
+    ],
+    "librariesToAvoid": [
+      {
+        "name": "moment",
+        "reason": "Use native Date, date-fns, or dayjs instead",
+        "alternatives": ["native Date", "date-fns", "dayjs"]
+      },
+      {
+        "name": "lodash",
+        "reason": "Modern JS has most lodash functions built-in",
+        "alternatives": ["native Array methods", "native Object methods"]
+      },
+      {
+        "name": "axios",
+        "reason": "Fetch API is powerful enough",
+        "alternatives": ["fetch", "src/api/client.ts"]
+      }
+    ],
+    "allowedLibraries": [
+      {
+        "name": "zod",
+        "reason": "Battle-tested, security-critical validation"
+      },
+      {
+        "name": "react",
+        "reason": "Core framework"
+      },
+      {
+        "name": "typescript",
+        "reason": "Type safety"
+      }
+    ]
+  }
+}

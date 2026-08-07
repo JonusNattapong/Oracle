@@ -1,0 +1,11 @@
+{
+  "name": "oracle-pragmatist",
+  "version": "0.8.0",
+  "description": "Pragmatist mode for Oracle agents. Reuse existing code, use stdlib first, build only what's needed. Think like the laziest senior dev who ships on time.",
+  "author": {
+    "name": "Oracle Team",
+    "url": "https://github.com/OraclePersonal/Oracle"
+  },
+  "keywords": ["pragmatism", "yagni", "reuse", "minimal-code", "efficiency"],
+  "hooks": "./hooks.json"
+}
