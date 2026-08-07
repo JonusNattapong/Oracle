@@ -13,7 +13,12 @@ import {
   COMPOSER_TOOLS_WITHOUT_STALL_RELOAD,
   type ChatGptBrowserConfig
 } from "./types.js";
-import { ChromeLauncher, ensureWindowNotMinimized, findOrCreatePageTarget } from "./chrome.js";
+import {
+  ChromeLauncher,
+  ensureWindowNotMinimized,
+  findOrCreatePageTarget,
+  withConsultLock
+} from "./chrome.js";
 import {
   CdpSession,
   normalizeChatGptConversationUrl,
@@ -107,7 +112,16 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
     }
   }
 
+  /**
+   * Locked for the full request, retries included: see `withConsultLock` in
+   * chrome.ts for why. Concurrent callers on the same profile queue rather
+   * than run — there is one ChatGPT tab, not one per caller.
+   */
   async run(request: ExecutionBackendRequest): Promise<ExecutionBackendResponse> {
+    return withConsultLock(this.config.profileDir, () => this.runLocked(request));
+  }
+
+  private async runLocked(request: ExecutionBackendRequest): Promise<ExecutionBackendResponse> {
     let lastError: unknown;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {

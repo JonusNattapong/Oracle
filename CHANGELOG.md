@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.0] - 2026-08-07
 
 ### Added
 - **`oracle ask --create-image` / `create_image`** — turns on ChatGPT's Create
@@ -20,6 +20,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rescue a wedged UI.
 
 ### Fixed
+- **Concurrent `oracle ask` calls on the `chatgpt-browser` backend could
+  silently answer the wrong question.** Three requests running at once share
+  one Chrome profile and, after a first fix in this release closed the
+  Chrome-launch race (below), correctly share one Chrome instance too — but
+  `findOrCreatePageTarget` also reuses whichever `chatgpt.com` tab is already
+  open, so all three then drove the *same tab*, typing and reading against a
+  single response stream. Live-reproduced: three concurrent calls with three
+  different prompts returned the same wrong answer to all three, with exit
+  code 0 and no error. A new lock (`withConsultLock`) now holds the full
+  request — launch through final read, retries included — so concurrent
+  requests queue instead of interleaving. Verified live: same three prompts
+  now each get their own correct answer, serialized rather than corrupted.
+- **Two Oracle processes could spawn two Chrome instances onto one profile.**
+  `ChromeLauncher.launch()` reads whether a Chrome is already running,
+  decides, and only then acts — not atomic across processes. Two callers
+  evaluating that at the same moment could each decide "none running" and
+  each launch one, after which every later CDP call in whichever process lost
+  the race could land on the wrong instance and hang. A widened reuse-probe
+  timeout landed earlier in this release (`7b2bb96`) to stop a *slow* Chrome
+  from being mistaken for a dead one within a single process's retries — that
+  narrowed the window but cannot close it, since the race is between two
+  separate processes and probing slower does not make a read-then-write
+  sequence atomic across them. A cross-process lock (`withLaunchLock`) now
+  serializes the launch decision itself, not just the spawn.
 - **Image uploads went to the wrong element.** The live page carries five file
   inputs. Only one sits inside the composer form, and that one declares no
   `accept` attribute; the other four belong to the photo picker and the

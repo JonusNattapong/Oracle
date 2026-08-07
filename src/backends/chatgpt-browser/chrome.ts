@@ -109,6 +109,137 @@ export async function getWebSocketDebuggerUrl(port: number, timeoutMs = 10000): 
  */
 const REUSE_PROBE_TIMEOUT_MS = 10_000;
 
+/**
+ * How long a launch lock is honored before it is treated as abandoned (its
+ * holder crashed without releasing it) rather than genuinely in progress. Set
+ * above the slowest legitimate hold: a cold Chrome start can spend the 10s
+ * reuse probe deciding to launch, plus up to 15s in `waitForActiveEndpoint`,
+ * plus the `getWebSocketDebuggerUrl` call after that.
+ */
+const LAUNCH_LOCK_STALE_MS = 60_000;
+
+/** How long a waiting caller blocks for the launch lock before giving up. */
+const LAUNCH_LOCK_ACQUIRE_TIMEOUT_MS = 45_000;
+
+/**
+ * Exclusive-create-with-stale-detection lock, scoped to one file inside a
+ * Chrome profile directory. Same pattern as `AuditLogger.withLock` in
+ * `src/observability/audit.ts`; parameterized here because this module needs
+ * two independent locks over the same profile directory (see below) with
+ * different filenames and hold-time budgets — reusing one lock file for both
+ * would deadlock a caller against itself.
+ */
+async function withFileLock<T>(
+  lockPath: string,
+  staleMs: number,
+  acquireTimeoutMs: number,
+  operation: () => Promise<T>
+): Promise<T> {
+  await fs.mkdir(path.dirname(lockPath), { recursive: true });
+  const deadline = Date.now() + acquireTimeoutMs;
+  let handle: fs.FileHandle | undefined;
+  while (!handle) {
+    try {
+      handle = await fs.open(lockPath, "wx", 0o600);
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      // Windows may report EPERM instead of EEXIST for an existing file.
+      if (code !== "EEXIST" && code !== "EPERM") throw error;
+      try {
+        const stat = await fs.stat(lockPath);
+        if (Date.now() - stat.mtimeMs > staleMs) {
+          await fs.unlink(lockPath).catch(() => undefined);
+          continue;
+        }
+      } catch {
+        continue;
+      }
+      if (Date.now() >= deadline) {
+        throw new Error(`Timed out waiting for the lock at ${lockPath}.`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+  try {
+    return await operation();
+  } finally {
+    await handle.close().catch(() => undefined);
+    await fs.unlink(lockPath).catch(() => undefined);
+  }
+}
+
+/**
+ * Serializes `ChromeLauncher.launch()` per profile directory across processes.
+ *
+ * `launch()`'s reuse check is read-then-act: read `DevToolsActivePort`, probe
+ * whether it answers, and if not, delete the marker and spawn a new Chrome.
+ * That is not atomic. Two processes evaluating it at the same moment — three
+ * users each running `oracle ask` at once, or several `/v1/consult` requests
+ * arriving together — can both conclude "no live Chrome" and both spawn one
+ * onto the same profile directory. Two Chrome instances then race to own
+ * `DevToolsActivePort`, and whichever wrote last decides where every later CDP
+ * call in the process that lost the race gets sent — often to a Chrome that
+ * has since exited, which is what an unexplained CDP hang usually was.
+ *
+ * A lock only around the spawn call is not enough: the decision to spawn must
+ * itself happen inside the lock, or two holders in sequence could each still
+ * make that decision independently before either one launches.
+ *
+ * This alone does not make concurrent requests safe — see `withConsultLock`
+ * in backend.ts for the tab-sharing race this one does not cover.
+ *
+ * Exported for chrome.test.ts, which verifies the serialization and
+ * stale-recovery behavior directly rather than through a real Chrome launch.
+ */
+export function withLaunchLock<T>(profileDir: string, operation: () => Promise<T>): Promise<T> {
+  return withFileLock(
+    path.join(profileDir, ".launch.lock"),
+    LAUNCH_LOCK_STALE_MS,
+    LAUNCH_LOCK_ACQUIRE_TIMEOUT_MS,
+    operation
+  );
+}
+
+/**
+ * Locks the full duration of one browser-backend request — launch through
+ * final read — per profile directory. `findOrCreatePageTarget` reuses
+ * whichever chatgpt.com tab is already open rather than creating a new one:
+ * that is the intended behavior for one user across turns (continuity), but
+ * it means two requests running at once drive the *same* tab — one typing
+ * while the other reads, both against a single response stream. The failure
+ * mode is not a hang: each caller sees a plausible-looking answer that may
+ * belong to the other caller's question, or to whatever was already on
+ * screen, which is worse than a crash because nothing signals it happened.
+ *
+ * Held for the whole request rather than added inside `run()`'s retry loop:
+ * a retry after a transient failure must not let a second caller's request
+ * interleave into the same tab in the gap between attempts.
+ *
+ * Exported for backend.test.ts.
+ */
+export function withConsultLock<T>(profileDir: string, operation: () => Promise<T>): Promise<T> {
+  return withFileLock(
+    path.join(profileDir, ".consult.lock"),
+    CONSULT_LOCK_STALE_MS,
+    CONSULT_LOCK_ACQUIRE_TIMEOUT_MS,
+    operation
+  );
+}
+
+/**
+ * A consult can legitimately run for the configured browser timeout (deep
+ * research turns run to 30+ minutes; see `COMPOSER_TOOL_MIN_TIMEOUT_MS` in
+ * types.ts) plus its own retry-with-backoff attempts. Set well above that so
+ * a slow-but-alive holder is never mistaken for a crashed one.
+ */
+const CONSULT_LOCK_STALE_MS = 40 * 60_000;
+
+/**
+ * How long a queued caller waits for the tab before giving up rather than
+ * queuing indefinitely behind other users' requests.
+ */
+const CONSULT_LOCK_ACQUIRE_TIMEOUT_MS = 40 * 60_000;
+
 interface ActiveDevToolsEndpoint {
   port: number;
   browserPath: string;
@@ -209,7 +340,15 @@ export async function ensureWindowNotMinimized(
 export class ChromeLauncher {
   private childProcess?: ChildProcess;
 
+  /**
+   * Locked per profile directory: see `withLaunchLock` for why the reuse
+   * decision below must not run concurrently with another process's.
+   */
   async launch(config: ChatGptBrowserConfig): Promise<ChromeProcessInfo> {
+    return withLaunchLock(config.profileDir, () => this.launchLocked(config));
+  }
+
+  private async launchLocked(config: ChatGptBrowserConfig): Promise<ChromeProcessInfo> {
     const activeEndpoint = await readActiveEndpoint(config.profileDir);
 
     // Reuse only when both the random port and browser UUID match the endpoint
