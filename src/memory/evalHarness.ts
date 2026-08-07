@@ -1,13 +1,13 @@
 import fs from "node:fs/promises";
 
-interface EvalQuery {
+export interface EvalQuery {
   id: string;
   query: string;
   relevantIds: string[];
   category: string;
 }
 
-interface EvalDataset {
+export interface EvalDataset {
   version: string;
   description: string;
   queries: EvalQuery[];
@@ -50,26 +50,25 @@ export class EvalHarness {
   async evaluate(
     retrievalFn: (query: string) => Promise<string[]>
   ): Promise<RecallMetrics> {
-    const recalls: number[] = [];
+    const targets = [...new Set(this.dataset.metrics.recall_targets)].sort((a, b) => a - b);
+    const recallByK = new Map(targets.map((k) => [k, [] as number[]]));
     const mrrs: number[] = [];
 
     for (const q of this.dataset.queries) {
       const retrieved = await retrievalFn(q.query);
       const relevant = new Set(q.relevantIds);
 
-      // Recall@k for each k in targets
-      const topK = Math.max(...this.dataset.metrics.recall_targets);
-      const topRetrieved = retrieved.slice(0, topK);
-      const hits = topRetrieved.filter((id) => relevant.has(id));
-
-      // Recall = hits / relevant
-      const recall = relevant.size > 0 ? hits.length / relevant.size : 0;
-      recalls.push(recall);
+      for (const k of targets) {
+        const topRetrieved = retrieved.slice(0, k);
+        const hits = topRetrieved.filter((id) => relevant.has(id));
+        const recall = relevant.size > 0 ? hits.length / relevant.size : 0;
+        recallByK.get(k)?.push(recall);
+      }
 
       // MRR = 1 / rank_of_first_relevant
       let mrr = 0;
-      for (let i = 0; i < topRetrieved.length; i++) {
-        if (relevant.has(topRetrieved[i])) {
+      for (let i = 0; i < retrieved.length; i++) {
+        if (relevant.has(retrieved[i])) {
           mrr = 1 / (i + 1);
           break;
         }
@@ -77,13 +76,18 @@ export class EvalHarness {
       mrrs.push(mrr);
     }
 
-    const avgRecall = recalls.length > 0 ? recalls.reduce((a, b) => a + b) / recalls.length : 0;
+    const average = (values: number[] | undefined): number =>
+      values && values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+    const recallAt1 = average(recallByK.get(1));
+    const recallAt5 = average(recallByK.get(5));
+    const recallAt10 = average(recallByK.get(10));
+    const avgRecall = average(recallByK.get(Math.max(...targets)));
     const avgMRR = mrrs.length > 0 ? mrrs.reduce((a, b) => a + b) / mrrs.length : 0;
 
     return {
-      recallAt1: recalls[0] ?? 0, // Simplified: use first query's recall as proxy
-      recallAt5: avgRecall, // Use average across all queries
-      recallAt10: avgRecall,
+      recallAt1,
+      recallAt5,
+      recallAt10,
       mrr: avgMRR,
       avgRecall,
     };

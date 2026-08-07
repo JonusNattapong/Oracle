@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "measuredAt": "2026-08-07",
+  "measuredAtCommit": "684dacb",
+  "description": "Deterministic HybridRetrieval evaluation floor for the committed memory query set.",
+  "floors": {
+    "recallAt1": 0.49,
+    "recallAt5": 0.99,
+    "recallAt10": 0.99,
+    "mrr": 0.99
+  }
+}

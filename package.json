@@ -54,9 +54,10 @@
     "mcp:messaging": "tsx src/mcp-messaging.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run src",
+    "test:eval": "vitest run src/memory/evalHarness.test.ts",
     "test:cli": "node scripts/smoke-cli.mjs",
     "test:runtime": "node scripts/smoke-runtime.mjs",
-    "verify": "npm run build && npm run test && npm run test:cli && npm run test:runtime",
+    "verify": "npm run build && npm run test && npm run test:eval && npm run test:cli && npm run test:runtime",
     "prepublishOnly": "npm run verify",
     "verify:live": "node scripts/verify-live.mjs"
   },
