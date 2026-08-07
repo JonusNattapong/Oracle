@@ -26,6 +26,7 @@ describe("OracleDaemon", () => {
   // parallel suite load.
   test("serves scheduler API from SQLite and removes state on stop", { timeout: 60_000 }, async () => {
     let runtimeSystemPrompt = "";
+    let runtimeTool: string | undefined;
     daemon = new OracleDaemon({
       homeDir: home,
       workspaceRoot: home,
@@ -45,6 +46,7 @@ describe("OracleDaemon", () => {
         healthCheck: async () => [],
         run: async (request) => {
           runtimeSystemPrompt = request.systemPrompt;
+          runtimeTool = request.tool;
           return {
             text: `API ANSWER: ${request.userPrompt}`,
             usage: {}
@@ -145,6 +147,14 @@ describe("OracleDaemon", () => {
     expect(runtimeSystemPrompt).not.toContain(`Current workspace: ${home}.`);
     expect(runtimeSystemPrompt).toContain("Manage persistent schedules, approvals");
     expect(runtimeSystemPrompt).not.toContain("project and global memory");
+
+    const researchRes = await client!.consult({
+      question: "Research this through ChatGPT web search",
+      backend: "codex",
+      tool: "web-search"
+    });
+    expect(researchRes.status).toBe("completed");
+    expect(runtimeTool).toBe("web-search");
 
     const fetchedSession = await client!.getConsultSession(consultRes.sessionId);
     expect(fetchedSession.sessionId).toBe(consultRes.sessionId);

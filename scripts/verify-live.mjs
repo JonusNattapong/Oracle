@@ -42,18 +42,27 @@ function runCli(args, options = {}) {
   });
 }
 
-/** The newest session directory, which is the consult that just ran. */
+/** The newest session for this verification workspace, which is the consult that just ran. */
 async function newestSession() {
   const sessionsDir = path.join(oracleHome, "sessions");
   const entries = await fs.readdir(sessionsDir, { withFileTypes: true });
   const dirs = await Promise.all(
     entries.filter((entry) => entry.isDirectory()).map(async (entry) => {
       const full = path.join(sessionsDir, entry.name);
+      const recordPath = path.join(full, "session.json");
+      try {
+        const record = JSON.parse(await fs.readFile(recordPath, "utf8"));
+        if (record.cwd !== workspace) return null;
+      } catch {
+        return null;
+      }
       return { name: entry.name, full, mtime: (await fs.stat(full)).mtimeMs };
     })
   );
-  dirs.sort((a, b) => b.mtime - a.mtime);
-  return dirs[0];
+  const matching = dirs.filter(Boolean);
+  matching.sort((a, b) => b.mtime - a.mtime);
+  if (!matching[0]) throw new Error(`no session found for workspace ${workspace}`);
+  return matching[0];
 }
 
 const settle = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

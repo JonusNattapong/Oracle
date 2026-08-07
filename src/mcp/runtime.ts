@@ -49,7 +49,7 @@ export async function createOracleMcpServer(
     ".oracle/docs/ is a project-level knowledge base. Use oracle_docs_search to find documentation snippets. Use oracle_docs_add to add new docs.",
     "",
     // ── Consult (ask with context) ──
-    "oracle_ask is a single entry point for Q&A — pass files, context, or a conversationId for multi-turn recall. The answer will include project memory and docs context automatically.",
+    "oracle_ask is a single entry point for Q&A — pass files, context, or a conversationId for multi-turn recall. The answer will include project memory and docs context automatically. With the chatgpt-browser backend, set web_search or deep_research for a web-grounded turn.",
     "",
     // ── Relay (middleman + memory bank) ──
     "oracle_relay is the middleman/middleware entry point: it archives your request, enriches it with recalled memory, consults the AI backend, then files the Q&A into the memory bank (tagged `relay`) so the same question is answered from memory on future calls.",
@@ -91,6 +91,7 @@ export async function createOracleMcpServer(
   const backendOptions = {
     homeDir,
     experimentalBrowserMode: config.experimental?.browserMode,
+    experimentalBrowserStream: config.experimental?.browserStream,
     browser: {
       ...config.browser,
       browserTimeout: config.browser.timeout,

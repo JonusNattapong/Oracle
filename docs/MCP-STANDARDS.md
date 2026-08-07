@@ -86,7 +86,7 @@ cache.invalidatePattern("skill-.*");
 - `--json` outputs structured result with `finalText`, `turns`, `steps`, `checkpointId`, `usage`
 - All filesystem tools confined to the workspace root (traversal rejected)
 - Emits per-turn MCP progress notifications when a progress token is passed
-- Requires an agent-capable provider (`anthropic` or `opencode`); otherwise returns `ORACLE_AGENT_UNAVAILABLE`
+- Requires an agent-capable provider (`codex`, `anthropic`, or `opencode`); otherwise returns `ORACLE_AGENT_UNAVAILABLE`
 - Returns `checkpointId` on each run; save it to resume later
 - Checkpoint persisted after every tool-calling turn under `~/.oracle/checkpoints/`
 

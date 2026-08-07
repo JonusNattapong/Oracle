@@ -37,3 +37,13 @@ export const AstResolveSchema = z
   .boolean()
   .optional()
   .describe("Auto-resolve AST dependency files referenced by entry files");
+
+export const WebSearchSchema = z
+  .boolean()
+  .optional()
+  .describe("Ask ChatGPT to use its Web search for this turn (chatgpt-browser only)");
+
+export const DeepResearchSchema = z
+  .boolean()
+  .optional()
+  .describe("Ask ChatGPT to run Deep Research for this turn (chatgpt-browser only)");

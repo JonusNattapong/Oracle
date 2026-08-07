@@ -341,6 +341,7 @@ export class LocalApiServer {
         const conversationId = this.optionalString(body.conversationId, "conversationId");
         const previousResponseId = this.optionalString(body.previousResponseId, "previousResponseId");
         const accountMemory = this.optionalString(body.accountMemory, "accountMemory");
+        const tool = this.consultTool(body.tool);
         const cwd = this.resolveWorkspacePath(
           this.optionalString(body.cwd, "cwd") ?? this.options.workspaceRoot
         );
@@ -351,6 +352,7 @@ export class LocalApiServer {
         const backendOptions: CreateExecutionBackendOptions = {
           homeDir: this.options.homeDir,
           experimentalBrowserMode: config.experimental?.browserMode,
+          experimentalBrowserStream: config.experimental?.browserStream,
           browser: {
             ...config.browser,
             profileDir: configuredProfile
@@ -379,6 +381,7 @@ export class LocalApiServer {
           conversationId,
           previousResponseId,
           accountMemory,
+          tool,
           cwd,
           systemPrompt,
           maxFileSizeBytes: config.maxFileSizeBytes,
@@ -900,6 +903,12 @@ export class LocalApiServer {
     if (value === undefined || value === null) return undefined;
     if (typeof value !== "string") throw new Error(`${field} must be a string.`);
     return value;
+  }
+
+  private consultTool(value: unknown): "web-search" | "deep-research" | undefined {
+    if (value === undefined || value === null) return undefined;
+    if (value === "web-search" || value === "deep-research") return value;
+    throw new Error("tool must be web-search or deep-research.");
   }
 
   private taskStatus(value: unknown): "active" | "paused" | "deleted" {

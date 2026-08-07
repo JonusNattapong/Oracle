@@ -51,9 +51,9 @@ Then: `oracle doctor` should show `OK`.
 
 ### `oracle_agent` returns `ORACLE_AGENT_UNAVAILABLE`
 
-The agent loop requires `anthropic` or `opencode`. `codex` does not support
-the tool-use loop. Either switch provider or use `oracle ask` (which works
-with all providers including codex).
+The agent loop requires an agent-capable backend: `codex`, `anthropic`, or
+`opencode`. ChatGPT Browser Mode is consult-only, so switch the provider for
+tool-use tasks or use `oracle ask` for read-only consultation.
 
 ```bash
 oracle agent "task" --provider anthropic

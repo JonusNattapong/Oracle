@@ -176,6 +176,19 @@ The `oracle_ask` tool accepts a per-call backend override:
 The MCP server still applies the normal file-size limits, secret scan, bundle
 format, session recording, and workspace boundary.
 
+For web-grounded turns, set exactly one of `web_search` or `deep_research`:
+
+```json
+{
+  "question": "Compare the current options and cite recent sources",
+  "backend": "chatgpt-browser",
+  "web_search": true
+}
+```
+
+`deep_research` uses ChatGPT's longer-running Deep Research workflow. The two
+flags are mutually exclusive and only apply to the `chatgpt-browser` backend.
+
 ### Image input and output
 
 Browser Mode accepts PNG, JPEG, and WebP files through the normal `files`

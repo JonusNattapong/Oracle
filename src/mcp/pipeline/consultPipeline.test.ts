@@ -67,4 +67,16 @@ describe("consult pipeline context limits", () => {
     expect(captured[0].maxFileSizeBytes).toBe(111_111);
     expect(captured[0].maxInputBytes).toBe(222_222);
   });
+
+  test("forwards the selected ChatGPT research tool into service.consult()", async () => {
+    captured.length = 0;
+    const outcome = await runConsultPipeline({ ...input, webSearch: true }, deps);
+    expect(outcome.isError).not.toBe(true);
+    expect(captured[0].tool).toBe("web-search");
+
+    captured.length = 0;
+    const deepOutcome = await runConsultPipeline({ ...input, deepResearch: true }, deps);
+    expect(deepOutcome.isError).not.toBe(true);
+    expect(captured[0].tool).toBe("deep-research");
+  });
 });

@@ -49,6 +49,8 @@ export interface PipelineInput {
   includeMemory?: boolean;
   conversationId?: string;
   soul?: string;
+  webSearch?: boolean;
+  deepResearch?: boolean;
 }
 
 export interface PipelineContext {
@@ -91,6 +93,14 @@ export async function runConsultPipeline(
   const targetBackend = input.backend ?? deps.providerId;
 
   try {
+    if (input.webSearch && input.deepResearch) {
+      throw new OracleError(
+        "ORACLE_INVALID_REQUEST",
+        "Web search and Deep Research cannot be enabled together.",
+        "Choose one research mode for this turn."
+      );
+    }
+
     /* Stage 1 — identity / soul / system prompt */
     const { soulName, systemPrompt } = await resolveIdentity(input, deps);
 
@@ -124,6 +134,7 @@ export async function runConsultPipeline(
       provider: targetBackend,
       conversationId: input.conversationId,
       accountMemory: input.accountMemory,
+      tool: input.deepResearch ? "deep-research" : input.webSearch ? "web-search" : undefined,
       files: hasFiles ? files : [],
       compressContext: Boolean(input.compressContext),
       compressFiles: astFiles.length > 0 ? astFiles : undefined,

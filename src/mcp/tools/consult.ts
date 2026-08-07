@@ -13,6 +13,8 @@ import {
   GitDiffSchema,
   GitStagedSchema,
   AstResolveSchema,
+  WebSearchSchema,
+  DeepResearchSchema,
 } from "../pipeline/schema.js";
 
 export function registerConsultTool(
@@ -78,6 +80,8 @@ export function registerConsultTool(
           .boolean()
           .optional()
           .describe("Compress AST dependency files into signature skeletons to save tokens"),
+        web_search: WebSearchSchema,
+        deep_research: DeepResearchSchema,
       },
     },
     async ({
@@ -97,6 +101,8 @@ export function registerConsultTool(
       git_staged,
       ast_resolve,
       compress_context,
+      web_search,
+      deep_research,
     }) => {
       return runConsultPipeline(
         {
@@ -117,6 +123,8 @@ export function registerConsultTool(
           includeMemory: include_memory,
           conversationId,
           soul,
+          webSearch: web_search,
+          deepResearch: deep_research,
         },
         deps
       );

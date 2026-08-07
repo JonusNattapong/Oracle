@@ -38,6 +38,7 @@ const provider: Provider = {
 
 let lastSystemPrompt = "";
 let lastBrowserImageCount = 0;
+let lastBrowserTool: string | undefined;
 const browserProvider: Provider = {
   ...provider,
   id: "chatgpt-browser",
@@ -48,6 +49,7 @@ const browserProvider: Provider = {
   },
   async run(request) {
     lastBrowserImageCount = request.images?.length ?? 0;
+    lastBrowserTool = request.tool;
     if (request.userPrompt.includes("Return an image")) {
       const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
       const outputDir = path.join(request.artifactsDir!, "images");
@@ -373,6 +375,41 @@ describe("Oracle MCP tools", () => {
         })
       ])
     );
+  });
+
+  test("oracle_ask exposes ChatGPT Web Search and Deep Research controls", async () => {
+    const webSearch = await client.callTool({
+      name: "oracle_ask",
+      arguments: {
+        question: "Search the web for this answer",
+        backend: "chatgpt-browser",
+        web_search: true
+      }
+    });
+    expect(webSearch.isError).not.toBe(true);
+    expect(lastBrowserTool).toBe("web-search");
+
+    const deepResearch = await client.callTool({
+      name: "oracle_ask",
+      arguments: {
+        question: "Research this topic deeply",
+        backend: "chatgpt-browser",
+        deep_research: true
+      }
+    });
+    expect(deepResearch.isError).not.toBe(true);
+    expect(lastBrowserTool).toBe("deep-research");
+
+    const conflicting = await client.callTool({
+      name: "oracle_ask",
+      arguments: {
+        question: "Choose one research mode",
+        backend: "chatgpt-browser",
+        web_search: true,
+        deep_research: true
+      }
+    });
+    expect(conflicting.isError).toBe(true);
   });
 
   test("oracle_ask explicitly routes account memory without adding it to the answer prompt", async () => {

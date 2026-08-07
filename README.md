@@ -93,7 +93,7 @@ While both surfaces ride on top of the same shared core engine (`BundleService`,
 |---|---|---|
 | **Target User** | **Human Developers** & shell scripts | **AI Coding Agents & IDE Hosts** (Claude Code, Codex, Cursor) |
 | **Communication Mode** | Interactive terminal commands & human-readable output | Stdio JSON-RPC protocol (machine-callable tool schemas) |
-| **Surface Scope** | **Full administrative control** (all commands: ask, agent, memory, daemon, control, schedule, github) | **Focused 18-tool surface** (curated tools needed by agents: `oracle_ask`, `oracle_agent`, `oracle_memory_*`) |
+| **Surface Scope** | **Full administrative control** (all commands: ask, agent, memory, daemon, control, schedule, github) | **Focused 19-tool surface** (curated tools needed by agents: `oracle_ask`, `oracle_agent`, `oracle_memory_*`) |
 | **Binary Entry** | `oracle` (`./dist/cli.js`) | `oracle-mcp` (`./dist/mcp.js`) & `oracle-msg-mcp` (`./dist/mcp-messaging.js`) |
 
 ## Architecture and trust boundaries

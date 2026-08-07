@@ -342,13 +342,14 @@ export class RuntimeClient {
     conversationId?: string;
     previousResponseId?: string;
     accountMemory?: string;
+    tool?: "web-search" | "deep-research";
   }): Promise<SessionRecord> {
     return await this.request<SessionRecord>(
       "POST",
       "/v1/consult",
       input,
       true,
-      input.accountMemory ? 360_000 : 120_000
+      input.accountMemory || input.tool === "deep-research" ? 360_000 : 120_000
     );
   }
 

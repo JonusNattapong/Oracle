@@ -38,7 +38,7 @@ export function registerAgentTools(
           throw new OracleError(
             "ORACLE_AGENT_UNAVAILABLE",
             "The agent is not available with the configured provider.",
-            deps.agentUnavailableReason ?? "Set provider to 'anthropic' or 'opencode' in .oracle/config.json."
+            deps.agentUnavailableReason ?? "Set provider to 'codex', 'anthropic', or 'opencode' in .oracle/config.json."
           );
         }
         const result = await deps.agent.run({ prompt, workspaceRoot: deps.workspaceRoot, model: deps.config.model, readOnly, skill, maxSteps, resumeId });

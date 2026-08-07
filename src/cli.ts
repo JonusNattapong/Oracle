@@ -353,7 +353,7 @@ program
   .command("agent")
   .description("Autonomously carry out a coding task with a tool-use loop")
   .argument("<task>", "The task to carry out")
-  .option("--backend <backend>", "Backend override (anthropic, opencode, or codex)")
+  .option("--backend <backend>", "Backend override (codex, anthropic, or opencode)")
   .option("--provider <provider>", "Provider override (deprecated: use --backend)")
   .option("-m, --model <model>", "Model override", "auto")
   .option("--read-only", "Investigate only")

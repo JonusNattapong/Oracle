@@ -9,6 +9,8 @@ import {
   GitDiffSchema,
   GitStagedSchema,
   AstResolveSchema,
+  WebSearchSchema,
+  DeepResearchSchema,
 } from "../pipeline/schema.js";
 
 const MEMORY_TYPE = z.enum(["fact", "insight", "chunk", "working"]);
@@ -52,6 +54,8 @@ export function registerRelayTool(server: McpServer, deps: PipelineDeps): void {
         git_diff: GitDiffSchema,
         git_staged: GitStagedSchema,
         ast_resolve: AstResolveSchema,
+        web_search: WebSearchSchema,
+        deep_research: DeepResearchSchema,
       },
     },
     async ({
@@ -67,6 +71,8 @@ export function registerRelayTool(server: McpServer, deps: PipelineDeps): void {
       git_diff,
       git_staged,
       ast_resolve,
+      web_search,
+      deep_research,
     }) => {
       const allTags = ["relay", ...tags];
 
@@ -123,6 +129,8 @@ export function registerRelayTool(server: McpServer, deps: PipelineDeps): void {
           includeMemory: recall,
           conversationId: conversation_id,
           soul,
+          webSearch: web_search,
+          deepResearch: deep_research,
         },
         deps,
         hooks
