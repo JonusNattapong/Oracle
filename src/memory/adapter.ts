@@ -274,26 +274,42 @@ export class MemoryAdapter implements MemoryPort {
     const dirs = type
       ? [this.typeDir(type)]
       : Object.values(TYPE_DIR).map((d) => path.join(this.dataDir(), d));
+    // Filter, then truncate — never the other way round. Ids sort
+    // chronologically, so we walk each type dir newest-first a page at a time
+    // and stop once the page has yielded `limit` survivors. Truncating the file
+    // list up front (as this once did) drops matches that are merely older than
+    // the window, so a tag or agent filter silently returned nothing for any
+    // entry outside the newest handful.
+    const pageSize = Math.min(Math.max(limit * 4, 64), 512);
     const entries: MemoryStoreEntry[] = [];
     for (const dir of dirs) {
+      let files: string[];
       try {
-        const files = (await fs.readdir(dir)).sort();
-        const candidates = files.slice(-(limit * 4)).filter((file) => file.endsWith(".json"));
-        const loaded = await Promise.all(candidates.map(async (file) => {
+        files = (await fs.readdir(dir)).filter((file) => file.endsWith(".json")).sort();
+      } catch { continue; /* dir not ready */ }
+      const survivors: MemoryStoreEntry[] = [];
+      for (let end = files.length; end > 0 && survivors.length < limit; end -= pageSize) {
+        const page = files.slice(Math.max(0, end - pageSize), end);
+        const loaded = await Promise.all(page.map(async (file) => {
           try { return JSON.parse(await fs.readFile(path.join(dir, file), "utf8")) as MemoryStoreEntry; }
           catch { return null; }
         }));
+        const matched: MemoryStoreEntry[] = [];
         for (const entry of loaded) {
           if (!entry) continue;
           if (entry.archived && !includeArchived) continue;
           if (agent && entry.agent !== agent) continue;
           if (tags && !tags.some((t) => entry.tags.includes(t))) continue;
-          entries.push(entry);
+          matched.push(entry);
         }
-      } catch { /* dir not ready */ }
+        // Anchor freshness can also reject, so resolve it inside the loop:
+        // otherwise a page whose matches are all stale would end the scan
+        // early and under-fill the result. Free when nothing is anchored.
+        survivors.push(...await this.attachAnchorStatuses(matched, includeStale, opts?.anchorPaths));
+      }
+      entries.push(...survivors);
     }
-    const freshEntries = await this.attachAnchorStatuses(entries, includeStale, opts?.anchorPaths);
-    const results = freshEntries.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, limit);
+    const results = entries.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, limit);
     // Track access — fire-and-forget so recall never blocks
     if (touch) {
       for (const e of results) {
@@ -343,9 +359,12 @@ export class MemoryAdapter implements MemoryPort {
       }
     }
 
-    // Fallback: keyword-only (BM25 via SQLite or lexical score)
+    // Fallback: keyword-only (BM25 via SQLite or lexical score).
+    // Scores every candidate, so the pool must be the whole store — capping it
+    // at a multiple of `limit` made this silently blind to anything but the
+    // newest entries, which reads as "no such memory" rather than "not scanned".
     const terms = queryTerms(query);
-    const entries = await this.recall({ type: opts?.type, agent: opts?.agent, limit: Math.max(limit * 4, 100), includeStale: opts?.includeStale, touch: false });
+    const entries = await this.recall({ type: opts?.type, agent: opts?.agent, limit: 10_000, includeStale: opts?.includeStale, touch: false });
     return entries
       .map((entry) => ({ entry, score: this.lexicalScore(entry, terms) * this.anchorWeight(entry) }))
       .filter((hit) => hit.score > 0)
@@ -388,9 +407,10 @@ export class MemoryAdapter implements MemoryPort {
       }
     }
 
-    // Fallback: keyword + recency sort
+    // Fallback: keyword + recency sort. Same reasoning as searchMemories —
+    // ranking only means something over the full candidate pool.
     const terms = queryTerms(query);
-    const entries = await this.recall({ type: opts?.type, agent: opts?.agent, limit: Math.max(limit * 4, 100), includeStale: opts?.includeStale, touch: false });
+    const entries = await this.recall({ type: opts?.type, agent: opts?.agent, limit: 10_000, includeStale: opts?.includeStale, touch: false });
     return entries
       .map((entry) => ({ entry, score: this.lexicalScore(entry, terms) * this.anchorWeight(entry) }))
       .filter((hit) => hit.score > 0)
