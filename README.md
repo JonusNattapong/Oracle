@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@oraclepersonal/oracle"><img src="https://img.shields.io/badge/npm-%40oraclepersonal%2Foracle-cb3837?style=flat-square" alt="npm package" /></a>
+  <a href="https://www.npmjs.com/package/@jonusnattapong/oracle"><img src="https://img.shields.io/badge/npm-%40jonusnattapong%2Foracle-cb3837?style=flat-square" alt="npm package" /></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D24-5fa04e?style=flat-square" alt="Node.js 24 or newer" /></a>
   <a href="https://modelcontextprotocol.io/"><img src="https://img.shields.io/badge/MCP-server-7655e8?style=flat-square" alt="Model Context Protocol server" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-e9b44c?style=flat-square" alt="MIT license" /></a>
@@ -36,7 +36,7 @@ agent request
 Oracle requires Node.js 24 or newer. The default primary backend is **ChatGPT Browser Mode (`chatgpt-browser`)**, controlling Chrome via DevTools CDP with zero API key required.
 
 ```bash
-npm install -g @oraclepersonal/oracle
+npm install -g @jonusnattapong/oracle
 oracle browser setup
 oracle doctor
 oracle ask "Map the error-handling path and identify one missing test" -f "src/**/*.ts"
@@ -433,6 +433,33 @@ Oracle does not paper over the difference:
 
 Entity graph, consolidation, decay, and reflection are local-only features in
 every mode.
+
+### Verifiable memory and citations
+
+Project memories can be anchored to workspace files. The anchor records the
+relative path, Git commit, and file blob hash captured at write time. Missing
+files are excluded from recall by default; changed files are marked `drifted`
+and down-weighted during search.
+
+```bash
+oracle memory verify --anchors
+oracle memory why <entry-id> --for "the question that recalled it"
+```
+
+The MCP `oracle_memory_remember` tool accepts an `anchors` array with `path`
+and optional `lines`. `oracle_ask` returns memory/document citation metadata,
+including anchor freshness, and the CLI prints the same sources below an
+answer. Use `--no-citations` when a bare response is required.
+
+Memory retrieval quality is protected by the deterministic eval gate:
+
+```bash
+npm run test:eval
+```
+
+The dataset covers ordinary recall plus temporal, contradiction, and graph-hop
+queries. Anchor freshness uses an append-only local index so large stores can
+be verified without opening every memory file on each sweep.
 
 ## Security model
 

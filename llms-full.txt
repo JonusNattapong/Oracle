@@ -11,14 +11,14 @@ messaging, task, Runtime, Control Center, and Remote Swarm surfaces extend the
 same model into guarded action and durable coordination.
 
 Repository: https://github.com/OraclePersonal/Oracle
-Package: @oraclepersonal/oracle
+Package: @jonusnattapong/oracle
 License: MIT
 Runtime requirement: Node.js >= 24
 
 ## First Run
 
 ```bash
-npm install -g @oraclepersonal/oracle
+npm install -g @jonusnattapong/oracle
 codex login
 oracle doctor
 oracle ask "Map the error-handling path and identify one missing test" -f "src/**/*.ts"

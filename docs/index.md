@@ -19,14 +19,14 @@ Gemini CLI, …) wires into to fix that.
 ## Quick Start
 
 ```bash
-npm install -g @oraclepersonal/oracle
+npm install -g @jonusnattapong/oracle
 oracle doctor                          # verify a provider is wired up
 oracle setup-mcp --client claude-code  # wire the MCP server into Claude Code
 ```
 
 Or without installing:
 ```bash
-npx -p @oraclepersonal/oracle oracle ask "review this" -f "src/**/*.ts"
+npx -p @jonusnattapong/oracle oracle ask "review this" -f "src/**/*.ts"
 ```
 
 ## Core Pillars

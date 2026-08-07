@@ -13,12 +13,12 @@ title: Getting Started
 
 From npm (recommended):
 ```bash
-npm install -g @oraclepersonal/oracle
+npm install -g @jonusnattapong/oracle
 ```
 
 Or run without installing:
 ```bash
-npx -p @oraclepersonal/oracle oracle doctor
+npx -p @jonusnattapong/oracle oracle doctor
 ```
 
 From source (for development):
@@ -128,7 +128,7 @@ Or configure any MCP client manually:
   "mcpServers": {
     "oracle": {
       "command": "npx",
-      "args": ["-p", "@oraclepersonal/oracle", "oracle-mcp"],
+      "args": ["-p", "@jonusnattapong/oracle", "oracle-mcp"],
       "env": { "ORACLE_WORKSPACE_ROOT": "/path/to/your/project" }
     }
   }
@@ -142,7 +142,7 @@ the lighter `oracle-msg-mcp` binary instead:
   "mcpServers": {
     "oracle-messaging": {
       "command": "npx",
-      "args": ["-p", "@oraclepersonal/oracle", "oracle-msg-mcp"]
+      "args": ["-p", "@jonusnattapong/oracle", "oracle-msg-mcp"]
     }
   }
 }
