@@ -49,7 +49,7 @@ npx -p @oraclepersonal/oracle oracle ask "review this" -f "src/**/*.ts"
 | 2 | [Quick Start](ORACLE_QUICKSTART.md) | Step-by-step MCP setup and first tools |
 | 3 | [CLI Reference](cli-reference.md) | Every `oracle` subcommand and flag |
 | 4 | [Architecture](architecture.md) | System components, storage layout, provider routing |
-| 5 | [Agent & Sandbox](AGENT.md) | The autonomous agent, its constraints, and the audit trail |
+| 5 | [Agent & Sandbox](../AGENTS.md) | The autonomous agent, its constraints, and the audit trail |
 | 6 | [MCP Standards](MCP-STANDARDS.md) | Conventions for the MCP tool surface |
 | 7 | [Claude Code Usage](CLAUDE_CODE_USAGE.md) | Using Oracle MCP tools within Claude Code |
 | 8 | [Setup Checklist](SETUP_CHECKLIST.md) | Verification checklist for MCP setup |
@@ -65,6 +65,7 @@ npx -p @oraclepersonal/oracle oracle ask "review this" -f "src/**/*.ts"
 | 18 | [Init](getting-started.md#initialize-the-workspace) | Bootstrap `.oracle/` for a new project |
 | 19 | [Roadmap v0.6.0](roadmap-0.6.0.md) | Memory Engine foundation and agent coordination |
 | 20 | [Roadmap v0.7.0](roadmap-0.7.0.md) | Cost tracking, provider expansion, sandbox hardening, graph visualization |
+| 23 | [Roadmap v0.8.0](roadmap-0.8.0.md) | Verifiable memory, citations, MCP budget measurement, and lint gate |
 | 21 | [ACTB Governance Framework](superpowers/specs/2026-07-30-actb-governance-framework.md) | Awareness, Control, Transform, Boundary agent alignment architecture |
 | 22 | [Situated Companion](companion.md) | Semantic presence, self-initiated intents, silence gates, and privacy controls |
 

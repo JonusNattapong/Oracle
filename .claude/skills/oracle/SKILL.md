@@ -12,7 +12,7 @@ This project registers its own MCP tools under the `oracle_*` prefix (see
   code, omit for plain conversation. Pass an `oracle` profile to auto-scope memory.
 - **Agent** — `oracle_agent`: autonomous coding loop that reads/writes/edits files
   and runs shell commands until a task is done (needs `anthropic`/`opencode`; see
-  `docs/AGENT.md`).
+  `AGENTS.md`).
 - **Memory** — `.oracle-memory/` fact/insight/chunk/working entries, scoped per agent.
 - **Identity** — your profile + Oracle's persona, auto-injected into every `oracle_ask`.
 

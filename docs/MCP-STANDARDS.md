@@ -77,7 +77,7 @@ cache.invalidatePattern("skill-.*");
 ### 1. Flow, Ask & Agent (6 tools)
 - `oracle_run` — Unified entry point for consultation, research, planning, and approved action handoff
 - `oracle_ask` — Single entry point for Q&A: freeform question, or "look at these files and tell me X" when `files` is passed
-- `oracle_agent` — Autonomous coding loop (see [`AGENT.md`](AGENT.md))
+- `oracle_agent` — Autonomous coding loop (see [`AGENTS.md`](../AGENTS.md))
 - `oracle_agent_checkpoints` — List saved agent loop checkpoints
 - `oracle_agent_checkpoint_delete` — Delete a checkpoint by id
 - `oracle_skills` — List available skills
