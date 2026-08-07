@@ -39,7 +39,7 @@ const [
  * ~/.oracle store, with none of Oracle's provider/memory/agent stack. Wire
  * this into any MCP client that just needs agents to talk and coordinate.
  *
- *   npx -p @oraclepersonal/oracle oracle-msg-mcp
+ *   npx -p @jonusnattapong/oracle oracle-msg-mcp
  *
  * Store location follows ORACLE_HOME_DIR (default ~/.oracle), so it shares
  * the exact same bus as the full oracle-mcp server and the `oracle msg`/

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "measuredAt": "2026-08-07",
-  "measuredAtCommit": "684dacb",
-  "description": "Deterministic HybridRetrieval evaluation floor for the committed memory query set.",
+  "measuredAtCommit": "be34b4a",
+  "description": "Deterministic HybridRetrieval evaluation floor for the expanded memory query set, including temporal, contradiction, and graph-hop cases.",
   "floors": {
     "recallAt1": 0.49,
     "recallAt5": 0.99,
