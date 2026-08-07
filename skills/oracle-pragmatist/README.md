@@ -1,155 +1,257 @@
-# Oracle Pragmatist Skill
+# Oracle Usage Guide Plugin
 
-**Think like the laziest senior dev in the room. The best code is the code you never wrote.**
+**Ensure AI agents use Oracle CLI and MCP correctly.**
 
-Pragmatist mode makes Oracle agents optimize for shipping working code fast, not perfect abstractions. Reuse, YAGNI, stdlib first, minimize dependencies.
-
-## Install
-
-Already installed! This is a built-in Oracle skill.
-
-Enable it:
-
-```bash
-# Add to .oracle/config.json
-{
-  "skills": ["oracle-pragmatist"]
-}
-
-# Or enable for a single command
-oracle ask "..." --skill oracle-pragmatist
-```
-
-## How It Works
-
-Pragmatist mode operates at two points:
-
-### 1. Session Start
-When Oracle starts, it loads the pragmatist rules as system context. Every decision the agent makes considers:
-- Is this already implemented?
-- Can I use stdlib?
-- Do I really need a new dependency?
-
-### 2. Per-Prompt
-On every user request, Oracle checks:
-- What code exists that could solve this?
-- What's the minimal implementation?
-- Can I reduce this further?
-
-## Example
-
-### Without Pragmatist
-
-```bash
-oracle agent "Add date picker to user profile"
-```
-
-Result: 
-- Installs `react-datepicker`
-- Creates wrapper component
-- Adds styling
-- Configures locales
-- ~200 lines added
-
-### With Pragmatist
-
-```bash
-oracle agent "Add date picker to user profile" --skill oracle-pragmatist
-```
-
-Result:
-- Checks for existing date input
-- Uses HTML5 `<input type="date">`
-- Adds one line
-- ~1 line added
-
-## Configure
-
-Edit `.oracle/config.json`:
-
-```json
-{
-  "skills": ["oracle-pragmatist"],
-  "pragmatist": {
-    "enabled": true,
-    "reusablePatterns": [
-      {
-        "name": "pagination",
-        "path": "src/utils/pagination.ts",
-        "markers": ["paginate", "usePagination"]
-      },
-      {
-        "name": "api-client",
-        "path": "src/api/client.ts"
-      },
-      {
-        "name": "modals",
-        "path": "src/components/Modal.tsx"
-      }
-    ],
-    "forbiddenLibraries": [
-      "moment",
-      "lodash"
-    ]
-  }
-}
-```
-
-## With Oracle Memory
-
-For maximum effectiveness, pair with memory:
-
-```bash
-# Document patterns
-oracle memory add fact "pagination" \
-  "Use src/utils/pagination.ts for all list pagination. \
-   Supports offset and cursor. Pre-tested."
-
-oracle memory add fact "date-input" \
-  "HTML5 input type=date covers 95% of use cases. \
-   No library needed."
-
-# Then agents remember and reuse automatically
-```
-
-## Metrics
-
-Real measurements show pragmatism reduces:
-- **Code**: -54% average (up to -94% on over-engineered tasks)
-- **Cost**: -20%
-- **Time**: -27%
-- **Safety**: 100% maintained
-
-## What Pragmatist Won't Do
-
-- ❌ Remove necessary security dependencies
-- ❌ Skip testing and accessibility
-- ❌ Ignore performance when measured
-- ❌ Write untested code
-- ❌ Create technical debt
-
-## When NOT to Use
-
-Pragmatist is perfect for feature work. It's not ideal for:
-- **Complex infrastructure** (still need good abstractions)
-- **Core algorithms** (performance matters here)
-- **One-off scripts** (they're not pragmatic by definition)
-
-## Examples
-
-See [`examples/`](./examples/) for real pragmatist patterns:
-- Pagination without libraries
-- Date inputs without datepickers  
-- Form validation with stdlib
-- Modal dialogs with plain HTML
-- API clients without fetch wrappers
-
-## See Also
-
-- [`PRAGMATIST.md`](./PRAGMATIST.md) — Full rules and philosophy
-- [`examples/`](./examples/) — Real code examples
-- [Ponytail](https://github.com/DietrichGebert/ponytail) — Inspiration for this skill
+This plugin provides comprehensive guidance for AI agents (and humans) to use Oracle safely and effectively. It covers:
+- ✅ When to use oracle ask vs oracle agent
+- ✅ Safety patterns (read-only first, plan before changes)
+- ✅ Memory best practices
+- ✅ Common mistakes and how to avoid them
+- ✅ Command patterns and workflows
 
 ---
 
-**Remember**: Shipping is a feature. Perfection is not.
+## What This Is
+
+This is a **guide plugin**, not a skill that changes Oracle's behavior. It's documentation that helps AI agents understand Oracle's capabilities and limitations.
+
+Think of it as a manual for agents. When an agent uses Oracle, it should follow these patterns.
+
+---
+
+## Documentation Files
+
+### 1. **ORACLE_USAGE_GUIDE.md** ← Start here
+
+Comprehensive guide covering:
+- Core workflows (ask, investigate, plan, execute)
+- Memory best practices
+- MCP tool usage
+- Common mistakes
+- Safety boundaries
+- Decision tree
+
+**For:** Agents deciding how to use Oracle
+
+### 2. **ORACLE_AGENT_INSTRUCTIONS.md** ← Load as system prompt
+
+Instructions for AI agents using Oracle, covering:
+- Golden rules (read-only first, plan before mutations)
+- Command patterns
+- Things to never do
+- Safety checklist
+- Verification steps
+
+**For:** Inject into agent system prompts
+
+### 3. **PRAGMATIST.md** ← Philosophy guide
+
+Pragmatism philosophy (optional):
+- Reuse first, build second
+- YAGNI principle
+- Minimize dependencies
+- Examples and anti-patterns
+
+**For:** Agents wanting to minimize over-engineering
+
+---
+
+## How to Use
+
+### Option 1: Human Developers
+
+Read the guides:
+```bash
+# Quick reference
+cat skills/oracle-pragmatist/ORACLE_USAGE_GUIDE.md
+
+# Full instructions for agents
+cat skills/oracle-pragmatist/ORACLE_AGENT_INSTRUCTIONS.md
+```
+
+### Option 2: AI Agents (MCP)
+
+Load as system prompt:
+```bash
+# This guide should be included in system context
+# when oracle_agent or oracle_ask is called
+```
+
+### Option 3: Inside Claude Code
+
+Enable via MCP:
+```bash
+oracle setup-mcp --client claude-code
+# Claude Code loads ORACLE_AGENT_INSTRUCTIONS automatically
+```
+
+---
+
+## Golden Rules Summary
+
+### 1. Read-Only First
+```bash
+# Investigate safely
+oracle_agent { prompt: "...", read_only: true }
+
+# Then act
+oracle_agent { prompt: "...", mode: "plan" }
+```
+
+### 2. Plan Before Important Changes
+```bash
+# See what will happen
+oracle_agent { prompt: "...", mode: "plan" }
+
+# Then execute
+oracle_agent { prompt: "...", confirm: true }
+```
+
+### 3. Only Store Safe Facts in Memory
+```bash
+# ✅ Good: Store architectural decisions
+oracle_memory_remember { type: "fact", content: "We use PostgreSQL" }
+
+# ❌ Wrong: Don't store secrets
+oracle_memory_remember { type: "fact", content: "API_KEY=..." }
+```
+
+### 4. Scope Tasks Clearly
+```bash
+# ❌ Too broad
+oracle_agent { prompt: "Refactor everything" }
+
+# ✅ Specific
+oracle_agent { prompt: "Add validation to user endpoint" }
+```
+
+### 5. Always Verify
+```bash
+# After changes
+npm test
+npm run typecheck
+git diff  # Review changes
+```
+
+---
+
+## Command Patterns
+
+| Goal | Pattern |
+|------|---------|
+| **Answer a question** | `oracle_ask { include_docs, include_memory }` |
+| **Investigate (safe)** | `oracle_agent { read_only: true }` |
+| **Plan changes** | `oracle_agent { mode: "plan" }` |
+| **Execute (safe)** | `oracle_agent { mode: "plan" } → confirm` |
+| **Store knowledge** | `oracle_memory_remember { type: "fact" }` |
+| **Search docs** | `oracle_docs_search { query }` |
+
+---
+
+## Common Mistakes
+
+### ❌ Don't: Use ask for mutations
+```bash
+oracle_ask "Refactor the module"  # Wrong, ask is read-only
+```
+### ✅ Do: Use agent with plan
+```bash
+oracle_agent { prompt: "Refactor the module", mode: "plan" }
+```
+
+---
+
+### ❌ Don't: Skip planning for important changes
+```bash
+oracle_agent { prompt: "Change auth system", confirm: true }  # Risky!
+```
+### ✅ Do: Plan first
+```bash
+oracle_agent { prompt: "Change auth system", mode: "plan" }
+# Review → then confirm
+```
+
+---
+
+### ❌ Don't: Store secrets
+```bash
+oracle_memory_remember { content: "AWS_KEY=AKIA..." }  # Never!
+```
+### ✅ Do: Store only safe facts
+```bash
+oracle_memory_remember { 
+  content: "We use AWS RDS PostgreSQL 15"  // Safe
+}
+```
+
+---
+
+## When Each Tool Is Right
+
+```
+oracle_ask
+├─ "How does auth work?" → YES
+├─ "Refactor this" → NO
+├─ "Find the bug" → YES
+└─ "Fix the bug" → NO (use agent)
+
+oracle_agent (read_only)
+├─ "Diagnose the issue" → YES
+├─ "Explain the pattern" → YES
+├─ "Propose a solution" → YES
+└─ "Implement it" → NO (use mode: plan)
+
+oracle_agent (with mutations)
+├─ "Add validation" → YES (plan first)
+├─ "Fix typo" → YES (can confirm directly)
+├─ "Change schema" → YES (plan first!)
+└─ "Rewrite everything" → NO (too broad)
+
+oracle_memory
+├─ "Remember this pattern" → YES
+├─ "Store this API key" → NO
+├─ "Remember our decision" → YES
+└─ "Store temp state" → NO (use working memory)
+```
+
+---
+
+## Safety Checklist
+
+Before running mutations, an agent should verify:
+- [ ] I understand what I'm changing
+- [ ] I know why I'm changing it
+- [ ] Tests will verify it works
+- [ ] I can explain the change in a code review
+- [ ] The change is focused (one feature, not refactoring)
+- [ ] I've used --plan for important changes
+
+---
+
+## For Oracle Developers
+
+This plugin is designed to:
+1. **Document** how agents should use Oracle
+2. **Prevent** common mistakes
+3. **Guide** agents toward safe patterns
+4. **Enable** confidence in agent-driven changes
+
+The rules encode Oracle's safety model:
+- Workspace confinement ✅
+- Secret scanning ✅
+- Audit trails ✅
+- Approval gates ✅
+- Read-only mode ✅
+
+---
+
+## Related
+
+- [Oracle Architecture](../../docs/architecture.md)
+- [Oracle MCP Standards](../../docs/MCP-STANDARDS.md)
+- [Oracle CLI Reference](../../docs/cli-reference.md)
+- [Pragmatism Philosophy](./PRAGMATIST.md)
+
+---
+
+**Load this plugin in your agent system prompts to ensure correct Oracle usage.**

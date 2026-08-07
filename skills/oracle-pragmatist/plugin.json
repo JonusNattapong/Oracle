@@ -1,11 +1,15 @@
 {
-  "name": "oracle-pragmatist",
+  "name": "oracle-usage-guide",
   "version": "0.8.0",
-  "description": "Pragmatist mode for Oracle agents. Reuse existing code, use stdlib first, build only what's needed. Think like the laziest senior dev who ships on time.",
+  "description": "Usage guide for AI agents using Oracle CLI and MCP. Ensures correct and safe usage of oracle ask, oracle agent, memory, and docs.",
   "author": {
     "name": "Oracle Team",
     "url": "https://github.com/OraclePersonal/Oracle"
   },
-  "keywords": ["pragmatism", "yagni", "reuse", "minimal-code", "efficiency"],
-  "hooks": "./hooks.json"
+  "keywords": ["oracle", "mcp", "agent-guide", "safety", "best-practices", "pragmatism", "yagni"],
+  "documentation": {
+    "usage": "./ORACLE_USAGE_GUIDE.md",
+    "instructions": "./ORACLE_AGENT_INSTRUCTIONS.md",
+    "philosophy": "./PRAGMATIST.md"
+  }
 }
