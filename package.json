@@ -1,6 +1,6 @@
 {
   "name": "@jonusnattapong/oracle",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Oracle Assistant — an MCP-powered AI assistant with persistent memory, a knowledge base, web access, and an inter-agent message bus for Claude Code, opencode, and other coding agents.",
   "keywords": [
     "oracle-assistant",
