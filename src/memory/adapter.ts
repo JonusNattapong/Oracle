@@ -127,6 +127,7 @@ export class MemoryAdapter implements MemoryPort {
   /** Cached content index, keyed on the index file's size+mtime so a write from
    *  another process (CLI, daemon, MCP server share the store) invalidates it. */
   private contentIndex: { stamp: string; map: Map<string, string> } | null = null;
+  private dirsReady: Promise<void> | null = null;
 
   constructor(private readonly rootDir: string, private readonly dataDirectory = DATA_DIR) {
     this.vectors = new VectorStore(rootDir, dataDirectory);
@@ -153,7 +154,7 @@ export class MemoryAdapter implements MemoryPort {
   private queueAnchorIndex(record: AnchorIndexRecord): void {
     this.anchorIndexWrite = this.anchorIndexWrite.then(async () => {
       await this.ensureDirs();
-      await fs.appendFile(this.anchorIndexPath(), `${JSON.stringify(record)}\n`, "utf8");
+      await this.withStoreDirs(() => fs.appendFile(this.anchorIndexPath(), `${JSON.stringify(record)}\n`, "utf8"));
     }).catch(() => {});
   }
 
@@ -252,7 +253,7 @@ export class MemoryAdapter implements MemoryPort {
     this.contentIndexWrite = this.contentIndexWrite.then(async () => {
       await this.ensureDirs();
       const indexPath = this.contentIndexPath();
-      await fs.appendFile(indexPath, `${JSON.stringify({ k: key, id })}\n`, "utf8");
+      await this.withStoreDirs(() => fs.appendFile(indexPath, `${JSON.stringify({ k: key, id })}\n`, "utf8"));
       if (this.contentIndex) {
         const stamp = await this.statStamp(indexPath);
         if (stamp) this.contentIndex.stamp = stamp;
@@ -278,10 +279,48 @@ export class MemoryAdapter implements MemoryPort {
     return path.join(this.dataDir(), TYPE_DIR[type]);
   }
 
+  /**
+   * Create the store's directories once per adapter, not once per write.
+   *
+   * Every remember(), and every queued index append, opened with five recursive
+   * mkdir calls against directories that already existed after the first one.
+   * A CPU profile of a 300-write run put mkdir at the top of everything Oracle
+   * itself was doing.
+   *
+   * A failure clears the memo so the next call retries rather than inheriting a
+   * rejected promise for the life of the process.
+   */
   private async ensureDirs(): Promise<void> {
-    await fs.mkdir(this.dataDir(), { recursive: true });
-    for (const dir of Object.values(TYPE_DIR)) {
-      await fs.mkdir(path.join(this.dataDir(), dir), { recursive: true });
+    this.dirsReady ??= (async () => {
+      await fs.mkdir(this.dataDir(), { recursive: true });
+      for (const dir of Object.values(TYPE_DIR)) {
+        await fs.mkdir(path.join(this.dataDir(), dir), { recursive: true });
+      }
+    })().catch((error: unknown) => {
+      this.dirsReady = null;
+      throw error;
+    });
+    return this.dirsReady;
+  }
+
+  /**
+   * Run a write, and if the store turns out not to exist, rebuild it and try
+   * once more.
+   *
+   * ensureDirs() is memoised, which makes "the directories exist" an assumption
+   * held for the life of the adapter. Anything outside this process can falsify
+   * it — a cleaned workspace, a `rm -rf .oracle-memory`, a test tearing down
+   * between writes. Recreating on the failure keeps the memo an optimisation
+   * rather than a bet, and costs nothing on the path where it holds.
+   */
+  private async withStoreDirs<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException)?.code !== "ENOENT") throw error;
+      this.dirsReady = null;
+      await this.ensureDirs();
+      return operation();
     }
   }
 
@@ -305,8 +344,10 @@ export class MemoryAdapter implements MemoryPort {
     const fp = this.filePath(entry.type, entry.id);
     const tmp = `${fp}.tmp`;
     const { anchorStatus: _anchorStatus, ...persisted } = entry;
-    await fs.writeFile(tmp, JSON.stringify(persisted, null, 2), "utf8");
-    await fs.rename(tmp, fp);
+    await this.withStoreDirs(async () => {
+      await fs.writeFile(tmp, JSON.stringify(persisted, null, 2), "utf8");
+      await fs.rename(tmp, fp);
+    });
   }
 
   private anchorWeight(entry: MemoryStoreEntry): number {
