@@ -1,7 +1,7 @@
 {
-  "name": "oracle-pragmatist",
+  "name": "oracle-agent-guide",
   "version": "0.8.0",
-  "description": "Pragmatist mode for Oracle agents: reuse code, use stdlib, minimize dependencies. Includes comprehensive usage guide for correct and safe Oracle CLI/MCP usage.",
+  "description": "Comprehensive guide for AI agents using Oracle CLI and MCP. Ensures correct, safe, and pragmatic usage of oracle ask, oracle agent, memory, and docs.",
   "author": {
     "name": "Oracle Team",
     "url": "https://github.com/OraclePersonal/Oracle"
