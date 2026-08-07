@@ -1,4 +1,4 @@
-import type { MemoryStoreEntry, MemoryType, AutoMaintenanceOptions } from "../memory/adapter.js";
+import type { MemoryStoreEntry, MemoryType, AutoMaintenanceOptions, RememberOptions } from "../memory/adapter.js";
 import type { AnchorVerificationReport, MemoryAnchor } from "../memory/anchors.js";
 
 /**
@@ -10,7 +10,7 @@ export interface MemoryPort {
     agent: string,
     type: MemoryType,
     content: string,
-    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number; anchors?: MemoryAnchor[] }
+    opts?: RememberOptions
   ): Promise<MemoryStoreEntry>;
 
   recall(opts?: { type?: MemoryType; agent?: string; tags?: string[]; limit?: number; includeArchived?: boolean; includeStale?: boolean; touch?: boolean }): Promise<MemoryStoreEntry[]>;

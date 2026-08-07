@@ -13,7 +13,7 @@ import {
 } from "../backends/chatgpt-browser/accountMemoryApi.js";
 import { OracleError } from "../errors.js";
 import type { MemoryPort } from "../orchestrator/ports.js";
-import type { MemoryStoreEntry, MemoryType } from "./adapter.js";
+import type { MemoryStoreEntry, MemoryType, RememberOptions } from "./adapter.js";
 
 /** Marks entries whose durable copy lives in the ChatGPT account, not on disk. */
 export const CHATGPT_MEMORY_SOURCE = "chatgpt-account";
@@ -119,7 +119,7 @@ export class ChatGptMemoryAdapter implements MemoryPort {
     agent: string,
     type: MemoryType,
     content: string,
-    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number; anchors?: import("./anchors.js").MemoryAnchor[] }
+    opts?: RememberOptions
   ): Promise<MemoryStoreEntry> {
     if (!this.isRemoteType(type)) {
       return this.shadow.remember(agent, type, content, opts);

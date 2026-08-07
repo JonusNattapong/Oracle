@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2] - 2026-08-07
+
+### Added
+- **Supersession — memory can say a fact stopped being true.**
+  `oracle_memory_remember` takes `supersedes: [id, ...]`, and the named entries
+  stop surfacing in recall and search instead of competing with the new one as
+  equally current. Previously "we use PostgreSQL" and "we migrated to MySQL"
+  were both live, both recalled, and the model had to guess which was current
+  from two entries that each read as settled. The replaced entry stays on disk
+  with a `supersededBy` pointer and the winner records `supersedes`, so the
+  decision history stays walkable — `includeArchived` brings the whole chain
+  back. Unknown ids are ignored rather than failing the write.
+
+  Supersession is asserted by the writer, never inferred. Which of two settled
+  statements came second is a reading of meaning, and guessing at it from term
+  overlap would retire correct memories on a coincidence of vocabulary.
+
+### Changed
+- **Writes no longer cost O(store size).** Two independent full-store passes ran
+  on every `remember()`: duplicate detection scanned the whole type directory,
+  and entity-graph indexing rewrote `graph.json` in full. Seeding a store was
+  quadratic — 250 sequential writes into a 250-entry store took ~54s. Duplicate
+  detection now goes through an append-only content index (the same NDJSON shape
+  as the anchor index), and graph saves on the hot path are debounced and
+  coalesced. Measured on 500 sequential writes: ~59s before, ~6s after.
+
+  The graph is written 200ms behind the memories it describes and flushed on
+  `beforeExit`. Graph indexing was already fire-and-forget and unawaited, so a
+  hard kill could always lose the tail; `graphRebuild()` reconstructs it from
+  the memories, which are written synchronously.
+- `RememberOptions` is now one exported type rather than the same shape restated
+  in the port and each of the three adapters, where adding a field left the
+  others silently narrower than what they forwarded.
+
 ## [0.8.1] - 2026-08-07
 
 ### Fixed

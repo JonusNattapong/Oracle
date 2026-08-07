@@ -51,12 +51,32 @@ export interface MemoryStoreEntry {
   /** Soft-deleted by maintenance: stale and low-value. Hidden from live recall like archived. */
   pruned?: boolean;
   consolidatedBy?: string;
+  /** Id of the entry that replaced this one. Hidden from live recall; the chain stays walkable. */
+  supersededBy?: string;
+  /** Ids this entry replaced, recorded on the winner so the chain reads in both directions. */
+  supersedes?: string[];
   accessCount: number;
   lastAccessed: string;
   decayRate: number;
   /** File anchors are persisted; statuses are computed on read and never persisted. */
   anchors?: MemoryAnchor[];
   anchorStatus?: AnchorStatus[];
+}
+
+/**
+ * Options accepted by every MemoryPort.remember implementation.
+ *
+ * Shared rather than restated per adapter: the shape was previously duplicated
+ * in the port, the local adapter, and both remote adapters, so adding a field
+ * left the others silently narrower than what they forwarded.
+ */
+export interface RememberOptions {
+  tags?: string[];
+  meta?: Record<string, unknown>;
+  importance?: number;
+  anchors?: MemoryAnchor[];
+  /** Ids of entries this memory replaces. They stop surfacing in live recall. */
+  supersedes?: string[];
 }
 
 interface AnchorIndexRecord {
@@ -332,7 +352,7 @@ export class MemoryAdapter implements MemoryPort {
     agent: string,
     type: MemoryType,
     content: string,
-    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number; anchors?: MemoryAnchor[] }
+    opts?: RememberOptions
   ): Promise<MemoryStoreEntry> {
     await this.ensureDirs();
     const normalizedContent = canonicalContent(content);
@@ -340,12 +360,12 @@ export class MemoryAdapter implements MemoryPort {
     const candidateId = (await this.loadContentIndex()).get(contentKey);
     if (candidateId) {
       // Confirm against the entry itself: the index is a hint, and a pointer
-      // can outlive the entry it names. Archived and pruned entries are not
-      // duplicates — re-remembering something you soft-deleted should bring it
-      // back as a live entry, which is what the old scan did by passing
-      // includeArchived: false.
+      // can outlive the entry it names. Entries that are archived, pruned, or
+      // superseded are not duplicates — re-remembering something you soft-
+      // deleted should bring it back as a live entry, which is what the old
+      // scan did by passing includeArchived: false.
       const existing = await this.readEntry(type, candidateId);
-      if (existing && !existing.archived && !existing.pruned
+      if (existing && !existing.archived && !existing.pruned && !existing.supersededBy
         && canonicalContent(existing.content) === normalizedContent) {
         return existing;
       }
@@ -365,6 +385,8 @@ export class MemoryAdapter implements MemoryPort {
       decayRate: 0.01,
       ...(opts?.anchors?.length ? { anchors: opts.anchors } : {}),
     };
+    const superseded = await this.markSuperseded(opts?.supersedes, entry.id);
+    if (superseded.length) entry.supersedes = superseded;
     await this.writeEntry(entry);
     this.queueContentIndex(contentKey, entry.id);
     if (entry.anchors?.length) this.queueAnchorIndex({ id: entry.id, type: entry.type, anchors: entry.anchors });
@@ -381,6 +403,37 @@ export class MemoryAdapter implements MemoryPort {
     // Entity graph indexing
     this.entityGraph.indexMemory(entry.id, content, entry.tags).catch(() => {});
     return entry;
+  }
+
+  /**
+   * Point the given entries at their replacement and drop them from live recall.
+   *
+   * Supersession is asserted by the caller, never inferred. Deciding that "we
+   * moved to MySQL" replaces "we use PostgreSQL" is a reading of meaning, and
+   * the model doing the remembering has already done it — guessing at it here
+   * with term overlap would retire correct memories on a coincidence of
+   * vocabulary. Oracle's job is to make the assertion durable and cheap.
+   *
+   * Ids that name nothing are skipped rather than failing the write: the new
+   * memory is the point, and a bad pointer should not cost it. Returns the ids
+   * actually marked, so the winner records only real links.
+   */
+  private async markSuperseded(ids: string[] | undefined, replacementId: string): Promise<string[]> {
+    if (!ids?.length) return [];
+    const marked: string[] = [];
+    for (const id of new Set(ids)) {
+      if (id === replacementId) continue; // a memory cannot replace itself
+      for (const type of Object.keys(TYPE_DIR) as MemoryType[]) {
+        const entry = await this.readEntry(type, id);
+        if (!entry) continue;
+        if (entry.supersededBy === replacementId) { marked.push(id); break; }
+        entry.supersededBy = replacementId;
+        await this.writeEntry(entry);
+        marked.push(id);
+        break;
+      }
+    }
+    return marked;
   }
 
   async recall(opts?: { type?: MemoryType; agent?: string; tags?: string[]; limit?: number; includeArchived?: boolean; includeStale?: boolean; anchorPaths?: string[]; touch?: boolean }): Promise<MemoryStoreEntry[]> {
@@ -419,10 +472,11 @@ export class MemoryAdapter implements MemoryPort {
         const matched: MemoryStoreEntry[] = [];
         for (const entry of loaded) {
           if (!entry) continue;
-          // Both flags are soft deletes — archived by consolidation, pruned by
-          // maintenance — and both stay on disk for audit. includeArchived is
-          // the one switch that brings back either.
-          if ((entry.archived || entry.pruned) && !includeArchived) continue;
+          // Three soft deletes — archived by consolidation, pruned by
+          // maintenance, superseded by a later memory that replaced this fact.
+          // All stay on disk for audit, and includeArchived is the one switch
+          // that brings any of them back.
+          if ((entry.archived || entry.pruned || entry.supersededBy) && !includeArchived) continue;
           if (agent && entry.agent !== agent) continue;
           if (tags && !tags.some((t) => entry.tags.includes(t))) continue;
           matched.push(entry);

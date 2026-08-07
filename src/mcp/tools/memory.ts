@@ -31,7 +31,10 @@ export function registerMemoryTools(
     "oracle_memory_remember",
     {
       title: "Save Memory",
-      description: "Save a memory (project by default, global for cross-project knowledge).",
+      description:
+        "Save a memory (project by default, global for cross-project knowledge). "
+        + "Pass `supersedes` when this memory replaces one you already stored — the old entries "
+        + "stop surfacing in recall instead of competing with this one as equally current.",
       inputSchema: {
         scope: SCOPE,
         agent: z.string().min(1),
@@ -42,15 +45,18 @@ export function registerMemoryTools(
         anchors: z.array(z.object({
           path: z.string().min(1),
           lines: z.tuple([z.number().int().min(1), z.number().int().min(1)]).optional()
-        })).max(20).optional().describe("Workspace files that support this memory")
+        })).max(20).optional().describe("Workspace files that support this memory"),
+        supersedes: z.array(z.string().min(1)).max(20).optional()
+          .describe("Ids of memories this one replaces, e.g. after a decision changed. Unknown ids are ignored.")
       }
     },
-    async ({ scope, agent, type, content, tags, importance, anchors }) => {
+    async ({ scope, agent, type, content, tags, importance, anchors, supersedes }) => {
       try {
         if (anchors?.length && scope === "global") throw new Error("File anchors are only supported for project memory");
         const captured = anchors?.length ? await captureAnchors(workspaceRoot, anchors) : undefined;
-        const entry = await store(scope).remember(agent, type, content, { tags, importance, anchors: captured });
-        return success(`Saved ${scope} memory ${entry.id}.`, { scope, memory: entry });
+        const entry = await store(scope).remember(agent, type, content, { tags, importance, anchors: captured, supersedes });
+        const replaced = entry.supersedes?.length ? ` Superseded ${entry.supersedes.length}.` : "";
+        return success(`Saved ${scope} memory ${entry.id}.${replaced}`, { scope, memory: entry });
       } catch (error) { return failure(error); }
     }
   );

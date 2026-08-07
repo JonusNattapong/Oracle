@@ -2,7 +2,7 @@ import { MAX_ACCOUNT_MEMORY_CHARS } from "../backends/chatgpt-browser/accountMem
 import type { AccountMemoryVerification, ExecutionBackend } from "../backends/backend.js";
 import type { MemoryMirrorConfig } from "../config/project.js";
 import type { MemoryPort } from "../orchestrator/ports.js";
-import type { MemoryStoreEntry, MemoryType } from "./adapter.js";
+import type { MemoryStoreEntry, MemoryType, RememberOptions } from "./adapter.js";
 
 /** Cheapest possible follow-up turn after the backend performs the save. */
 const MIRROR_ACK_PROMPT = "Reply with exactly: OK";
@@ -126,7 +126,7 @@ export class HybridMemoryAdapter implements MemoryPort {
     agent: string,
     type: MemoryType,
     content: string,
-    opts?: { tags?: string[]; meta?: Record<string, unknown>; importance?: number; anchors?: import("./anchors.js").MemoryAnchor[] }
+    opts?: RememberOptions
   ): Promise<MemoryStoreEntry> {
     const entry = await this.local.remember(agent, type, content, opts);
     if (!shouldMirror(this.policy, { type, content, tags: opts?.tags, importance: opts?.importance })) {
