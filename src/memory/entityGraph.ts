@@ -371,6 +371,10 @@ export class EntityGraph {
   private ready: Promise<void>;
   private cache: GraphData | null = null;
   private mutex = new KeyedMutex();
+  private dirty = false;
+  private flushTimer: ReturnType<typeof setTimeout> | null = null;
+  private flushing: Promise<void> = Promise.resolve();
+  private exitFlush: (() => void) | null = null;
 
   constructor(rootDir: string, private readonly dataDirectory = ".oracle-memory") {
     this.rootDir = rootDir;
@@ -400,9 +404,69 @@ export class EntityGraph {
 
   private async save(data: GraphData): Promise<void> {
     this.cache = data;
+    this.dirty = false;
     const tmp = this.graphPath() + ".tmp";
     await fs.writeFile(tmp, JSON.stringify(data), "utf-8");
     await fs.rename(tmp, this.graphPath());
+  }
+
+  /**
+   * Mark the cached graph dirty and write it shortly after, instead of
+   * serialising the whole graph on every mutation.
+   *
+   * Indexing one memory rewrote the entire graph file, so the cost of a write
+   * grew with the graph and seeding a store was quadratic. Callers on the hot
+   * path (index/remove, once per remembered memory) go through here; a burst of
+   * writes now collapses into one save.
+   *
+   * Reads are unaffected: load() serves the same cache object, so an in-process
+   * reader always sees pending mutations. What a crash can lose is at most the
+   * last few hundred milliseconds of a derived index that `graphRebuild()`
+   * reconstructs from the memories themselves.
+   */
+  private scheduleSave(data: GraphData): void {
+    this.cache = data;
+    this.dirty = true;
+    this.armExitFlush();
+    if (this.flushTimer) return;
+    this.flushTimer = setTimeout(() => {
+      this.flushTimer = null;
+      void this.flush();
+    }, 200);
+    // Never hold a CLI process open waiting on a graph write.
+    this.flushTimer.unref?.();
+  }
+
+  /**
+   * Catch the debounce window closing on process shutdown, which is the common
+   * shape for the CLI: remember something, then exit. Registered lazily and
+   * once, and removed by flush(), so a test that creates many graphs does not
+   * pile up listeners.
+   *
+   * `beforeExit` does not fire on an explicit process.exit() or a fatal signal.
+   * That residual gap is why the graph stays a derived index: `graphRebuild()`
+   * reconstructs it from the memories, which are written synchronously.
+   */
+  private armExitFlush(): void {
+    if (this.exitFlush) return;
+    this.exitFlush = () => { void this.flush(); };
+    process.once("beforeExit", this.exitFlush);
+  }
+
+  /** Write pending graph mutations now. Safe to call when nothing is pending. */
+  async flush(): Promise<void> {
+    if (this.flushTimer) {
+      clearTimeout(this.flushTimer);
+      this.flushTimer = null;
+    }
+    if (this.exitFlush) {
+      process.removeListener("beforeExit", this.exitFlush);
+      this.exitFlush = null;
+    }
+    if (!this.dirty || !this.cache) return;
+    const data = this.cache;
+    this.flushing = this.flushing.then(() => this.save(data)).catch(() => {});
+    await this.flushing;
   }
 
   private findEdge(edges: Edge[], from: string, to: string, relation: string): Edge | undefined {
@@ -448,7 +512,7 @@ export class EntityGraph {
         }
       }
 
-      await this.save(data);
+      this.scheduleSave(data);
     });
   }
 
@@ -570,7 +634,7 @@ export class EntityGraph {
       for (const [name, entity] of Object.entries(data.entities)) {
         if (entity.memoryIds.length === 0) delete data.entities[name];
       }
-      await this.save(data);
+      this.scheduleSave(data);
     });
   }
 

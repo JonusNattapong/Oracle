@@ -320,11 +320,21 @@ describe("EntityGraph", () => {
     await graph.indexMemory("mem-1", "Redis persists data", ["redis"]);
     const statsBefore = await graph.getStats();
 
+    // Saves are debounced, so reaching the filesystem is what has to be waited
+    // on here — the in-process cache already has the entity either way.
+    await graph.flush();
+
     // Create a new graph instance pointing at the same directory
     const graph2 = new EntityGraph(tmp);
     const statsAfter = await graph2.getStats();
 
     expect(statsAfter.entityCount).toBe(statsBefore.entityCount);
+  });
+
+  it("keeps indexed entities visible in-process before the debounced save lands", async () => {
+    await graph.indexMemory("mem-1", "Redis persists data", ["redis"]);
+    // No flush: a reader on this instance must not have to know about the timer.
+    expect((await graph.getStats()).entityCount).toBeGreaterThan(0);
   });
 
   it("handles long content without crashing", async () => {

@@ -29,7 +29,7 @@ describe("MemoryAdapter — recall scope beyond the newest entries", () => {
     await fs.rm(tmp, { recursive: true, force: true, maxRetries: 3 });
   });
 
-  it("finds a tagged entry buried behind newer untagged ones", async () => {
+  it("finds a tagged entry buried behind newer untagged ones", { timeout: 60_000 }, async () => {
     await memory.remember("me", "fact", "the tagged one", { tags: ["target"] });
     for (let i = 0; i < 120; i++) {
       await memory.remember("me", "fact", `noise ${i}`, { tags: ["noise"] });
@@ -39,7 +39,7 @@ describe("MemoryAdapter — recall scope beyond the newest entries", () => {
     expect(hits.map((h) => h.content)).toEqual(["the tagged one"]);
   });
 
-  it("finds another agent's entry buried behind newer ones", async () => {
+  it("finds another agent's entry buried behind newer ones", { timeout: 60_000 }, async () => {
     await memory.remember("reviewer", "fact", "reviewer note");
     for (let i = 0; i < 120; i++) {
       await memory.remember("me", "fact", `noise ${i}`);

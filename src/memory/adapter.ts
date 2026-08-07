@@ -103,6 +103,10 @@ export class MemoryAdapter implements MemoryPort {
   private sqliteBackend: SQLiteMemoryBackend | null = null;
   private entityGraph: EntityGraph;
   private anchorIndexWrite: Promise<void> = Promise.resolve();
+  private contentIndexWrite: Promise<void> = Promise.resolve();
+  /** Cached content index, keyed on the index file's size+mtime so a write from
+   *  another process (CLI, daemon, MCP server share the store) invalidates it. */
+  private contentIndex: { stamp: string; map: Map<string, string> } | null = null;
 
   constructor(private readonly rootDir: string, private readonly dataDirectory = DATA_DIR) {
     this.vectors = new VectorStore(rootDir, dataDirectory);
@@ -130,6 +134,109 @@ export class MemoryAdapter implements MemoryPort {
     this.anchorIndexWrite = this.anchorIndexWrite.then(async () => {
       await this.ensureDirs();
       await fs.appendFile(this.anchorIndexPath(), `${JSON.stringify(record)}\n`, "utf8");
+    }).catch(() => {});
+  }
+
+  // ── Content index (exact-duplicate lookup) ──────────────────────
+  //
+  // remember() has to reject a re-write of content it already holds. Scanning
+  // every entry in the type dir to do that made each write O(store size) and
+  // seeding a store quadratic — ~54s for 250 sequential writes into a
+  // 250-entry store. This is the same append-only NDJSON shape as the anchor
+  // index above: one line per write mapping a content hash to the entry id, so
+  // a duplicate check is one map lookup plus one file read to confirm.
+  //
+  // Stale pointers are self-healing and need no tombstones: a line whose entry
+  // was deleted, archived, or edited simply fails the confirmation read and is
+  // treated as a miss, and the next write for that key appends a newer line
+  // that wins when the map is rebuilt.
+
+  private contentIndexPath(): string {
+    return path.join(this.dataDir(), "content-index.ndjson");
+  }
+
+  /** Type-scoped so the same text can exist as both a fact and an insight, matching the old per-type scan. */
+  private static contentKey(type: MemoryType, canonical: string): string {
+    return `${type}:${crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 24)}`;
+  }
+
+  private async statStamp(file: string): Promise<string | null> {
+    try {
+      const stat = await fs.stat(file);
+      return `${stat.size}:${stat.mtimeMs}`;
+    } catch { return null; }
+  }
+
+  private async loadContentIndex(): Promise<Map<string, string>> {
+    const indexPath = this.contentIndexPath();
+    const stamp = await this.statStamp(indexPath);
+    if (stamp === null) return this.rebuildContentIndex();
+    if (this.contentIndex?.stamp === stamp) return this.contentIndex.map;
+    let raw: string;
+    try { raw = await fs.readFile(indexPath, "utf8"); }
+    catch { return this.rebuildContentIndex(); }
+    const map = new Map<string, string>();
+    for (const line of raw.split("\n")) {
+      if (!line) continue;
+      try {
+        const record = JSON.parse(line) as { k: string; id: string };
+        map.set(record.k, record.id); // later lines win
+      } catch { /* skip corrupt row */ }
+    }
+    this.contentIndex = { stamp, map };
+    return map;
+  }
+
+  /** One full scan, for a store written before the index existed or whose index was lost. */
+  private async rebuildContentIndex(): Promise<Map<string, string>> {
+    const map = new Map<string, string>();
+    const rows: string[] = [];
+    for (const [type, dirName] of Object.entries(TYPE_DIR) as [MemoryType, string][]) {
+      let files: string[];
+      try {
+        files = (await fs.readdir(path.join(this.dataDir(), dirName))).filter((file) => file.endsWith(".json")).sort();
+      } catch { continue; }
+      const entries = await Promise.all(files.map((file) => this.readEntry(type, file.slice(0, -".json".length))));
+      for (const entry of entries) {
+        if (!entry) continue;
+        const key = MemoryAdapter.contentKey(type, canonicalContent(entry.content));
+        map.set(key, entry.id);
+        rows.push(JSON.stringify({ k: key, id: entry.id }));
+      }
+    }
+    const indexPath = this.contentIndexPath();
+    try {
+      await this.ensureDirs();
+      const tmp = `${indexPath}.tmp`;
+      await fs.writeFile(tmp, rows.length ? `${rows.join("\n")}\n` : "", "utf8");
+      await fs.rename(tmp, indexPath);
+      const stamp = await this.statStamp(indexPath);
+      this.contentIndex = stamp ? { stamp, map } : null;
+    } catch {
+      // An unwritable index only costs the next call another scan.
+      this.contentIndex = null;
+    }
+    return map;
+  }
+
+  /**
+   * Append one mapping and keep the in-process cache current, including its
+   * stamp — without that the write we just made would invalidate our own cache
+   * and force a re-read on every subsequent write, which is the cost this index
+   * exists to remove. A concurrent append from another process can land inside
+   * that window; the loser writes a duplicate entry rather than corrupting
+   * anything, and the next stamp mismatch resyncs both.
+   */
+  private queueContentIndex(key: string, id: string): void {
+    this.contentIndex?.map.set(key, id);
+    this.contentIndexWrite = this.contentIndexWrite.then(async () => {
+      await this.ensureDirs();
+      const indexPath = this.contentIndexPath();
+      await fs.appendFile(indexPath, `${JSON.stringify({ k: key, id })}\n`, "utf8");
+      if (this.contentIndex) {
+        const stamp = await this.statStamp(indexPath);
+        if (stamp) this.contentIndex.stamp = stamp;
+      }
     }).catch(() => {});
   }
 
@@ -229,9 +336,20 @@ export class MemoryAdapter implements MemoryPort {
   ): Promise<MemoryStoreEntry> {
     await this.ensureDirs();
     const normalizedContent = canonicalContent(content);
-    const existing = await this.recall({ type, limit: 10_000, includeArchived: false, touch: false });
-    const duplicate = existing.find((entry) => canonicalContent(entry.content) === normalizedContent);
-    if (duplicate) return duplicate;
+    const contentKey = MemoryAdapter.contentKey(type, normalizedContent);
+    const candidateId = (await this.loadContentIndex()).get(contentKey);
+    if (candidateId) {
+      // Confirm against the entry itself: the index is a hint, and a pointer
+      // can outlive the entry it names. Archived and pruned entries are not
+      // duplicates — re-remembering something you soft-deleted should bring it
+      // back as a live entry, which is what the old scan did by passing
+      // includeArchived: false.
+      const existing = await this.readEntry(type, candidateId);
+      if (existing && !existing.archived && !existing.pruned
+        && canonicalContent(existing.content) === normalizedContent) {
+        return existing;
+      }
+    }
     const now = new Date().toISOString();
     const entry: MemoryStoreEntry = {
       id: generateId(),
@@ -248,6 +366,7 @@ export class MemoryAdapter implements MemoryPort {
       ...(opts?.anchors?.length ? { anchors: opts.anchors } : {}),
     };
     await this.writeEntry(entry);
+    this.queueContentIndex(contentKey, entry.id);
     if (entry.anchors?.length) this.queueAnchorIndex({ id: entry.id, type: entry.type, anchors: entry.anchors });
 
     // Fire-and-forget indexing — never blocks remember
@@ -432,6 +551,12 @@ export class MemoryAdapter implements MemoryPort {
     if (updates.tags !== undefined) entry.tags = updates.tags;
     if (updates.importance !== undefined) entry.importance = updates.importance;
     await this.writeEntry(entry);
+    if (updates.content !== undefined) {
+      // Point the new content at this entry. The old key still points here too
+      // and is left to expire on its confirmation read — remembering the old
+      // text should create a fresh entry, which a failed confirmation gives us.
+      this.queueContentIndex(MemoryAdapter.contentKey(type, canonicalContent(entry.content)), entry.id);
+    }
     if (entry.anchors?.length) this.queueAnchorIndex({ id: entry.id, type: entry.type, anchors: entry.anchors });
     if (USE_OLLAMA && updates.content !== undefined) {
       this.ensureVectors().then(() => this.vectors.index(id, entry.content)).catch(() => {});
@@ -574,6 +699,18 @@ export class MemoryAdapter implements MemoryPort {
   }
 
   /**
+   * Write any pending entity-graph mutations to disk.
+   *
+   * Graph indexing is fire-and-forget and its saves are debounced, so a
+   * short-lived process that exits right after remembering can drop the tail.
+   * Long-running surfaces (daemon, MCP server) never need this; call it before
+   * exit when a batch of writes has to be durable for the next process.
+   */
+  async flushGraph(): Promise<void> {
+    await this.entityGraph.flush();
+  }
+
+  /**
    * Rebuilds the entity graph from every stored memory.
    *
    * Indexing is incremental, so entities extracted under older rules survive
@@ -636,6 +773,9 @@ export class MemoryAdapter implements MemoryPort {
 
     const saveFn = async (entry: MemoryStoreEntry): Promise<MemoryStoreEntry> => {
       await this.writeEntry(entry);
+      // Consolidation synthesises new content, so the merged entry needs its
+      // own index line or remembering that text again would duplicate it.
+      this.queueContentIndex(MemoryAdapter.contentKey(entry.type, canonicalContent(entry.content)), entry.id);
       return entry;
     };
 
