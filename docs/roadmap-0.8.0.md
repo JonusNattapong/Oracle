@@ -13,7 +13,7 @@ memory visualization. v0.8.0 adds no new surface. It does two things:
    can trust and check, not something they hope is right. This is the only
    capability Oracle has that competing tools structurally cannot copy.
 2. **Workstream B — A core that holds its shape.** The MCP consult pipeline
-   refactor (`PLAN.md`) landed and proved the approach. The remaining structural
+   refactor landed and proved the approach. The remaining structural
    debt is the tool surface itself and the absence of any automated style gate.
 
 The two workstreams are independent and can land in either order.
@@ -202,7 +202,7 @@ never been measured, so nobody knows the size of the tax.
 
 ### Current state
 
-`AGENT.md` states it plainly: "No linter/formatter is configured — rely on `tsc`
+`AGENTS.md` states it plainly: "No linter/formatter is configured — rely on `tsc`
 and consistent style." That is 31 modules and ~70 test files held together by
 discipline.
 
@@ -225,17 +225,15 @@ this tree). Not ESLint — the config burden is not worth it here.
 
 ---
 
-## B3. Close out PLAN.md
+## B3. Close out the lifecycle plan
 
-`PLAN.md` still reads `Status: proposed`. It shipped: `src/mcp/response.ts`
-holds the single `failure()`, `src/mcp/pipeline/` holds the pipeline, stages,
-and shared schema, `consult.ts` is 133 lines and `relay.ts` is 140, and the
-`maxInputBytes` drift bug has a named regression test at
-`src/mcp/pipeline/consultPipeline.test.ts:63`.
+The MCP consult lifecycle refactor is shipped: `src/mcp/response.ts` holds the
+single `failure()`, `src/mcp/pipeline/` holds the pipeline, stages, and shared
+schema, and the `maxInputBytes` drift bug has a named regression test at
+`src/mcp/pipeline/consultPipeline.test.ts`. The former root-level plan was
+completed and removed so it cannot be mistaken for pending work.
 
-- [x] Mark it completed with the commit that landed it, or fold it into
-      `docs/architecture.md` and delete it. A stale plan at the repo root is
-      read as pending work.
+- [x] Close out and remove the completed lifecycle plan.
 
 ---
 
