@@ -9,9 +9,11 @@ import type { OracleRegistry } from "../oracles/registry.js";
 import { ProfileStore } from "../identity/profile.js";
 import type { MemoryPort } from "../orchestrator/ports.js";
 import type { AgentService } from "../agent/service.js";
+import type { ActionProvider } from "./pipeline/flow.js";
 import { registerAgentTools } from "./tools/agent.js";
 import { registerConsultTool } from "./tools/consult.js";
 import { registerRelayTool } from "./tools/relay.js";
+import { registerFlowTool } from "./tools/flow.js";
 import { registerMemoryTools } from "./tools/memory.js";
 import { registerDocsTools } from "./tools/docs.js";
 import { registerWebTools } from "./tools/web.js";
@@ -33,6 +35,7 @@ interface OracleServerDependencies {
   providerChecks?: typeof checkBackend;
   agent?: AgentService;
   agentUnavailableReason?: string;
+  actionProvider?: ActionProvider;
 }
 
 const oracleHomeDir = process.env.ORACLE_HOME_DIR ?? path.join(os.homedir(), ".oracle");
@@ -60,6 +63,7 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
     providerChecks = checkBackend,
     agent,
     agentUnavailableReason,
+    actionProvider,
   } = deps;
 
   // Agent tools (oracle_agent + checkpoints)
@@ -85,6 +89,20 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
     memory,
     soulsDir: SOULS_DIR,
     profile
+  });
+
+  // Unified flow (consult -> research -> plan -> approved action)
+  registerFlowTool(server, {
+    service,
+    config,
+    workspaceRoot,
+    providerId,
+    memory,
+    soulsDir: SOULS_DIR,
+    profile,
+    agent,
+    agentUnavailableReason,
+    actionProvider,
   });
 
   // Memory tools (oracle_memory_*)
@@ -125,7 +143,7 @@ export function registerOracleTools(deps: OracleServerDependencies): void {
   // not exposed here. Every tool a client loads costs it context and one more
   // way to pick the wrong one, and these three groups are all reachable by
   // other means an agent already has: `oracle msg`/`oracle task` on the CLI,
-  // and the `gh` CLI for GitHub. The default surface is 19 focused tools;
+  // and the `gh` CLI for GitHub. The default surface is 20 focused tools;
   // the implementations are untouched and still drive the CLI;
   // `oracle-msg-mcp` continues to serve messaging and tasks over MCP for
   // clients that specifically want them.

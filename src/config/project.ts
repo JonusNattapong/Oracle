@@ -113,6 +113,8 @@ export interface ProjectConfig {
   routing: {
     defaultProvider: ProviderName;
     preferAzure: boolean;
+    /** Optional agent-capable backend for action handoff from consult backends. */
+    actionProvider?: "codex" | "anthropic" | "opencode";
   };
   serve: {
     host: string;
@@ -219,6 +221,7 @@ const routingSchema = z
   .object({
     defaultProvider: z.enum(providerValues).optional(),
     preferAzure: z.boolean().optional(),
+    actionProvider: z.enum(["codex", "anthropic", "opencode"]).optional(),
   })
   .strict();
 

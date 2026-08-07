@@ -81,7 +81,7 @@ tasks.
 | Surface | Use it when | Entry point |
 |---|---|---|
 | **CLI** | A human or script needs direct consult, agent, memory, task, or Runtime commands. | `oracle` |
-| **MCP server** | Claude Code, Codex, or another MCP host needs Oracle as a consultant: ask, agent, memory, docs, web, diagnostics. 19 focused tools rather than everything the CLI can do. | `oracle-mcp` |
+| **MCP server** | Claude Code, Codex, or another MCP host needs Oracle as a consultant and flow controller: ask, research, plan, agent, memory, docs, web, diagnostics. 20 focused tools rather than everything the CLI can do. | `oracle-mcp` |
 | **Coordination-only MCP server** | Agents need messaging and verified tasks without loading provider, memory, or agent dependencies. | `oracle-msg-mcp` |
 | **Runtime API + Control Center** | Scheduling, remote coordination, approvals, or event replay must survive individual CLI sessions. | `oracle-daemon` |
 
@@ -93,7 +93,7 @@ While both surfaces ride on top of the same shared core engine (`BundleService`,
 |---|---|---|
 | **Target User** | **Human Developers** & shell scripts | **AI Coding Agents & IDE Hosts** (Claude Code, Codex, Cursor) |
 | **Communication Mode** | Interactive terminal commands & human-readable output | Stdio JSON-RPC protocol (machine-callable tool schemas) |
-| **Surface Scope** | **Full administrative control** (all commands: ask, agent, memory, daemon, control, schedule, github) | **Focused 19-tool surface** (curated tools needed by agents: `oracle_ask`, `oracle_agent`, `oracle_memory_*`) |
+| **Surface Scope** | **Full administrative control** (all commands: ask, agent, memory, daemon, control, schedule, github) | **Focused 20-tool surface** (curated tools needed by agents: `oracle_run`, `oracle_ask`, `oracle_agent`, `oracle_memory_*`) |
 | **Binary Entry** | `oracle` (`./dist/cli.js`) | `oracle-mcp` (`./dist/mcp.js`) & `oracle-msg-mcp` (`./dist/mcp-messaging.js`) |
 
 ## Architecture and trust boundaries
@@ -172,6 +172,30 @@ oracle agent \
 Agent-capable backends are currently `codex`, `anthropic`, and `opencode`.
 Command policy and workspace path checks reduce risk, but they are not a
 replacement for OS- or container-level isolation.
+
+### Use one flow from an MCP host
+
+`oracle_run` is the recommended entry point when the caller should not need to
+choose between asking, researching, planning, and acting:
+
+```json
+{
+  "prompt": "Fix the flaky scheduler test and verify it",
+  "mode": "auto"
+}
+```
+
+Mutation-shaped requests return a plan first. After reviewing it, call the
+same tool with `mode: "act"` and `confirm: true`. When the primary backend is
+ChatGPT Browser Mode, set an agent-capable handoff backend in `.oracle/config.json`:
+
+```json
+{
+  "routing": {
+    "actionProvider": "codex"
+  }
+}
+```
 
 ### Coordinate agents with verified tasks
 
@@ -509,7 +533,7 @@ The package exposes four binaries:
 
 ```text
 oracle            main CLI
-oracle-mcp        stdio MCP server (19 focused tools)
+oracle-mcp        stdio MCP server (20 focused tools)
 oracle-msg-mcp    coordination-only stdio MCP server
 oracle-daemon     persistent Runtime
 ```

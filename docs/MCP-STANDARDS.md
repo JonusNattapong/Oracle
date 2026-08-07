@@ -62,7 +62,8 @@ cache.invalidatePattern("skill-.*");
 
 ## Tool Categories
 
-### 1. Ask & Agent (5 tools)
+### 1. Flow, Ask & Agent (6 tools)
+- `oracle_run` — Unified entry point for consultation, research, planning, and approved action handoff
 - `oracle_ask` — Single entry point for Q&A: freeform question, or "look at these files and tell me X" when `files` is passed
 - `oracle_agent` — Autonomous coding loop (see [`AGENT.md`](AGENT.md))
 - `oracle_agent_checkpoints` — List saved agent loop checkpoints
@@ -86,7 +87,7 @@ cache.invalidatePattern("skill-.*");
 - `--json` outputs structured result with `finalText`, `turns`, `steps`, `checkpointId`, `usage`
 - All filesystem tools confined to the workspace root (traversal rejected)
 - Emits per-turn MCP progress notifications when a progress token is passed
-- Requires an agent-capable provider (`codex`, `anthropic`, or `opencode`); otherwise returns `ORACLE_AGENT_UNAVAILABLE`
+- Requires an agent-capable provider (`codex`, `anthropic`, or `opencode`); otherwise returns `ORACLE_AGENT_UNAVAILABLE`. `oracle_run` can hand off from `chatgpt-browser` through `routing.actionProvider`.
 - Returns `checkpointId` on each run; save it to resume later
 - Checkpoint persisted after every tool-calling turn under `~/.oracle/checkpoints/`
 

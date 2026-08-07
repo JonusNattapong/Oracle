@@ -24,12 +24,14 @@ flowchart TD
     SelectType -->|Single Agent / Q&A| SingleLoop[Single Agent Execution Cycle]
     SelectType -->|Multi-Agent Task| TaskLoop[Multi-Agent Coordination Cycle]
 
-    SingleLoop --> AskVsAgent{Need File Changes?}
-    AskVsAgent -->|No| Ask[oracle_ask / Consultation]
-    AskVsAgent -->|Yes| Agent[oracle_agent Loop]
+    SingleLoop --> Flow[oracle_run / Flow Controller]
+    Flow --> Ask[oracle_ask / Consultation]
+    Flow --> Research[Web Search / Deep Research]
+    Flow --> Plan[Plan + Approval]
+    Plan --> Agent[oracle_agent Loop]
 
-    Agent --> Plan[Plan / Read-Only Pass]
-    Plan --> Execute[Sandbox Execution & Audit]
+    Agent --> ReviewPlan[Plan / Read-Only Pass]
+    ReviewPlan --> Execute[Sandbox Execution & Audit]
     Execute --> Review[Self-Review Pass]
 
     TaskLoop --> TaskCreate[Create Task with Checklist]
@@ -71,12 +73,15 @@ sequenceDiagram
 
 ## 3. Phase 2: Single-Agent Execution Cycle
 
-When performing coding tasks or Q&A within a single session, use the right tool entry point (`oracle_ask` vs `oracle_agent`).
+When an MCP host is available, use `oracle_run` as the single entry point. It
+classifies the request and keeps the safe plan-before-action boundary. Use the
+lower-level tools directly when a caller already knows the desired mode.
 
 ### Tool Selection Rule
 
 | Mode | Tool / Command | File Mutations | Primary Purpose |
 |---|---|---|---|
+| **Unified flow** | `oracle_run` | Depends | Classifies Q&A, research, planning, and approved action handoff |
 | **Consultation** | `oracle_ask` | ❌ No | Architecture Q&A, code analysis, code review, advice |
 | **Investigation** | `oracle_agent --read-only` | ❌ No | Deep codebase search without altering any files |
 | **Planned Coding** | `oracle_agent --plan` | ✅ Yes (after approval) | Read-only investigation pass first → User approval → Mutate files |
@@ -172,7 +177,7 @@ To maintain long-term repository knowledge across sessions:
 ## 6. Summary Checklist for Agents
 
 - [ ] Call `oracle_identity_show` and `oracle_msg_register` at session start.
-- [ ] Choose `oracle_ask` for read-only advice and `oracle_agent` for code modifications.
+- [ ] Prefer `oracle_run` for mixed requests; use `oracle_ask` for read-only advice and `oracle_agent` for direct coding loops.
 - [ ] Always check off task checklist items before calling `oracle_task_submit`.
 - [ ] Perform self-review (`--review`) before declaring tasks complete.
 - [ ] Save relevant facts or insights to working memory before terminating the turn.

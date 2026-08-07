@@ -38,7 +38,7 @@ describe("loadProjectConfig", () => {
         deployment: "company-gpt"
       },
       openrouter: { appName: "Team Oracle" },
-      routing: { defaultProvider: "browser", preferAzure: true },
+      routing: { defaultProvider: "browser", preferAzure: true, actionProvider: "codex" },
       serve: { host: "0.0.0.0", port: 9474, manualLogin: false }
     });
     await expect(loadProjectConfig(root)).resolves.toMatchObject({
@@ -59,7 +59,7 @@ describe("loadProjectConfig", () => {
         baseURL: "https://openrouter.ai/api/v1",
         appName: "Team Oracle"
       },
-      routing: { defaultProvider: "browser", preferAzure: true },
+      routing: { defaultProvider: "browser", preferAzure: true, actionProvider: "codex" },
       serve: { host: "0.0.0.0", port: 9474, manualLogin: false }
     });
   });
@@ -96,6 +96,7 @@ describe("loadProjectConfig", () => {
     [{ azure: { endpoint: "not-a-url" } }],
     [{ openrouter: { unknown: true } }],
     [{ routing: { defaultProvider: "auto" } }],
+    [{ routing: { actionProvider: "openai" } }],
     [{ serve: { port: 70_000 } }]
   ])("rejects invalid config %j", async (config) => {
     await expect(loadProjectConfig(await rootWith(config))).rejects.toMatchObject({

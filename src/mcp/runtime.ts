@@ -50,6 +50,7 @@ export async function createOracleMcpServer(
     "",
     // ── Consult (ask with context) ──
     "oracle_ask is a single entry point for Q&A — pass files, context, or a conversationId for multi-turn recall. The answer will include project memory and docs context automatically. With the chatgpt-browser backend, set web_search or deep_research for a web-grounded turn.",
+    "oracle_run is the preferred single entry point: it classifies consultation, research, planning, and action requests. Auto mode prepares a plan for mutation requests; call it again with mode='act' and confirm=true to hand off to the configured action backend.",
     "",
     // ── Relay (middleman + memory bank) ──
     "oracle_relay is the middleman/middleware entry point: it archives your request, enriches it with recalled memory, consults the AI backend, then files the Q&A into the memory bank (tagged `relay`) so the same question is answered from memory on future calls.",
@@ -107,12 +108,22 @@ export async function createOracleMcpServer(
     openrouter: config.openrouter
   };
 
+  const configuredActionProvider = config.routing.actionProvider;
+  const actionProvider = configuredActionProvider
+    ?? (route.provider === "codex" || route.provider === "anthropic" || route.provider === "opencode"
+      ? route.provider
+      : undefined);
   let agent: AgentService | undefined;
   let agentUnavailableReason: string | undefined;
-  try {
-    agent = new AgentService(createAgentBackend(route.provider));
-  } catch (error) {
-    agentUnavailableReason = error instanceof Error ? error.message : String(error);
+  if (actionProvider) {
+    try {
+      agent = new AgentService(createAgentBackend(actionProvider));
+    } catch (error) {
+      agentUnavailableReason = error instanceof Error ? error.message : String(error);
+    }
+  } else {
+    agentUnavailableReason =
+      "No agent backend is connected. Set routing.actionProvider to 'codex', 'anthropic', or 'opencode'.";
   }
 
   registerOracleTools({
@@ -133,7 +144,8 @@ export async function createOracleMcpServer(
     globalMemory,
     profile: new ProfileStore(homeDir),
     agent,
-    agentUnavailableReason
+    agentUnavailableReason,
+    actionProvider
   });
   return server;
 }

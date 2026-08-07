@@ -147,6 +147,7 @@ describe("Oracle MCP tools", () => {
     expect(tools).toContain("oracle_memory_remember");
     expect(tools).toContain("oracle_memory_maintain");
     expect(tools).toContain("oracle_relay");
+    expect(tools).toContain("oracle_run");
     expect(tools).toContain("oracle_identity_show");
     expect(tools).toContain("oracle_awareness_show");
     expect(tools).toContain("oracle_msg_send");
@@ -375,6 +376,35 @@ describe("Oracle MCP tools", () => {
         })
       ])
     );
+  });
+
+  test("oracle_run provides one flow for consult and approved action handoff", async () => {
+    const consultation = await client.callTool({
+      name: "oracle_run",
+      arguments: { prompt: "Explain the sample answer", mode: "consult" }
+    });
+    expect(consultation.isError).not.toBe(true);
+    expect(consultation.structuredContent).toMatchObject({
+      flow: { mode: "consult", status: "completed", requiresApproval: false }
+    });
+
+    const plan = await client.callTool({
+      name: "oracle_run",
+      arguments: { prompt: "Implement the sample answer change", mode: "act" }
+    });
+    expect(plan.isError).not.toBe(true);
+    expect(plan.structuredContent).toMatchObject({
+      flow: { mode: "act", status: "approval_required", requiresApproval: true }
+    });
+
+    const handoff = await client.callTool({
+      name: "oracle_run",
+      arguments: { prompt: "Implement the sample answer change", mode: "act", confirm: true }
+    });
+    expect(handoff.isError).not.toBe(true);
+    expect(handoff.structuredContent).toMatchObject({
+      flow: { mode: "act", status: "handoff_required" }
+    });
   });
 
   test("oracle_ask exposes ChatGPT Web Search and Deep Research controls", async () => {
