@@ -101,6 +101,14 @@ export async function getWebSocketDebuggerUrl(port: number, timeoutMs = 10000): 
   throw new Error(`Chrome CDP endpoint at http://127.0.0.1:${port}/json/version not reachable within ${timeoutMs}ms`);
 }
 
+/**
+ * How long a Chrome already running on this profile is given to answer before
+ * it is treated as gone. Generous on purpose: mistaking a busy browser for a
+ * dead one starts a second instance on the same profile, which is far more
+ * expensive than waiting.
+ */
+const REUSE_PROBE_TIMEOUT_MS = 10_000;
+
 interface ActiveDevToolsEndpoint {
   port: number;
   browserPath: string;
@@ -206,9 +214,18 @@ export class ChromeLauncher {
 
     // Reuse only when both the random port and browser UUID match the endpoint
     // Chrome published inside this exact profile.
+    //
+    // The probe is given room to answer slowly. A running Chrome that is busy —
+    // rendering a heavy conversation, or competing for a loaded machine — can
+    // miss a short deadline while being perfectly alive, and the cost of that
+    // mistake is not a retry: the code below deletes DevToolsActivePort and
+    // starts a second Chrome on the same profile directory. Two instances then
+    // share one profile, the surviving marker points at whichever wrote last,
+    // and every later CDP call may land on the wrong one and hang. A slow answer
+    // must not be read as a dead browser.
     if (activeEndpoint) {
       try {
-        const wsUrl = await getWebSocketDebuggerUrl(activeEndpoint.port, 1000);
+        const wsUrl = await getWebSocketDebuggerUrl(activeEndpoint.port, REUSE_PROBE_TIMEOUT_MS);
         if (new URL(wsUrl).pathname === activeEndpoint.browserPath) {
           return { port: activeEndpoint.port, webSocketDebuggerUrl: wsUrl };
         }
