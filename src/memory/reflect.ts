@@ -47,7 +47,7 @@ export async function reflectOnMemories(
   const apiKey = opts.apiKey ?? process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return [];
 
-  const usable = entries.filter((e) => !e.archived && !(e as any).pruned);
+  const usable = entries.filter((e) => !e.archived && !e.pruned);
   const clusters = clusterByTags(usable, 0.25);
 
   const model = opts.model ?? DEFAULT_MODEL;

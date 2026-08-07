@@ -46,7 +46,10 @@ export interface MemoryStoreEntry {
   ttl?: number;
   source?: string;
   importance?: number;
+  /** Soft-deleted by consolidation: superseded by the entry named in consolidatedBy. */
   archived?: boolean;
+  /** Soft-deleted by maintenance: stale and low-value. Hidden from live recall like archived. */
+  pruned?: boolean;
   consolidatedBy?: string;
   accessCount: number;
   lastAccessed: string;
@@ -297,7 +300,10 @@ export class MemoryAdapter implements MemoryPort {
         const matched: MemoryStoreEntry[] = [];
         for (const entry of loaded) {
           if (!entry) continue;
-          if (entry.archived && !includeArchived) continue;
+          // Both flags are soft deletes — archived by consolidation, pruned by
+          // maintenance — and both stay on disk for audit. includeArchived is
+          // the one switch that brings back either.
+          if ((entry.archived || entry.pruned) && !includeArchived) continue;
           if (agent && entry.agent !== agent) continue;
           if (tags && !tags.some((t) => entry.tags.includes(t))) continue;
           matched.push(entry);

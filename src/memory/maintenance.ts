@@ -29,11 +29,6 @@ export interface MaintenanceResult {
   promoted: string[];
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────
-
-/** Workaround: MemoryStoreEntry has no `pruned` field, but we set it at runtime. */
-type MutableEntry = MemoryStoreEntry & { pruned?: boolean };
-
 // ── pruneStaleMemories ────────────────────────────────────────────────────
 
 /**
@@ -67,7 +62,7 @@ export async function pruneStaleMemories(
     // Skip entries already archived, consolidated, or previously pruned.
     if (entry.archived) continue;
     if (entry.consolidatedBy) continue;
-    if ((entry as MutableEntry).pruned) continue;
+    if (entry.pruned) continue;
 
     // ── Staleness check ──────────────────────────────────────────────
     const lastAccess = new Date(entry.lastAccessed ?? entry.ts).getTime();
@@ -79,7 +74,7 @@ export async function pruneStaleMemories(
     if (importance >= minImportance) continue;
 
     // ── Prune ────────────────────────────────────────────────────────
-    (entry as MutableEntry).pruned = true;
+    entry.pruned = true;
     if (saveFn) {
       await saveFn(entry);
     }
