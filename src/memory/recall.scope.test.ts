@@ -49,9 +49,14 @@ describe("MemoryAdapter — recall scope beyond the newest entries", () => {
     expect(hits.map((h) => h.content)).toEqual(["reviewer note"]);
   });
 
-  it("keyword search reaches an old entry behind newer noise", async () => {
+  // The lexical fallback used to draw max(limit * 4, 100) candidates, so 150
+  // pieces of noise put the target well outside the old window. Kept just past
+  // that boundary rather than an order of magnitude beyond it: remember()
+  // rescans the whole type dir on every write to dedupe, which makes seeding
+  // this fixture quadratic in the noise count.
+  it("keyword search reaches an old entry behind newer noise", { timeout: 60_000 }, async () => {
     await memory.remember("me", "fact", "zebra crossing telemetry pipeline");
-    for (let i = 0; i < 500; i++) {
+    for (let i = 0; i < 150; i++) {
       await memory.remember("me", "fact", `unrelated filler entry number ${i}`);
     }
 

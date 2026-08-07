@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1] - 2026-08-07
+
+### Fixed
+- **Recall no longer drops matches older than the newest page.** `recall()`
+  truncated each type directory to the newest `limit * 4` files and only then
+  applied the archived/agent/tag filters, so a match outside that window came
+  back as an empty result rather than a hit — a miss was indistinguishable from
+  an absence. `searchMemories`/`scoredSearchMemories` inherited the ceiling
+  through a lexical candidate pool capped at `max(limit * 4, 100)`; with no
+  embedder configured that fallback is the only search path, so keyword search
+  silently saw roughly the newest hundred entries per type and reported
+  everything older as nonexistent. Recall now filters before it truncates,
+  walking each directory newest-first a page at a time until it has `limit`
+  survivors, and both fallbacks score the whole store. Stored memories were
+  never lost — they were unreachable.
+- **Pruned memories are hidden from live recall.** `pruneStaleMemories`
+  documents itself as a soft delete, but only `reflect.ts` checked the flag:
+  `recall()` and both search paths ignored it, so a pruned entry still ranked,
+  still surfaced, and was still injected into consults. `pruned` is now treated
+  like `archived` — hidden by default, recoverable through `includeArchived` —
+  and is a real field on `MemoryStoreEntry` rather than a cast, which is what
+  let the read and write sites drift apart unnoticed.
+
+### Removed
+- **`src/memory/decay.ts`.** `computeDecayScore` and `identifyStaleMemories` had
+  no caller outside a test; maintenance implements its own staleness check and
+  never consulted them. Their presence implied Oracle decays memory relevance
+  over time, which it does not. The unrelated `decayRate` field stays — it feeds
+  the recency term in `scoredSearchMemories`.
+
+### Changed
+- Pruning is documented as deliberately manual. `remember()` stamps importance
+  0.5, nothing lowers it, and pruning retains anything at or above
+  `minImportance` (0.2), so automatic maintenance never soft-deletes a memory
+  the operator did not explicitly mark low-value. Callers that want pruning pass
+  thresholds that say so.
+
 ## [0.8.0] - 2026-08-07
 
 ### Added
