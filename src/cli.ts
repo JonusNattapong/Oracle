@@ -27,6 +27,7 @@ import { FileSessionStore } from "./session/store.js";
 import {
   ensureProjectConfig,
   generateMcpSetup,
+  MCP_CLIENTS,
   writeMcpSetup,
   type McpClient
 } from "./setup/mcp.js";
@@ -1276,13 +1277,17 @@ program
 
 program
   .command("setup-mcp")
-  .option("--client <client>", "Client: claude-code or codex", "claude-code")
+  .option(
+    "--client <client>",
+    `Client: ${MCP_CLIENTS.join(", ")}`,
+    "claude-code"
+  )
   .option("--cwd <path>", "Project root", process.cwd())
   .option("--print", "Print generated configuration without writing")
   .option("--force", "Replace an existing configuration")
   .action(async (options) => {
-    if (options.client !== "claude-code" && options.client !== "codex") {
-      throw new Error("Expected --client claude-code or codex.");
+    if (!MCP_CLIENTS.includes(options.client)) {
+      throw new Error(`Expected --client to be one of: ${MCP_CLIENTS.join(", ")}.`);
     }
     const serverPath = fileURLToPath(new URL("./mcp.js", import.meta.url));
     const file = generateMcpSetup({

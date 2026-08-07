@@ -1,8 +1,6 @@
 ---
-name: Oracle MCP Usage Guide
-description: How to use Oracle MCP tools in Claude Code for consultation, memory, messaging, and task tracking
-metadata:
-  type: skill
+name: oracle-mcp-usage
+description: How to use Oracle's MCP tools in Claude Code for consultation, memory, messaging, and task tracking. Use when the task involves calling oracle_* tools directly rather than through the CLI.
 ---
 
 # Oracle MCP Usage Guide

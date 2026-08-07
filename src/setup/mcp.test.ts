@@ -53,6 +53,65 @@ describe("generateMcpSetup", () => {
     expect(result.content).toContain('[mcp_servers.oracle]');
     expect(result.content).toContain("ORACLE_WORKSPACE_ROOT");
   });
+
+  test("generates Gemini CLI settings.json under mcpServers, same shape as Claude Code", () => {
+    const root = path.resolve("project");
+    const result = generateMcpSetup({ root, client: "gemini", serverPath: path.resolve("dist/mcp.js") });
+    expect(result.path).toBe(path.join(root, ".gemini", "settings.json"));
+    expect(JSON.parse(result.content)).toMatchObject({
+      mcpServers: {
+        "oracle": {
+          command: process.execPath,
+          args: [path.resolve("dist/mcp.js")],
+          env: { ORACLE_WORKSPACE_ROOT: root }
+        }
+      }
+    });
+  });
+
+  test("generates opencode.json with type/command-array/environment shape", () => {
+    const root = path.resolve("project");
+    const result = generateMcpSetup({ root, client: "opencode", serverPath: path.resolve("dist/mcp.js") });
+    expect(result.path).toBe(path.join(root, "opencode.json"));
+    expect(JSON.parse(result.content)).toMatchObject({
+      mcp: {
+        "oracle": {
+          type: "local",
+          command: [process.execPath, path.resolve("dist/mcp.js")],
+          enabled: true,
+          environment: { ORACLE_WORKSPACE_ROOT: root }
+        }
+      }
+    });
+  });
+
+  test("generates openclaw.json nested under mcp.servers", () => {
+    const root = path.resolve("project");
+    const result = generateMcpSetup({ root, client: "openclaw", serverPath: path.resolve("dist/mcp.js") });
+    expect(result.path).toBe(path.join(root, "openclaw.json"));
+    expect(JSON.parse(result.content)).toMatchObject({
+      mcp: {
+        servers: {
+          "oracle": {
+            command: process.execPath,
+            args: [path.resolve("dist/mcp.js")],
+            env: { ORACLE_WORKSPACE_ROOT: root }
+          }
+        }
+      }
+    });
+  });
+
+  test("generates Hermes Agent's global YAML config, not a project-relative file", () => {
+    const root = path.resolve("project");
+    const homeDir = path.resolve("fake-home");
+    const result = generateMcpSetup({ root, client: "hermes", serverPath: path.resolve("dist/mcp.js"), homeDir });
+    expect(result.path).toBe(path.join(homeDir, ".hermes", "config.yaml"));
+    expect(result.content).toContain("mcp_servers:");
+    expect(result.content).toContain("  oracle:");
+    expect(result.content).toContain(`command: ${JSON.stringify(process.execPath.replaceAll("\\", "/"))}`);
+    expect(result.content).toContain("ORACLE_WORKSPACE_ROOT");
+  });
 });
 
 describe("writeMcpSetup", () => {
@@ -95,6 +154,134 @@ describe("writeMcpSetup", () => {
     const content = await fs.readFile(configPath, "utf8");
     expect(content).toContain('model = "gpt-5.4"');
     expect(content).toContain("[mcp_servers.oracle]");
+  });
+
+  test("merges opencode.json under mcp while preserving unrelated servers and top-level keys", async () => {
+    const root = await temporaryRoot();
+    const configPath = path.join(root, "opencode.json");
+    await fs.writeFile(configPath, JSON.stringify({
+      "$schema": "https://opencode.ai/config.json",
+      mcp: { existing: { type: "local", command: ["existing"] } }
+    }));
+    const generated = generateMcpSetup({ root, client: "opencode", serverPath: path.join(root, "mcp.js") });
+
+    await writeMcpSetup(generated);
+
+    const written = JSON.parse(await fs.readFile(configPath, "utf8"));
+    expect(written["$schema"]).toBe("https://opencode.ai/config.json");
+    expect(written.mcp.existing).toMatchObject({ type: "local", command: ["existing"] });
+    expect(written.mcp["oracle"]).toMatchObject({ type: "local", enabled: true });
+  });
+
+  test("merges openclaw.json two levels deep (mcp.servers) without disturbing mcp.<other keys>", async () => {
+    const root = await temporaryRoot();
+    const configPath = path.join(root, "openclaw.json");
+    await fs.writeFile(configPath, JSON.stringify({
+      mcp: { servers: { existing: { command: "existing" } }, someOtherSetting: true }
+    }));
+    const generated = generateMcpSetup({ root, client: "openclaw", serverPath: path.join(root, "mcp.js") });
+
+    await writeMcpSetup(generated);
+
+    const written = JSON.parse(await fs.readFile(configPath, "utf8"));
+    expect(written.mcp.someOtherSetting).toBe(true);
+    expect(written.mcp.servers.existing).toMatchObject({ command: "existing" });
+    expect(written.mcp.servers["oracle"]).toMatchObject({ command: process.execPath });
+  });
+
+  test("merges Gemini settings.json under mcpServers while preserving unrelated settings", async () => {
+    const root = await temporaryRoot();
+    const configPath = path.join(root, ".gemini", "settings.json");
+    await fs.mkdir(path.dirname(configPath));
+    await fs.writeFile(configPath, JSON.stringify({
+      theme: "dark",
+      mcpServers: { existing: { command: "existing" } }
+    }));
+    const generated = generateMcpSetup({ root, client: "gemini", serverPath: path.join(root, "mcp.js") });
+
+    await writeMcpSetup(generated);
+
+    const written = JSON.parse(await fs.readFile(configPath, "utf8"));
+    expect(written.theme).toBe("dark");
+    expect(written.mcpServers.existing).toMatchObject({ command: "existing" });
+    expect(written.mcpServers["oracle"]).toMatchObject({ command: process.execPath });
+  });
+
+  test("appends Hermes YAML config without an existing mcp_servers section", async () => {
+    const root = await temporaryRoot();
+    const homeDir = await temporaryRoot();
+    const configPath = path.join(homeDir, ".hermes", "config.yaml");
+    await fs.mkdir(path.dirname(configPath));
+    await fs.writeFile(configPath, "log_level: info\n");
+    const generated = generateMcpSetup({ root, client: "hermes", serverPath: path.join(root, "mcp.js"), homeDir });
+
+    await writeMcpSetup(generated);
+
+    const content = await fs.readFile(configPath, "utf8");
+    expect(content).toContain("log_level: info");
+    expect(content).toContain("mcp_servers:");
+    expect(content).toContain("  oracle:");
+    expect(content).toContain("ORACLE_WORKSPACE_ROOT");
+  });
+
+  test("adds oracle under an existing mcp_servers section without disturbing sibling servers", async () => {
+    const root = await temporaryRoot();
+    const homeDir = await temporaryRoot();
+    const configPath = path.join(homeDir, ".hermes", "config.yaml");
+    await fs.mkdir(path.dirname(configPath));
+    await fs.writeFile(
+      configPath,
+      [
+        "log_level: info",
+        "mcp_servers:",
+        "  filesystem:",
+        '    command: "npx"',
+        "    args:",
+        '      - "-y"',
+        ""
+      ].join("\n")
+    );
+    const generated = generateMcpSetup({ root, client: "hermes", serverPath: path.join(root, "mcp.js"), homeDir });
+
+    await writeMcpSetup(generated);
+
+    const content = await fs.readFile(configPath, "utf8");
+    expect(content).toContain("  filesystem:");
+    expect(content).toContain('command: "npx"');
+    expect(content).toContain("  oracle:");
+    expect(content).toContain("ORACLE_WORKSPACE_ROOT");
+  });
+
+  test("replaces only the oracle block in Hermes YAML, preserving sibling servers", async () => {
+    const root = await temporaryRoot();
+    const homeDir = await temporaryRoot();
+    const configPath = path.join(homeDir, ".hermes", "config.yaml");
+    await fs.mkdir(path.dirname(configPath));
+    await fs.writeFile(
+      configPath,
+      [
+        "mcp_servers:",
+        "  oracle:",
+        '    command: "old-node"',
+        "    args:",
+        '      - "old-mcp.js"',
+        "    env:",
+        '      ORACLE_WORKSPACE_ROOT: "old-root"',
+        "  filesystem:",
+        '    command: "npx"',
+        ""
+      ].join("\n")
+    );
+    const generated = generateMcpSetup({ root, client: "hermes", serverPath: path.join(root, "mcp.js"), homeDir });
+
+    await writeMcpSetup(generated, true);
+
+    const content = await fs.readFile(configPath, "utf8");
+    expect(content).not.toContain("old-root");
+    expect(content).not.toContain("old-node");
+    expect(content).toContain("  filesystem:");
+    expect(content).toContain('command: "npx"');
+    expect(content).toContain(root.replaceAll("\\", "/"));
   });
 
   test("replaces only the Oracle Codex block and preserves later tables", async () => {
