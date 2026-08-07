@@ -46,46 +46,70 @@ inspection. It is more damaging than the first.
    understood: three concurrent `oracle ask` calls with three different
    questions returned **the same wrong answer to all three** — silently, with
    exit code 0, no error. A hang would have been the safer failure. **Fixed**
-   with a second lock (`withConsultLock`) held for the full request — launch
-   through final read, retries included — so concurrent requests queue rather
-   than interleave on the tab.
+   — see below; the first fix attempted (a profile-wide lock forcing full
+   serialization) was superseded by a second one that achieves real
+   parallelism instead of trading wrong answers for a queue.
 
 ## The fix
 
-Two cross-process advisory locks, both using the same exclusive-create +
-stale-detection pattern already proven in this codebase
-(`AuditLogger.withLock()` in `src/observability/audit.ts`):
-`fs.open(path, "wx")`, poll-with-backoff on `EEXIST`/`EPERM`, stale-lock
-detection via mtime, release on completion. Extracted into a shared
-`withFileLock` primitive in `chrome.ts` since two independent locks were
-needed over the same profile directory — reusing one lock file for both would
-deadlock a caller against itself, since `run()` holds the outer lock while
-its own call chain reaches `launch()`'s inner one.
+Two mechanisms, arrived at in two passes — the first was safe but not what
+was asked for, and testing it live is what surfaced the requirement it
+missed.
 
-- [x] `withLaunchLock` — the launch-time race (per profile, `.launch.lock`)
-- [x] `withConsultLock` — the tab-sharing race (per profile, `.consult.lock`,
-      held for the whole request including retries)
-- [x] `chrome.test.ts` — 6 tests: serialization, result propagation,
-      lock release on throw, stale-lock recovery, and that the two locks
-      don't block each other unnecessarily
-- [x] Full suite: 694 tests pass, no regressions
-- [x] Live-verified: 3 concurrent `oracle ask` calls with distinct prompts,
-      before the fix → identical wrong answer to all three; after → each
-      received its own correct answer (ALPHA / BETA / GAMMA), serialized at
-      roughly 30s each rather than corrupted
+**Pass 1 (safe, serialized — superseded below).** A profile-wide lock
+(`withConsultLock`) held for the whole request, so concurrent callers queue
+rather than share a tab. Live-verified correct: three concurrent calls with
+three different prompts each got their own right answer, ~30s apart rather
+than corrupted. This closed the silent-wrong-answer bug completely, but the
+ask was for parallel, and this is not — accepted as an intermediate state
+while parallelism was investigated, not as the final answer.
 
-**Known trade-off, accepted deliberately:** concurrent browser-backend
-requests are now serialized, not parallel. This is the correct behavior for
-one shared ChatGPT tab, not a shortcut — true parallelism would need either
-one Chrome profile per concurrent user (resource-heavy) or one tab per
-request (breaks the continuity `findOrCreatePageTarget` exists to provide).
-Neither was in scope for "stop it from returning wrong answers."
+**Pass 2 (parallel — what shipped).** Each request gets its own dedicated
+Chrome **window**, not a shared tab and not even a shared *tab* — a same-window
+dedicated tab was tried first and rejected by live testing: of three
+concurrent tab-based requests, only the frontmost tab produced a real answer,
+the other two timed out at 180s with no response at all. Live-confirmed cause:
+`document.visibilityState` differs between a frontmost and a backgrounded tab
+in the same window, and Chrome/ChatGPT do not process a background tab's work
+the same way. A separate `Target.createTarget({ newWindow: true })` per
+request does not have this problem — live-confirmed `document.hidden: false`
+and `visibilityState: "visible"` in three simultaneously open windows.
+
+With each request isolated to its own window, there is nothing left for
+independent requests to share, so the profile-wide lock is gone. What remains
+is narrower: `withConversationLock`, keyed by a hash of the conversation URL,
+serializes only requests that continue the *same* existing thread (two windows
+posting into one ChatGPT conversation is still not something its UI or backend
+expects) — a fresh chat, or a different conversation, is never blocked by it.
+`withLaunchLock` (Chrome-process spawn only) is unchanged from pass 1.
+
+- [x] `createDedicatedWindowTarget` / `closeWindowTarget` — open/close a
+      fresh, isolated window per request (`chrome.ts`)
+- [x] `withConversationLock` / `conversationLockKey` — per-conversation lock,
+      not per-profile (`chrome.ts`)
+- [x] `withLaunchLock` — the launch-time race, unchanged (per profile,
+      `.launch.lock`)
+- [x] `backend.ts` — `run()`/`runOnce` restructured: lock only when
+      continuing a conversation, dedicated window either way, window closed
+      in `finally` regardless of outcome
+- [x] `chrome.test.ts` — 9 tests: launch-lock serialization/propagation/
+      release-on-throw/stale-recovery, conversation-lock serialization
+      *within* one conversation, no serialization *across* conversations,
+      the two lock kinds don't block each other, digest stability
+- [x] Full suite: 697 tests pass, no regressions
+- [x] Live-verified, pass 1 (serialized): 3 concurrent `oracle ask` calls,
+      distinct prompts — before any fix, identical wrong answer to all three;
+      after, each correct, serialized ~30s apart
+- [x] Live-verified, pass 2 (parallel): same 3-way test, fresh chats — all
+      three completed with their own correct, distinct answers (no timeouts,
+      no cross-contamination), running concurrently rather than queued
 
 **Known gap, not yet addressed:** `ChatGptBrowserBackend.listAccountMemories`
-also drives the shared tab (navigates, reads memory) and is not covered by
-`withConsultLock`. Lower priority — it's a diagnostic path, not the main
-`ask` flow that was reported and reproduced — but a `run()` call and a
-`listAccountMemories()` call in flight at the same time would still race.
+still uses `findOrCreatePageTarget` (the shared tab) and is not covered by
+either lock. Lower priority — it's a diagnostic path, not the main `ask` flow
+that was reported and reproduced — but a `run()` call and a
+`listAccountMemories()` call in flight at the same time would still race, and
+could now also collide with whichever window a concurrent `run()` created.
 
 ## Explicitly out of scope (not needed to fix the actual bug)
 

@@ -1,9 +1,11 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import type { ChatGptBrowserConfig, ChromeProcessInfo, ChromeTarget } from "./types.js";
 import { runCommand } from "../../providers/codex.js";
+import { CdpSession } from "./response.js";
 
 export async function findChromeExecutable(): Promise<string | null> {
   if (process.platform === "darwin") {
@@ -201,29 +203,51 @@ export function withLaunchLock<T>(profileDir: string, operation: () => Promise<T
 }
 
 /**
- * Locks the full duration of one browser-backend request — launch through
- * final read — per profile directory. `findOrCreatePageTarget` reuses
- * whichever chatgpt.com tab is already open rather than creating a new one:
- * that is the intended behavior for one user across turns (continuity), but
- * it means two requests running at once drive the *same* tab — one typing
- * while the other reads, both against a single response stream. The failure
- * mode is not a hang: each caller sees a plausible-looking answer that may
- * belong to the other caller's question, or to whatever was already on
- * screen, which is worse than a crash because nothing signals it happened.
+ * Locks one existing ChatGPT conversation thread, not the whole profile.
  *
- * Held for the whole request rather than added inside `run()`'s retry loop:
- * a retry after a transient failure must not let a second caller's request
- * interleave into the same tab in the gap between attempts.
+ * Each request drives its own dedicated OS window (`createDedicatedWindowTarget`),
+ * so two requests no longer fight over which tab to use — but two requests
+ * both continuing the *same* conversation (same `--conversation` /
+ * `previousResponseId`) would still post into the same underlying thread from
+ * two windows at once, which ChatGPT's UI and backend were never built to
+ * expect and could interleave or duplicate messages within that thread.
+ * Locking per conversation identity, not per profile, means this only
+ * serializes callers that actually target the same thread — a fresh chat, or
+ * a different conversation, proceeds immediately on its own window regardless
+ * of what else is running.
+ *
+ * A dedicated *tab* (same OS window) was tried first and rejected: live
+ * testing showed Chrome/ChatGPT do not process a background tab the same as
+ * the frontmost one — of three concurrent tab-based requests, only the
+ * frontmost got a real answer, and the other two timed out with no partial
+ * response at all. A separate `Target.createTarget({newWindow: true})` per
+ * request does not have this problem — verified live: `document.hidden` is
+ * `false` and `document.visibilityState` is `"visible"` in all three windows
+ * simultaneously, unlike three tabs in one window.
+ *
+ * `conversationKey` is expected to already be a filesystem-safe digest (see
+ * `conversationLockKey`) — this function does not hash its input itself, so
+ * that repeated calls for the same conversation reliably hit the same lock
+ * file without recomputing the digest at every call site.
  *
  * Exported for backend.test.ts.
  */
-export function withConsultLock<T>(profileDir: string, operation: () => Promise<T>): Promise<T> {
+export function withConversationLock<T>(
+  profileDir: string,
+  conversationKey: string,
+  operation: () => Promise<T>
+): Promise<T> {
   return withFileLock(
-    path.join(profileDir, ".consult.lock"),
-    CONSULT_LOCK_STALE_MS,
-    CONSULT_LOCK_ACQUIRE_TIMEOUT_MS,
+    path.join(profileDir, `.conversation-${conversationKey}.lock`),
+    CONVERSATION_LOCK_STALE_MS,
+    CONVERSATION_LOCK_ACQUIRE_TIMEOUT_MS,
     operation
   );
+}
+
+/** Filesystem-safe digest of a conversation URL, for use as a lock filename. */
+export function conversationLockKey(conversationUrl: string): string {
+  return crypto.createHash("sha256").update(conversationUrl).digest("hex").slice(0, 16);
 }
 
 /**
@@ -232,13 +256,13 @@ export function withConsultLock<T>(profileDir: string, operation: () => Promise<
  * types.ts) plus its own retry-with-backoff attempts. Set well above that so
  * a slow-but-alive holder is never mistaken for a crashed one.
  */
-const CONSULT_LOCK_STALE_MS = 40 * 60_000;
+const CONVERSATION_LOCK_STALE_MS = 40 * 60_000;
 
 /**
- * How long a queued caller waits for the tab before giving up rather than
- * queuing indefinitely behind other users' requests.
+ * How long a queued caller waits for the same conversation before giving up
+ * rather than queuing indefinitely behind other requests to that thread.
  */
-const CONSULT_LOCK_ACQUIRE_TIMEOUT_MS = 40 * 60_000;
+const CONVERSATION_LOCK_ACQUIRE_TIMEOUT_MS = 40 * 60_000;
 
 interface ActiveDevToolsEndpoint {
   port: number;
@@ -290,6 +314,78 @@ export async function findOrCreatePageTarget(port: number): Promise<ChromeTarget
     "PUT"
   );
   return newTarget;
+}
+
+/**
+ * Opens a brand-new OS-level Chrome window, never a tab, and never reused —
+ * every call is a fresh window for one caller's exclusive use.
+ *
+ * `findOrCreatePageTarget` reuses whichever chatgpt.com tab is already open,
+ * which is right for one caller working across turns in one conversation but
+ * wrong for concurrent, independent requests, which have nothing to share. A
+ * dedicated *tab* in the same window was tried and rejected by live testing:
+ * of three concurrent tab-based requests, only the frontmost tab produced a
+ * real answer — the other two timed out with no response at all, because
+ * Chrome/ChatGPT do not process a background tab the way they process the
+ * active one. A separate window does not have this problem: verified live,
+ * `document.hidden` is `false` and `document.visibilityState` is `"visible"`
+ * in three simultaneously open windows, which is not true of three tabs.
+ *
+ * The HTTP `/json/new` endpoint used elsewhere in this file has no parameter
+ * for opening a new window rather than a new tab, so this goes through the
+ * CDP `Target.createTarget({ newWindow: true })` command instead, over a
+ * short-lived connection to the browser-level (not page-level) debugger
+ * endpoint. The created target's own page-level `webSocketDebuggerUrl` — the
+ * one every other function in this module expects — is then read back from
+ * `/json/list` by its target id.
+ *
+ * Callers are expected to close the window with `closeWindowTarget` once the
+ * request finishes, success or failure, so windows do not accumulate across a
+ * long-running daemon or many `oracle ask` calls in a session.
+ */
+export async function createDedicatedWindowTarget(port: number): Promise<ChromeTarget> {
+  const version = await fetchJson<{ webSocketDebuggerUrl: string }>(
+    `http://127.0.0.1:${port}/json/version`
+  );
+  const browserSession = new CdpSession(version.webSocketDebuggerUrl);
+  let targetId: string;
+  try {
+    await browserSession.connect();
+    const created = await browserSession.send<{ targetId: string }>("Target.createTarget", {
+      url: "https://chatgpt.com",
+      newWindow: true
+    });
+    targetId = created.targetId;
+  } finally {
+    browserSession.close();
+  }
+
+  // Target.createTarget's own response carries no webSocketDebuggerUrl (that
+  // lives on the page-level target, not the create command's result), and a
+  // window that was just asked for may not be listed yet the instant the
+  // command resolves — poll briefly rather than trusting one read.
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    const targets = await fetchJson<ChromeTarget[]>(`http://127.0.0.1:${port}/json/list`);
+    const match = targets.find((target) => target.id === targetId);
+    if (match?.webSocketDebuggerUrl) return match;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`Chrome did not publish a debugger URL for newly created window ${targetId}.`);
+}
+
+/**
+ * Closes a window opened by `createDedicatedWindowTarget`. Best-effort: a
+ * request that already succeeded or failed must not be turned into an error
+ * by cleanup afterward.
+ */
+export async function closeWindowTarget(port: number, targetId: string): Promise<void> {
+  try {
+    await fetchJson(`http://127.0.0.1:${port}/json/close/${targetId}`, 5000);
+  } catch {
+    // The window may have already closed itself (e.g. the request crashed the
+    // renderer); nothing further to do.
+  }
 }
 
 /**

@@ -15,9 +15,12 @@ import {
 } from "./types.js";
 import {
   ChromeLauncher,
+  closeWindowTarget,
+  conversationLockKey,
+  createDedicatedWindowTarget,
   ensureWindowNotMinimized,
   findOrCreatePageTarget,
-  withConsultLock
+  withConversationLock
 } from "./chrome.js";
 import {
   CdpSession,
@@ -113,15 +116,13 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
   }
 
   /**
-   * Locked for the full request, retries included: see `withConsultLock` in
-   * chrome.ts for why. Concurrent callers on the same profile queue rather
-   * than run — there is one ChatGPT tab, not one per caller.
+   * Each attempt gets its own dedicated Chrome window
+   * (`createDedicatedWindowTarget` in `runOnce`), so concurrent requests need
+   * no lock here — there is nothing left for them to share. `runOnce`
+   * acquires a narrower, conversation-scoped lock only when the request
+   * continues an existing thread (see `withConversationLock` in chrome.ts).
    */
   async run(request: ExecutionBackendRequest): Promise<ExecutionBackendResponse> {
-    return withConsultLock(this.config.profileDir, () => this.runLocked(request));
-  }
-
-  private async runLocked(request: ExecutionBackendRequest): Promise<ExecutionBackendResponse> {
     let lastError: unknown;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
@@ -156,6 +157,33 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
       );
     }
 
+    // Resolved before any Chrome or lock work starts: whether this request
+    // continues an existing thread decides whether it needs to wait for
+    // anyone else, and that must be known up front, not discovered mid-flight.
+    const conversationUrl = request.previousResponseId
+      ? normalizeChatGptConversationUrl(request.previousResponseId)
+      : undefined;
+    if (request.previousResponseId && !conversationUrl) {
+      throw new Error("Saved ChatGPT continuation URL is invalid or is not a ChatGPT conversation.");
+    }
+
+    return conversationUrl
+      // Serialized: two requests posting into the same thread from two
+      // windows at once is not behavior ChatGPT's UI or backend expects.
+      ? withConversationLock(
+          this.config.profileDir,
+          conversationLockKey(conversationUrl),
+          () => this.runOnceOnDedicatedWindow(request, conversationUrl)
+        )
+      // A fresh chat has nothing to share with any other request, so it
+      // proceeds immediately regardless of what else is running.
+      : this.runOnceOnDedicatedWindow(request, undefined);
+  }
+
+  private async runOnceOnDedicatedWindow(
+    request: ExecutionBackendRequest,
+    conversationUrl: string | undefined
+  ): Promise<ExecutionBackendResponse> {
     const uploadImages: BrowserImagePayload[] = (request.images ?? []).map((image, index) => {
       const validated = validateBrowserImage({
         ...image,
@@ -170,10 +198,17 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
 
     const launcher = new ChromeLauncher();
     let session: CdpSession | undefined;
+    let dedicatedWindow: { port: number; id: string } | undefined;
 
     try {
       const processInfo = await launcher.launch(this.config);
-      const target = await findOrCreatePageTarget(processInfo.port);
+      // A dedicated window, not `findOrCreatePageTarget`'s shared tab: two
+      // requests running at once must not end up typing into and reading from
+      // the same tab, and a same-window tab was found live to be starved
+      // while backgrounded (see createDedicatedWindowTarget's comment).
+      // Closed in `finally` below once this request is done.
+      const target = await createDedicatedWindowTarget(processInfo.port);
+      dedicatedWindow = { port: processInfo.port, id: target.id };
       if (!target.webSocketDebuggerUrl) {
         throw new Error("Target page does not expose a WebSocket debugger URL.");
       }
@@ -194,21 +229,9 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
       await session.connect();
 
       const monitor = new ResponseMonitor(session);
-      const conversationUrl = request.previousResponseId
-        ? normalizeChatGptConversationUrl(request.previousResponseId)
-        : undefined;
-      if (request.previousResponseId && !conversationUrl) {
-        throw new Error("Saved ChatGPT continuation URL is invalid or is not a ChatGPT conversation.");
-      }
-      const targetConversationUrl = normalizeChatGptConversationUrl(target.url);
-      const alreadyOnConversation = Boolean(
-        conversationUrl && targetConversationUrl === conversationUrl
-      );
-      await monitor.navigateToChatGPT(
-        conversationUrl ?? "https://chatgpt.com",
-        60_000,
-        !alreadyOnConversation
-      );
+      // Freshly created by createDedicatedWindowTarget above, so it is never
+      // already on the requested conversation — always navigate.
+      await monitor.navigateToChatGPT(conversationUrl ?? "https://chatgpt.com", 60_000, true);
       const authentication = await monitor.authenticationStatus();
       if (!authentication.authenticated) {
         throw new Error(
@@ -415,6 +438,12 @@ export class ChatGptBrowserBackend implements ExecutionBackend {
     } finally {
       if (session) {
         session.close();
+      }
+      // Best-effort: closeWindowTarget already swallows its own failures, and
+      // a request that already succeeded or failed must not become an error
+      // because of cleanup afterward.
+      if (dedicatedWindow) {
+        await closeWindowTarget(dedicatedWindow.port, dedicatedWindow.id);
       }
     }
   }

@@ -18,6 +18,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   generation gets a five-minute timeout floor and is exempt from the stall
   recovery page reload, which would discard a finished render rather than
   rescue a wedged UI.
+- **Concurrent `oracle ask` calls on the `chatgpt-browser` backend now run in
+  parallel**, each on its own dedicated Chrome window
+  (`createDedicatedWindowTarget`), rather than queuing behind one another. A
+  same-window dedicated *tab* per request was tried first and rejected by live
+  testing: of three concurrent tab-based requests, only the frontmost tab
+  produced a real answer, the other two timed out with no response, because
+  Chrome/ChatGPT do not process a backgrounded tab in a shared window the same
+  way as the active one (`document.visibilityState` differs). A separate OS
+  window per request does not have this problem — live-confirmed
+  `document.hidden: false` in three simultaneously open windows — and
+  live-verified end to end: three concurrent asks with three different
+  prompts each returned their own correct answer, running concurrently rather
+  than one at a time. Two requests continuing the *same* existing conversation
+  still serialize (`withConversationLock`, keyed per conversation, not per
+  profile) — posting into one ChatGPT thread from two windows at once is not
+  behavior its UI or backend is built to expect — but a fresh chat, or a
+  different conversation, is never blocked by another request in flight.
 
 ### Fixed
 - **Concurrent `oracle ask` calls on the `chatgpt-browser` backend could
@@ -28,10 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   open, so all three then drove the *same tab*, typing and reading against a
   single response stream. Live-reproduced: three concurrent calls with three
   different prompts returned the same wrong answer to all three, with exit
-  code 0 and no error. A new lock (`withConsultLock`) now holds the full
-  request — launch through final read, retries included — so concurrent
-  requests queue instead of interleaving. Verified live: same three prompts
-  now each get their own correct answer, serialized rather than corrupted.
+  code 0 and no error. Superseded by the dedicated-window design above, which
+  fixes this and also achieves real parallelism rather than trading wrong
+  answers for a queue.
 - **Two Oracle processes could spawn two Chrome instances onto one profile.**
   `ChromeLauncher.launch()` reads whether a Chrome is already running,
   decides, and only then acts — not atomic across processes. Two callers
