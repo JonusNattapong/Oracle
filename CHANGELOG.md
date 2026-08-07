@@ -8,6 +8,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`oracle ask --create-image` / `create_image`** — turns on ChatGPT's Create
+  image for one answer through the composer's `+` menu (`chatgpt-browser`
+  backend). Generated images were already captured and written to the session's
+  artifacts directory; what was missing was any way to ask for one, so it
+  depended on ChatGPT deciding a prompt wanted an image. Selection is confirmed
+  against the composer before the question is sent, and the consult fails rather
+  than returning prose in place of the image that was requested. Image
+  generation gets a five-minute timeout floor and is exempt from the stall
+  recovery page reload, which would discard a finished render rather than
+  rescue a wedged UI.
+
+### Fixed
+- **Image uploads went to the wrong element.** The live page carries five file
+  inputs. Only one sits inside the composer form, and that one declares no
+  `accept` attribute; the other four belong to the photo picker and the
+  image-generation modal and every one of them declares `accept="image/*"`. The
+  first selector Oracle tried was `input[type='file'][accept*='image']`, so
+  files were handed to the photo picker rather than the composer. It failed
+  intermittently rather than outright, which is why it survived a live
+  verification pass. The list now prefers `form input[type='file']`.
+- **A failed upload poisoned the next one.** The upload wait counts attachments
+  against a baseline taken just before injecting, which only measures the new
+  files if the composer starts empty. Chrome keeps the profile between runs, so
+  a consult that failed mid-upload left its attachment in place and the next run
+  waited for a count it could never reach — producing exactly the alternating
+  pass/fail pattern observed. The composer is now cleared first. Measured over
+  eight consecutive live runs after the fix: eight passes, against a failure
+  roughly every third run before it.
+- **`attachment` selectors had already drifted.** All three `data-testid`
+  alternates matched zero elements against the live page; only the remove
+  control's `aria-label` still resolved, so upload completion was being detected
+  by the last fallback in the list. Reordered to lead with what matches.
+- **`browser status --selectors` now checks every composer tool** rather than a
+  hardcoded pair, so a tool added to the registry without a matching menu entry
+  is reported instead of failing later at the point of use.
+- **A composer tool the backend cannot engage is now refused, not dropped.**
+  `ExecutionBackendRequest.tool` documented that backends unable to honour it
+  "must fail rather than answer without it", but nothing enforced this: only the
+  browser backend ever read the field, so `--web-search` against `codex`,
+  `anthropic`, or any API provider answered normally without searching. There
+  was no signal in the result that the request had been ignored. Backends now
+  declare a `composerTools` capability and `ConsultService` rejects the consult
+  before it is sent. Two existing tests asserted the old behavior — one asked
+  the `codex` backend to run a web search and expected an answer.
+
 - **ChatGPT Browser response streaming** — captures conversation responses from
   the CDP Network domain with incremental SSE parsing, full-message and JSON
   patch delta support, optional usage metadata, and DOM polling fallback.

@@ -536,12 +536,57 @@ export class ResponseMonitor {
     return true;
   }
 
+  /**
+   * Removes anything already attached to the composer.
+   *
+   * The upload wait below counts attachments relative to a baseline taken just
+   * before injecting. That only measures the new files if the composer starts
+   * empty — and it does not, because Chrome keeps the profile between runs and
+   * a consult that fails mid-upload leaves its attachment sitting there. The
+   * next run then waits for a count it can never reach, fails, and hands the
+   * same dirty composer to the run after it. Starting from empty is what makes
+   * the count mean what it is read to mean.
+   *
+   * The remove control is clicked through the DOM rather than with a synthesised
+   * mouse event: it sits underneath the thumbnail's own button, so a real click
+   * at its coordinates lands on the thumbnail instead.
+   */
+  private async clearComposerAttachments(timeoutMs = 10_000): Promise<void> {
+    const attachmentSelectors = JSON.stringify(CHATGPT_SELECTORS.attachment);
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const remaining = await this.session.evaluate<number>(`
+        (function() {
+          const buttons = Array.from(
+            document.querySelectorAll("button[aria-label*='Remove file' i]")
+          );
+          buttons.forEach((button) => button.click());
+          const attachments = new Set();
+          for (const selector of ${attachmentSelectors}) {
+            for (const element of document.querySelectorAll(selector)) attachments.add(element);
+          }
+          return attachments.size;
+        })()
+      `);
+      if (remaining === 0) return;
+      await delay(300);
+    }
+    // Not fatal on its own: the caller's baseline still accounts for whatever is
+    // left, and a stale attachment shows up as the upload timeout it already
+    // reports. Say so rather than failing a consult that may still work.
+    console.warn(
+      "[chatgpt-browser] could not clear the composer before uploading; a stale attachment may remain."
+    );
+  }
+
   async uploadImages(images: BrowserImagePayload[], timeoutMs = 60_000): Promise<void> {
     if (images.length === 0) return;
     const fileInputSelectors = JSON.stringify(CHATGPT_SELECTORS.fileInput);
     const attachButtonSelectors = JSON.stringify(CHATGPT_SELECTORS.attachButton);
     const attachmentSelectors = JSON.stringify(CHATGPT_SELECTORS.attachment);
     const encodedImages = JSON.stringify(images);
+
+    await this.clearComposerAttachments();
 
     const locateInputScript = `
       (function() {

@@ -196,7 +196,8 @@ describe("ResponseMonitor", () => {
 
   test("attaches images and waits for the composer preview to finish", async () => {
     const client = fakeClient([
-      true,
+      0,     // clearComposerAttachments — nothing was left over
+      true,  // the composer's file input was located
       { success: true, baselineCount: 0 },
       { count: 1, busy: false, matchedNames: 0 }
     ]);
@@ -208,8 +209,10 @@ describe("ResponseMonitor", () => {
       fileName: "diagram.png"
     }], 2_000);
 
-    expect(client.evaluate).toHaveBeenCalledTimes(3);
-    expect(String(vi.mocked(client.evaluate).mock.calls[1][0])).toContain("DataTransfer");
+    // clear → locate input → inject → poll
+    expect(client.evaluate).toHaveBeenCalledTimes(4);
+    expect(String(vi.mocked(client.evaluate).mock.calls[0][0])).toContain("Remove file");
+    expect(String(vi.mocked(client.evaluate).mock.calls[2][0])).toContain("DataTransfer");
   });
 
   test("captures assistant image payloads through an awaited in-browser fetch", async () => {

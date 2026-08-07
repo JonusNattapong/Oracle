@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { ChatGptBrowserConfig, DiagnosticResult } from "./types.js";
+import { COMPOSER_TOOL_LABELS } from "./types.js";
 import {
   ChromeLauncher,
   findChromeExecutable,
@@ -151,8 +152,12 @@ export async function checkChatGptSelectors(
          })()`
       );
 
-    // Present on an idle composer.
-    for (const group of ["promptInput", "attachButton", "fileInput"] as const) {
+    // Present on an idle composer. `modelSelector` is included because its
+    // failure is otherwise invisible: `selectModel` is only called when the
+    // requested model differs from the default, so a UI without a model picker
+    // at all — which is what this account now shows — goes unnoticed until
+    // someone overrides the model and gets a click on an unrelated button.
+    for (const group of ["promptInput", "attachButton", "fileInput", "modelSelector"] as const) {
       const index = await resolve(group);
       checks.push({
         name: `selector ${group}`,
@@ -185,7 +190,10 @@ export async function checkChatGptSelectors(
             : `fell through to fallback #${menuIndex} (${CHATGPT_SELECTORS.composerMenuItem[menuIndex]})`
     });
 
-    for (const label of ["Web search", "Deep research"]) {
+    // Driven by the tool registry, not a hand-written list: a tool added to
+    // COMPOSER_TOOL_LABELS without a matching menu entry is drift this check
+    // exists to catch, and a hardcoded list would not have caught it.
+    for (const label of Object.values(COMPOSER_TOOL_LABELS)) {
       const present = items.some((item) => item.toLowerCase().startsWith(label.toLowerCase()));
       checks.push({
         name: `composer tool "${label}"`,

@@ -44,7 +44,25 @@ export const CHATGPT_SELECTORS: SelectorMap = {
     ".agent-turn",
     "[role='article']"
   ],
+  /**
+   * The composer's own file input.
+   *
+   * Probed against the live page on 2026-08-07: it carries **five** file
+   * inputs. Only one sits inside the composer form, and that one declares no
+   * `accept` attribute. The other four belong to the photo picker and the
+   * image-generation modal (`upload-photos-input`,
+   * `image-gen-action-modal-upload-photos`, `-upload-camera`) and every one of
+   * them declares `accept="image/*"`.
+   *
+   * So `input[type='file'][accept*='image']` — the previous first choice —
+   * resolved to the photo picker's input, outside the composer, and files were
+   * being handed to an element the composer does not read. Attachments
+   * sometimes appeared anyway, which is why this surfaced as an intermittent
+   * upload timeout rather than a clean failure. Scoping to the form is what
+   * makes the match the right element rather than merely the first one.
+   */
   fileInput: [
+    "form input[type='file']",
     "input[type='file'][accept*='image']",
     "input[type='file'][multiple]",
     "input[type='file']"
@@ -65,11 +83,19 @@ export const CHATGPT_SELECTORS: SelectorMap = {
     "[role='menuitem']",
     "[role='option']"
   ],
+  /**
+   * Handles on an attached-but-not-yet-sent file. Probed against the live
+   * composer on 2026-08-07: all three `data-testid` alternates matched zero
+   * elements and only the remove control's aria-label resolved, so upload
+   * completion was being detected by the last fallback in the list. The order
+   * here now reflects what actually matches; the testids are kept in case they
+   * return.
+   */
   attachment: [
+    "button[aria-label*='Remove file' i]",
     "[data-testid*='attachment']",
     "[data-testid*='file-thumbnail']",
-    "[data-testid*='image-thumbnail']",
-    "button[aria-label*='Remove file' i]"
+    "[data-testid*='image-thumbnail']"
   ],
   modelSelector: [
     "button[data-testid='model-selector-button']",
