@@ -1,4 +1,4 @@
-import type { MemoryStoreEntry, MemoryType, AutoMaintenanceOptions, RememberOptions } from "../memory/adapter.js";
+import type { MemoryStoreEntry, MemoryType, AutoMaintenanceOptions, ReanchorResult, RememberOptions } from "../memory/adapter.js";
 import type { AnchorVerificationReport, MemoryAnchor } from "../memory/anchors.js";
 
 /**
@@ -79,5 +79,8 @@ export interface MemoryPort {
 
   /** Verify file anchors and report freshness. */
   verifyAnchors?(opts?: { includeArchived?: boolean; paths?: string[] }): Promise<AnchorVerificationReport>;
+
+  /** Re-point one entry's anchors at the current working tree. Null if no such entry. */
+  reanchorMemory?(id: string, type: MemoryType): Promise<ReanchorResult | null>;
 }
 

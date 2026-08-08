@@ -150,6 +150,31 @@ oracle memory store hybrid
 `chatgpt` and `hybrid` require the `chatgpt-browser` backend and a signed-in
 session. See the memory storage table in the README for the trade-offs.
 
+Memories can carry Git anchors — the commit and blob sha of the files they
+describe — so the store can tell when the code moved out from under them:
+
+```bash
+oracle memory verify --anchors            # sweep the store and report freshness
+oracle memory reanchor <id> --type fact   # accept the current file as the new baseline
+```
+
+`verify` exits non-zero when an anchor points at a **missing** file, which makes
+it usable as a CI or pre-commit gate:
+
+```bash
+oracle memory verify --anchors || echo "memory describes code that no longer exists"
+```
+
+**drifted** anchors (the file was edited) are reported but do not fail the
+command — they fire on every commit touching an anchored file, so gating on them
+would turn the check into noise. A drifted memory is still recalled, at reduced
+confidence, until someone decides whether it is still true.
+
+`reanchor` is that decision, and it is deliberately one entry at a time: it
+asserts the memory still holds for the new code, which no sweep can determine.
+It refuses to re-point an anchor whose file was deleted — rewrite or forget the
+memory instead.
+
 ---
 
 ### oracle browser

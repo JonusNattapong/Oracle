@@ -248,4 +248,8 @@ export class HybridMemoryAdapter implements MemoryPort {
   verifyAnchors(opts?: { includeArchived?: boolean; paths?: string[] }) {
     return this.local.verifyAnchors?.(opts) ?? Promise.resolve({ totalAnchored: 0, fresh: 0, drifted: 0, missing: 0, unavailable: 0, entries: [] });
   }
+
+  reanchorMemory(id: string, type: MemoryType) {
+    return this.local.reanchorMemory?.(id, type) ?? Promise.resolve(null);
+  }
 }

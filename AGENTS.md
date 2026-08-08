@@ -52,8 +52,9 @@ routes to a provider/backend (`src/providers/`, `src/backends/`). The agent loop
 `anthropic`, `opencode`) translates the neutral transcript.
 
 Task breakdown (`src/tasks/breakdown.ts`) autonomously decomposes complex goals into
-structured sub-tasks with verification checklists. Memory graph visualization
-(`src/web/components/MemoryGraph.tsx`) displays entity relationships and knowledge connections.
+structured sub-tasks with verification checklists. The memory entity graph is explored
+through the CLI (`oracle memory graph show | entity | path | rebuild`); there is no web
+UI — the CLI is the human-facing surface.
 
 State split: user-level data (sessions, identity, memory, runtime) lives under
 `~/.oracle/`; project config, policy, and docs under `.oracle/`.
@@ -303,7 +304,7 @@ Set the provider in `.oracle/config.json`:
 | `src/context/astCompressor.ts` | AST compression: collapses function/method bodies to signatures for token efficiency |
 | `src/context/astResolver.ts` | AST dependency resolution: identifies relevant code by analyzing imports and dependencies |
 | `src/tasks/breakdown.ts` | Autonomous task breakdown: decomposes goals into structured sub-tasks with verification checklists |
-| `src/web/components/MemoryGraph.tsx` | MemoryGraph UI: entity relationship visualization with node memory counts and edge weights |
+| `src/web/` | Web search and fetch providers (Brave, Tavily, Firecrawl, AgentQL) behind `oracle web` and `oracle_web_*` |
 | `src/backends/chatgpt-browser/` | ChatGPT Browser Mode: headed Chrome CDP backend with ARIA fallback chain and Cloudflare diagnostics |
 
 ---

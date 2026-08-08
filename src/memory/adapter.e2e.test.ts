@@ -80,6 +80,55 @@ describe("MemoryAdapter — end to end", () => {
     expect(report).toMatchObject({ totalAnchored: 1, fresh: 0, drifted: 0, missing: 1 });
   });
 
+  describe("reanchorMemory", () => {
+    async function repo(): Promise<string> {
+      await git(tmp, "init", "-q");
+      await git(tmp, "config", "user.email", "oracle@example.test");
+      await git(tmp, "config", "user.name", "Oracle Tests");
+      const source = path.join(tmp, "decision.md");
+      await fs.writeFile(source, "Keep the local cache.\n", "utf8");
+      await git(tmp, "add", "decision.md");
+      await git(tmp, "commit", "-qm", "initial");
+      return source;
+    }
+
+    it("makes a drifted entry fresh again and keeps the line range", async () => {
+      const source = await repo();
+      const anchor = await captureAnchor(tmp, { path: "decision.md", lines: [1, 1] });
+      const entry = await memory.remember("me", "fact", "The cache choice is deliberate", { anchors: [anchor] });
+
+      await fs.writeFile(source, "Keep the local cache, now with a TTL.\n", "utf8");
+      expect((await memory.recall({ type: "fact", touch: false }))[0].anchorStatus?.[0].state).toBe("drifted");
+
+      const result = await memory.reanchorMemory(entry.id, "fact");
+      expect(result?.before[0].blobSha).toBe(anchor.blobSha);
+      expect(result?.after[0].blobSha).not.toBe(anchor.blobSha);
+      expect(result?.after[0].lines).toEqual([1, 1]);
+
+      const after = await memory.recall({ type: "fact", touch: false });
+      expect(after[0].anchorStatus?.[0].state).toBe("fresh");
+      expect(await memory.verifyAnchors()).toMatchObject({ totalAnchored: 1, fresh: 1, drifted: 0, missing: 0 });
+    });
+
+    it("refuses to re-anchor onto a deleted file and leaves the entry untouched", async () => {
+      const source = await repo();
+      const anchor = await captureAnchor(tmp, { path: "decision.md" });
+      const entry = await memory.remember("me", "fact", "The cache choice is deliberate", { anchors: [anchor] });
+      await fs.unlink(source);
+
+      await expect(memory.reanchorMemory(entry.id, "fact")).rejects.toThrow(/no longer exists/);
+
+      const stored = await memory.recall({ type: "fact", includeStale: true, touch: false });
+      expect(stored[0].anchors?.[0].blobSha).toBe(anchor.blobSha);
+    });
+
+    it("returns null for an unknown entry and an empty result when nothing is anchored", async () => {
+      expect(await memory.reanchorMemory("does-not-exist", "fact")).toBeNull();
+      const plain = await memory.remember("me", "fact", "No anchors here");
+      expect(await memory.reanchorMemory(plain.id, "fact")).toMatchObject({ before: [], after: [] });
+    });
+  });
+
   it("verifies a 1000-entry anchored store within the freshness budget", async () => {
     await git(tmp, "init", "-q");
     await git(tmp, "config", "user.email", "oracle@example.test");

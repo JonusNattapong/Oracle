@@ -72,4 +72,21 @@ describe("MemoryAdapter — recall scope beyond the newest entries", () => {
     const hits = await memory.recall({ type: "fact", limit: 3, touch: false });
     expect(hits.map((h) => h.content)).toEqual(["entry 29", "entry 28", "entry 27"]);
   });
+
+  /**
+   * The case above is only deterministic because timestamps are strictly
+   * increasing. Wall-clock time resolves to the millisecond, so on a fast host
+   * a burst of writes used to share a stamp and leave recall order undefined —
+   * which is exactly how it failed, intermittently and only on CI.
+   */
+  it("stamps a burst of writes with strictly increasing timestamps", async () => {
+    const written = [];
+    for (let i = 0; i < 50; i++) {
+      written.push(await memory.remember("me", "fact", `burst ${i}`));
+    }
+
+    const stamps = written.map((entry) => entry.ts);
+    expect(new Set(stamps).size).toBe(stamps.length);
+    expect([...stamps].sort()).toEqual(stamps);
+  });
 });
