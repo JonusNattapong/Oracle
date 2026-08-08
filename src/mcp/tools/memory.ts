@@ -34,7 +34,11 @@ export function registerMemoryTools(
       description:
         "Save a memory (project by default, global for cross-project knowledge). "
         + "Pass `supersedes` when this memory replaces one you already stored — the old entries "
-        + "stop surfacing in recall instead of competing with this one as equally current.",
+        + "stop surfacing in recall instead of competing with this one as equally current. "
+        + "Pass `anchors` whenever the memory is about specific code: the store records the "
+        + "commit and content hash of those files, so it can tell you the memory went stale "
+        + "when they change. Without anchors a memory keeps full confidence forever, including "
+        + "after the code it describes is rewritten or deleted.",
       inputSchema: {
         scope: SCOPE,
         agent: z.string().min(1),
@@ -45,7 +49,10 @@ export function registerMemoryTools(
         anchors: z.array(z.object({
           path: z.string().min(1),
           lines: z.tuple([z.number().int().min(1), z.number().int().min(1)]).optional()
-        })).max(20).optional().describe("Workspace files that support this memory"),
+        })).max(20).optional().describe(
+          "Workspace-relative files this memory describes, e.g. [{path: 'src/agent/loop.ts'}]. "
+          + "Attach them for any claim about how particular code works; omit only for knowledge "
+          + "that no file can invalidate, such as a preference or a project goal."),
         supersedes: z.array(z.string().min(1)).max(20).optional()
           .describe("Ids of memories this one replaces, e.g. after a decision changed. Unknown ids are ignored.")
       }

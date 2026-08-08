@@ -59,6 +59,7 @@
     "test:cli": "node scripts/smoke-cli.mjs",
     "test:runtime": "node scripts/smoke-runtime.mjs",
     "tool-budget": "tsx scripts/tool-budget.ts",
+    "memory:check": "tsx src/cli.ts memory verify --anchors",
     "verify": "npm run build && npm run lint && npm run test && npm run test:eval && npm run test:cli && npm run test:runtime",
     "prepublishOnly": "npm run verify",
     "verify:live": "node scripts/verify-live.mjs"

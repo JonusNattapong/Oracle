@@ -57,7 +57,24 @@ through the CLI (`oracle memory graph show | entity | path | rebuild`); there is
 UI — the CLI is the human-facing surface.
 
 State split: user-level data (sessions, identity, memory, runtime) lives under
-`~/.oracle/`; project config, policy, and docs under `.oracle/`.
+`~/.oracle/`; project config, policy, and docs under `.oracle/`. Project-scoped
+memory is workspace-local, in `.oracle-memory/`, and is not committed.
+
+### Saving memory about this codebase
+
+When you store a memory that makes a claim about particular code, pass `anchors`
+to `oracle_memory_remember` with the files it describes:
+
+```jsonc
+{ "content": "The agent loop is provider-agnostic; providers translate the transcript",
+  "anchors": [{ "path": "src/agent/loop.ts" }] }
+```
+
+Anchored memories record the commit and content hash of those files, so recall
+can downgrade them once the code changes and drop them once it is deleted. An
+unanchored memory keeps full confidence forever — including after the thing it
+describes is gone. Omit anchors only for knowledge no file can invalidate, such
+as a preference or a project goal. Check the store with `npm run memory:check`.
 
 ### Testing notes
 
