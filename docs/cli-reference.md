@@ -175,6 +175,37 @@ asserts the memory still holds for the new code, which no sweep can determine.
 It refuses to re-point an anchor whose file was deleted — rewrite or forget the
 memory instead.
 
+#### Running the check automatically
+
+```bash
+npm run memory:check
+```
+
+**This belongs on your own machine, not in CI.** Project memory lives in
+`.oracle-memory/` in the workspace and is deliberately not committed, so a CI
+runner checks out a repository with no memory store at all and the command
+reports zero anchors and exits 0 — green forever, regardless of the truth. The
+same reasoning keeps it out of `npm run verify`: that gate runs on publish, and
+releasing should not depend on the state of one developer's memory.
+
+As a pre-commit hook, so a commit that deletes a file tells you which memories
+described it:
+
+```bash
+cat > .git/hooks/pre-commit <<'HOOK'
+#!/bin/sh
+npm run --silent memory:check || {
+  echo "Stored memories describe files this commit removes. Review them, then commit again."
+  exit 1
+}
+HOOK
+chmod +x .git/hooks/pre-commit
+```
+
+Anchors only exist on memories that were saved with them. `oracle_memory_remember`
+takes an `anchors` argument for exactly this — attach it whenever the memory is a
+claim about particular code, or nothing here has anything to check.
+
 ---
 
 ### oracle browser
