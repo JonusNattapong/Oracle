@@ -91,3 +91,9 @@ jobs:
 
       - name: TypeScript check
         run: npm run typecheck
+
+      # `verify` gates on lint before it runs the tests, but CI never called it,
+      # so a lint error could only ever surface locally or at publish time.
+      # Neither step needs the build, which is why they share this job.
+      - name: Lint
+        run: npm run lint
