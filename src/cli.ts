@@ -75,6 +75,7 @@ import { loadSoul } from "./core/souls.js";
 import { buildOracleSystemPrompt } from "./core/systemPrompt.js";
 import { getConversationContext, recordSelfLog } from "./core/selfMemory.js";
 import { buildMemoryContext } from "./core/memoryContext.js";
+import type { MemoryType } from "./memory/adapter.js";
 import { validateCitations, type Citation } from "./core/citations.js";
 import { resolveComposerTool } from "./core/composerTool.js";
 import { buildWiki, getWikiPage, listWikiTopics } from "./wiki/compile.js";
@@ -696,6 +697,55 @@ memCmd
       const states = entry.statuses.map((status) => `${status.path}=${status.state}`).join(", ");
       console.log(`  ${entry.id}  [${entry.type}]  ${states}`);
     }
+    // Only `missing` fails the command. A deleted file means the memory describes
+    // code that is gone, which no edit can make true again. `drifted` is reported
+    // but tolerated: it fires on every commit touching an anchored file, so
+    // failing on it would make the check noise and get it switched off.
+    if (report.missing > 0) {
+      console.error(`\n${report.missing} anchor(s) point at files that no longer exist.`);
+      console.error("Rewrite or forget those memories, or re-point a still-valid one with `oracle memory reanchor <entryId>`.");
+      process.exitCode = 1;
+    }
+  });
+
+memCmd
+  .command("reanchor")
+  .description("Re-point a memory's anchors at the current working tree")
+  .argument("<entryId>", "Memory entry id")
+  .requiredOption("--type <type>", "Memory type the entry is stored under")
+  .action(async (entryId, options) => {
+    const orchestrator = new OrchestratorFactory(process.cwd(), homeDir());
+    const memory = await orchestrator.createMemoryAdapter();
+    if (!memory.reanchorMemory) {
+      console.error("The active memory backend does not expose re-anchoring.");
+      process.exitCode = 1;
+      return;
+    }
+    const types: MemoryType[] = ["fact", "insight", "chunk", "working"];
+    if (!types.includes(options.type as MemoryType)) {
+      console.error(`Unknown memory type: ${options.type}. Expected one of ${types.join(", ")}.`);
+      process.exitCode = 1;
+      return;
+    }
+    let result;
+    try {
+      result = await memory.reanchorMemory(entryId, options.type as MemoryType);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error));
+      process.exitCode = 1;
+      return;
+    }
+    if (!result) {
+      console.error(`Memory entry not found: ${entryId}`);
+      process.exitCode = 1;
+      return;
+    }
+    if (!result.after.length) {
+      console.log(`${entryId} has no file anchors — nothing to re-point.`);
+      return;
+    }
+    console.log(`Re-anchored ${entryId} to ${result.after[0].commit.slice(0, 12)}:`);
+    for (const anchor of result.after) console.log(`  ${anchor.path}`);
   });
 
 memCmd

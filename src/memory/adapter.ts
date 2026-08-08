@@ -9,7 +9,7 @@ import { consolidateMemories, type ConsolidationResult } from "./consolidation.j
 import { pruneStaleMemories, promoteWorkingMemories, runMaintenance, type MaintenanceOptions, type MaintenanceResult } from "./maintenance.js";
 import { reflectOnMemories, type Reflection } from "./reflect.js";
 import type { RuntimeDatabase } from "../runtime/database.js";
-import { checkAnchors, type AnchorStatus, type AnchorVerificationReport, type MemoryAnchor } from "./anchors.js";
+import { captureAnchors, checkAnchors, type AnchorStatus, type AnchorVerificationReport, type MemoryAnchor } from "./anchors.js";
 
 /** Options for MemoryAdapter.startAutoMaintenance(). */
 export interface AutoMaintenanceOptions {
@@ -77,6 +77,14 @@ export interface RememberOptions {
   anchors?: MemoryAnchor[];
   /** Ids of entries this memory replaces. They stop surfacing in live recall. */
   supersedes?: string[];
+}
+
+/** Outcome of re-pointing one entry's anchors at the current working tree. */
+export interface ReanchorResult {
+  id: string;
+  type: MemoryType;
+  before: MemoryAnchor[];
+  after: MemoryAnchor[];
 }
 
 interface AnchorIndexRecord {
@@ -714,6 +722,37 @@ export class MemoryAdapter implements MemoryPort {
       if (entry.anchors?.length) this.queueAnchorIndex({ id: entry.id, type: entry.type, anchors: entry.anchors });
     }
     return report;
+  }
+
+  /**
+   * Re-capture an entry's anchors against the working tree, making the current
+   * file contents the new baseline so the entry reads as `fresh` again.
+   *
+   * Deliberately one entry at a time. Re-anchoring asserts "this memory is still
+   * true of the new code" — a judgement only the caller can make. A bulk version
+   * would let a single command launder every drifted entry back to full
+   * confidence, which is exactly the signal anchors exist to preserve.
+   */
+  async reanchorMemory(id: string, type: MemoryType): Promise<ReanchorResult | null> {
+    const entry = await this.readEntry(type, id);
+    if (!entry) return null;
+    const before = entry.anchors ?? [];
+    if (!before.length) return { id, type, before, after: [] };
+    // Fail before writing anything: a deleted file cannot be re-anchored, and a
+    // partial rewrite would leave the entry pointing at a mix of two commits.
+    for (const anchor of before) {
+      try {
+        const stat = await fs.stat(path.resolve(this.rootDir, anchor.path));
+        if (!stat.isFile()) throw new Error("not a file");
+      } catch {
+        throw new Error(`Cannot re-anchor ${id}: ${anchor.path} no longer exists. Rewrite or forget the memory instead.`);
+      }
+    }
+    const after = await captureAnchors(this.rootDir, before.map((anchor) => ({ path: anchor.path, ...(anchor.lines ? { lines: anchor.lines } : {}) })));
+    entry.anchors = after;
+    await this.writeEntry(entry);
+    this.queueAnchorIndex({ id: entry.id, type: entry.type, anchors: after });
+    return { id, type, before, after };
   }
 
   async forget(id: string, type: MemoryType): Promise<void> {

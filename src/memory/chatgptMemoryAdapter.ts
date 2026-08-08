@@ -270,6 +270,10 @@ export class ChatGptMemoryAdapter implements MemoryPort {
     return this.shadow.verifyAnchors?.(opts) ?? Promise.resolve({ totalAnchored: 0, fresh: 0, drifted: 0, missing: 0, unavailable: 0, entries: [] });
   }
 
+  reanchorMemory(id: string, type: MemoryType) {
+    return this.shadow.reanchorMemory?.(id, type) ?? Promise.resolve(null);
+  }
+
   /**
    * Saved Memory cannot be edited in place: an update is a delete followed by a
    * save, and the local shadow is only advanced once the remote save confirms.
