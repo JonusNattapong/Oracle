@@ -9,9 +9,8 @@
     "declaration": true,
     "sourceMap": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "jsx": "react-jsx"
+    "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/*.test.ts", "src/web/**"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
 }
