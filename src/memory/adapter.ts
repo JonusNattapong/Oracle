@@ -112,6 +112,24 @@ function generateId(): string {
   return `${date}-${time}-${micros}-${rand}`;
 }
 
+/**
+ * `ts` is the only key recall sorts on, and wall-clock time resolves to the
+ * millisecond. Once writes became O(1) two remembers could land inside the same
+ * millisecond, leaving their stamps equal and "newest first" decided by whatever
+ * order the directory happened to be read in.
+ *
+ * Nudging each collision one millisecond forward keeps stamps strictly
+ * increasing per adapter, so recall order matches write order. The drift is
+ * bounded by the length of the burst and stays far below any recency window.
+ * Concurrent processes still share a store and can tie; nothing here is worse
+ * for them than before.
+ */
+function monotonicTimestamp(lastMs: number): { iso: string; ms: number } {
+  const now = Date.now();
+  const ms = now > lastMs ? now : lastMs + 1;
+  return { iso: new Date(ms).toISOString(), ms };
+}
+
 /** Cheap canonical form used to prevent exact duplicate writes without an LLM. */
 function canonicalContent(content: string): string {
   return content.trim().toLowerCase().replace(/\s+/g, " ");
@@ -136,6 +154,7 @@ export class MemoryAdapter implements MemoryPort {
    *  another process (CLI, daemon, MCP server share the store) invalidates it. */
   private contentIndex: { stamp: string; map: Map<string, string> } | null = null;
   private dirsReady: Promise<void> | null = null;
+  private lastTimestampMs = 0;
 
   constructor(private readonly rootDir: string, private readonly dataDirectory = DATA_DIR) {
     this.vectors = new VectorStore(rootDir, dataDirectory);
@@ -419,7 +438,9 @@ export class MemoryAdapter implements MemoryPort {
         return existing;
       }
     }
-    const now = new Date().toISOString();
+    const stamp = monotonicTimestamp(this.lastTimestampMs);
+    this.lastTimestampMs = stamp.ms;
+    const now = stamp.iso;
     const entry: MemoryStoreEntry = {
       id: generateId(),
       ts: now,
